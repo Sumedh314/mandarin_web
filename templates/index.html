@@ -7,6 +7,27 @@
 
 {% block body %}
 <h1>Program</h1>
-<p>{{text}}</p>
-<a href="/print_this">hi</a>
+<form action="post">
+    <p id="text">YouTube link:</p>
+    <input id="link" type="text">
+    <button id="button" type="button">click</button>
+</form>
+
+<div id="video"></div>
+
+<script>
+    video = document.getElementById("video");
+    button = document.getElementById("button");
+    console.log(link)
+
+    button.addEventListener("click", load_video);
+
+    function load_video() {
+        link = document.getElementById("link").value;
+        link = link.replace('watch?v=', 'embed/');
+        
+        video.innerHTML = '<iframe width="560" height="315" src=' + link + ' title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+        console.log(video.innerHTML);
+    }
+</script>
 {% endblock %}
