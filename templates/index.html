@@ -4,13 +4,13 @@
 <title>Mandarin</title>
 {% endblock %}
 
-
 {% block body %}
 <h1>Program</h1>
+
 <div id="videoLink">
     <p id="videoTextLabel">YouTube link:</p>
     <input id="link" type="text">
-    <button id="videoButton" type="button" onclick="loadVideo()">click</button>
+    <button id="videoButton" type="button">click</button>
 </div>
 
 <div id="video"></div>
@@ -25,34 +25,7 @@
     <p id="translation"></p>
 </div>
 
-
-<script>
-    const video = document.getElementById("video");
-    const videoButton = document.getElementById("videoButton");
-    const textButton = document.getElementById("textButton");
-
-    textButton.addEventListener("click", translate);
-
-    function loadVideo() {
-        let link = document.getElementById("link").value;
-        link = link.replace('watch?v=', 'embed/');
-        
-        video.innerHTML = '<iframe width="560" height="315" src=' + link + ' title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
-    }
-
-    async function translate() {
-        let phrase = document.getElementById("text").value;
-
-        const translation = await fetch("/translate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain",
-            },
-            body: phrase,
-        });
-        
-        const result = await translation.json();
-        document.getElementById("translation").innerHTML = result['translation']
-    }
-</script>
+<div id="wordsArea">
+    <p id="words"></p>
+</div>
 {% endblock %}
