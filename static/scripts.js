@@ -1,20 +1,40 @@
-const video = document.getElementById('video');
-const videoButton = document.getElementById('videoButton');
-const textButton = document.getElementById('textButton');
+/**
+ * Converts a YouTube transcript timestamp from seconds to hh:mm:ss
+ * 
+ * @param {string|number} timestamp time of video in seconds
+ * @returns {string} mm:ss or hh:mm:ss
+ */
+function formatTimestamp(timestamp) {
+    const totalSeconds = (Math.floor(Number(timestamp)));
 
-videoButton.addEventListener('click', loadVideo);
-textButton.addEventListener('click', translate);
+    // Get hours, minutes, and seconds from total seconds
+    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const seconds = totalSeconds % 60;
+
+    // Array with parts for final timestamp
+    const parts = [];
+    
+    // Add values to final timestamp
+    if (hours > 0) {
+        parts.push(String(hours).padStart(2, '0'));
+    }
+    parts.push(String(minutes).padStart(2, '0'));
+    parts.push(String(seconds).padStart(2, '0'));
+
+    return parts.join(':')
+}
 
 /**
  * Prints the English translation of a word into the dedicated translation area.
  */
-async function translate() {
+async function requestTranslation() {
 
     // Phrase user entered
     let phrase = document.getElementById('text').value;
 
     // Get translation from Python
-    const translationResponse = await fetch('/translate', {
+    const translationResponse = await fetch('/translate_text', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
@@ -45,14 +65,24 @@ async function loadVideo() {
         headers: {
             'Content-Type': 'text/plain',
         },
-        body: originalLink,
+        body: originalLink.href,
     });
     const transcript = await transcriptResponse.json();
 
     // Print transcript line by line and including the timestamp
-    for (i = 0; i < Object.keys(transcript).length; i++) {
-        let timestamp = result[i]['start'];
-        let text = result[i]['text'];
-        document.getElementById('wordsArea').innerHTML += `${timestamp}: ${text}<br>`;
+    let wordsAreaText = '';
+    for (let i = 0; i < transcript.length; i++) {
+        let timestamp = transcript[i]['start'];
+        let text = transcript[i]['text'];
+        wordsAreaText += `${formatTimestamp(timestamp)}: ${text}<br>`;
     }
+    document.getElementById('wordsArea').innerHTML = wordsAreaText;
 }
+
+// Event listeners
+const video = document.getElementById('video');
+const videoButton = document.getElementById('videoButton');
+const textButton = document.getElementById('textButton');
+
+videoButton.addEventListener('click', loadVideo);
+textButton.addEventListener('click', requestTranslation);

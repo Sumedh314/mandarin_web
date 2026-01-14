@@ -15,12 +15,12 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/translate', methods=['POST'])
-def translate():
+@app.route('/translate_text', methods=['POST'])
+def translate_text():
     """Translates a given word or phrase and returns it to JavaScript"""
-    phrase = request.data.decode('utf-8')
-    translation = (translator.translate(phrase))
-    
+    text = request.data.decode('utf-8')
+    translation = (translator.translate(text))
+
     return translation
 
 
