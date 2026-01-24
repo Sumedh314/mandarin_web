@@ -1,3 +1,53 @@
 body {
     background-color: white;
 }
+.words {
+    border-style: solid;
+    border-width: 1px;
+    border-color: lightgray;
+    min-height: 150px;
+    max-height: 250px;
+    height: auto;
+    overflow-y: auto;
+    font-size: large;
+}
+
+.confidenceZero {
+    background-color: lightblue;
+    border-radius: 3px;
+}
+.confidenceZero:hover {
+    cursor: pointer;
+    background-color: #add8e670;
+}
+
+.confidenceOne {
+    background-color: yellow;
+}
+.confidenceOne:hover {
+    cursor: pointer;
+    background-color: #ffff5570;
+}
+
+.confidenceTwo {
+    background-color: yellow;
+}
+.confidenceTwo:hover {
+    cursor: pointer;
+    background-color: #ffff0070;
+}
+
+.confidenceThree {
+    background-color: white;
+}
+.confidenceThree:hover {
+    cursor: pointer;
+    background-color: lightgray;
+}
+
+.confidenceNA {
+    background-color: white;
+}
+.confidenceNA:hover {
+    background-color: white;
+}
