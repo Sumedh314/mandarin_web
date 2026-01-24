@@ -90,19 +90,6 @@ def segment_text():
     return segmented_text
 
 
-@app.route('/segment_transcript', methods=['POST'])
-def segment_transcript():
-    """Segments a transcript into individual words using the jieba library while preserving timestamps"""
-    transcript = request.json
-
-    segmented_transcript = {}
-    for snippet in transcript:
-        segmented_transcript[snippet['start']] = [word for word in jieba.cut(snippet['text'])]
-    
-    print(segmented_transcript)
-    return jsonify(segmented_transcript)
-
-
 @app.route('/get_confidence_levels', methods=['POST'])
 def get_confidence_levels():
     """Returns the confidence levels of each word of the given text"""
@@ -136,7 +123,7 @@ def get_confidence_levels():
     return jsonify(text_confidence_levels)
 
 
-@app.route('/generate_transcript/', methods=['POST'])
+@app.route('/generate_transcript', methods=['POST'])
 def generate_transcript():
     """Generates the transcript of a YouTube video"""
     link = request.data.decode('utf-8')
@@ -144,10 +131,10 @@ def generate_transcript():
     query = urlparse(link).query
     video_id = parse_qs(query)['v'][0]
 
-    transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
+    # transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
 
-    # with open('transcript.json', 'r') as transcript_file:
-    #     transcript = json.load(transcript_file)
+    with open('transcript.json', 'r') as transcript_file:
+        transcript = json.load(transcript_file)
 
     return jsonify(transcript)
 

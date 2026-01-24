@@ -1,5 +1,3 @@
-const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'};
-
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words
  */
@@ -8,17 +6,11 @@ async function loadVideoAndTranscript() {
     embedVideo(link);
 
     const transcript = await requestVideoTranscript(link);
-    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
-    
-    let transcriptConfidencesLevels = {};
-    for (const timestamp in segmentedTranscript) {
-        let snippetConfidencesLevels = await requestConfidenceLevels(segmentedTranscript[timestamp]);
-        for (const word in snippetConfidencesLevels) {
-            transcriptConfidencesLevels[word] = snippetConfidencesLevels[word];
-        }
-    }
+    const formattedTranscript = formatTranscript(transcript);
+    const segmentedTranscript = await requestWordSegments(formattedTranscript);
+    const transcriptConfidencesLevels = await requestConfidenceLevels(segmentedTranscript);
 
-    printText(segmentedTranscript, transcriptConfidencesLevels, true);
+    printText(segmentedTranscript, transcriptConfidencesLevels);
 }
 
 /**
@@ -30,7 +22,7 @@ async function printUserText() {
     const segmentedText = await requestWordSegments(text);
     const confidenceLevels = await requestConfidenceLevels(segmentedText);
 
-    printText(segmentedText, confidenceLevels, false);
+    printText(segmentedText, confidenceLevels);
 }
 
 /**
@@ -38,22 +30,22 @@ async function printUserText() {
  * 
  * @param {Object} segmentedText Original text to be printed after being segmented
  * @param {Object} confidenceLevels Confidence levels for each word
- * @param {boolean} isTranscript Whether or not the text to be printed is a transcript
  */
-function printText(segmentedText, confidenceLevels, isTranscript) {
+function printText(segmentedText, confidenceLevels) {
+    const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
+
     let wordsAreaText = '';
-    if (isTranscript) {
-        for (const timestamp of Object.keys(segmentedText)) {
-            let text = segmentedText[timestamp];
-            wordsAreaText += formatTimestamp(timestamp);
-
-            wordsAreaText += createClickableWords(text, confidenceLevels);
-
-            wordsAreaText += "<br>";
+    for (const word of segmentedText) {
+        if (word == '\n') {
+            wordsAreaText += '<br>';
+            continue;
         }
-    }
-    else {
-        wordsAreaText += createClickableWords(segmentedText, confidenceLevels)
+        if (word in confidenceLevels) {
+            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+        }
+        else {
+            wordsAreaText += `<span>${word}</span>`
+        }
     }
 
     document.getElementById('words').innerHTML = wordsAreaText;
@@ -161,8 +153,6 @@ async function requestVideoTranscript(link) {
 
 /**
  * Segments Mandarin text into individual words using Python
- * 
- * @param {string} text Text for function to segment
  */
 async function requestWordSegments(text) {
 
@@ -175,27 +165,6 @@ async function requestWordSegments(text) {
         body: text,
     });
     const segmentedText = await segmentationResponse.json();
-
-    return segmentedText;
-}
-
-/**
- * Requests a video transcript to be segmented into individual words while preserving timestamps
- */
-async function requestTranscriptWordSegments(transcript) {
-
-    // Get segmented text
-    const segmentationResponse = await fetch('/segment_transcript', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transcript),
-    });
-    const segmentedText = await Map(segmentationResponse.json());
-    
-    // let segmentedTextMap = new Map(Object.entries(segmentedText));
-    console.log(segmentedTextMap);
 
     return segmentedText;
 }
@@ -216,6 +185,23 @@ async function requestConfidenceLevels(text) {
     const confidenceLevels = await confidenceLevelsResponse.json();
 
     return confidenceLevels;
+}
+
+/**
+ * Formats a YouTube transcript so that it can be printed to the screen
+ */
+function formatTranscript(transcript) {
+
+    // Format transcript line by line
+    let formattedTranscript = '';
+    for (let index = 0; index < transcript.length; index++) {
+        let timestamp = formatTimestamp(transcript[index]['start']);
+        let text = transcript[index]['text'];
+
+        formattedTranscript += `${timestamp}: ${text}\n`;
+    }
+
+    return formattedTranscript;
 }
 
 /**
@@ -243,32 +229,6 @@ function formatTimestamp(timestamp) {
     parts.push(String(seconds).padStart(2, '0'));
 
     return parts.join(':')
-}
-
-/**
- * Creates color-coded words that the user can click to see definitions
- * 
- * @param {Object} text The segmented text to print in the words area
- * @param {Object} confidenceLevels Confidencen levels of each word in the text
- * @returns {string}
- */
-function createClickableWords(text, confidenceLevels) {
-    let wordsAreaText = '';
-
-    for (const word of text) {
-        if (word == '\n') {
-            wordsAreaText += '<br>';
-            continue;
-        }
-        if (word in confidenceLevels) {
-            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
-        }
-        else {
-            wordsAreaText += `<span>${word}</span>`
-        }
-    }
-
-    return wordsAreaText;
 }
 
 // Event listeners
