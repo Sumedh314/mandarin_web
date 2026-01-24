@@ -1,6 +1,7 @@
 body {
     background-color: white;
 }
+
 .words {
     border-style: solid;
     border-width: 1px;
@@ -22,22 +23,25 @@ body {
 }
 
 .confidenceOne {
-    background-color: yellow;
+    border-radius: 3px;
+    background-color: #ffdd00;
 }
 .confidenceOne:hover {
     cursor: pointer;
-    background-color: #ffff5570;
+    background-color: #ffdd0070;
 }
 
 .confidenceTwo {
-    background-color: yellow;
+    border-radius: 3px;
+    background-color: #ffdd0080;
 }
 .confidenceTwo:hover {
     cursor: pointer;
-    background-color: #ffff0070;
+    background-color: #ffdd0030;
 }
 
 .confidenceThree {
+    border-radius: 3px;
     background-color: white;
 }
 .confidenceThree:hover {
@@ -46,8 +50,5 @@ body {
 }
 
 .confidenceNA {
-    background-color: white;
-}
-.confidenceNA:hover {
     background-color: white;
 }

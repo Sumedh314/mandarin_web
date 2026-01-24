@@ -26,7 +26,7 @@ translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
 client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
-non_mandarin_characters = string.printable + '！？。，、「」（）“‘：\n '
+non_mandarin_characters = string.printable + '！？。，、「」（）“‘：…～\n '
 
 
 @app.route('/')
@@ -100,14 +100,21 @@ def get_confidence_levels():
         word_confidence_levels = json.load(confidence_levels)
 
     for word in text:
-        if word in non_mandarin_characters:
-            confidence = -1
-        elif word in word_confidence_levels:
+
+        word_is_mandarin = True
+        for character in word:
+            if character in non_mandarin_characters:
+                confidence = 5
+                word_is_mandarin = False
+                break
+        if not word_is_mandarin:
+            continue
+        
+        if word in word_confidence_levels:
             confidence = word_confidence_levels[word]
         else:
             word_confidence_levels[word] = 0
             confidence = 0
-        
         text_confidence_levels[word] = confidence
 
     with open('word_confidence_levels.json', 'w') as confidence_levels:

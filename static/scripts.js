@@ -97,81 +97,92 @@ async function printDefinitions(text) {
 }
 
 /**
- * Segments and prints the text entered manually by the user.
+ * Prints the text into the dedicated area with clickable words.
+ * 
+ * @param {Object} segmentedText Original text to be printed after being segmented
+ * @param {Object} confidenceLevels Confidence levels for each word
  */
-async function segmentAndPrintText() {
+async function printText(segmentedText, confidenceLevels) {
     const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree', [-1]: 'confidenceNA'}
-
-    const text = document.getElementById('text').value;
-    const segmentedText = await requestWordSegments(text);
-    const confidenceLevels = await requestConfidenceLevels(segmentedText);
 
     let wordsAreaText = '';
     for (const word of segmentedText) {
-        if (confidenceLevels[word] != -1) {
+        if (word == '\n') {
+            wordsAreaText += '<br>';
+            continue;
+        }
+        if (word in confidenceLevels) {
             wordsAreaText += `<a class="${confidenceClasses[confidenceLevels[word]]}" onclick="printDefinitions('${word}')">${word}</a>`;
-            wordsAreaText += ' ';
         }
         else {
             wordsAreaText += `<a>${word}</a>`
         }
     }
 
-    console.log(confidenceLevels);
-
     document.getElementById('words').innerHTML = wordsAreaText;
-}
-
-/**
- * Prints the text into the dedicated area with clickable words
- * 
- * @param {Map} text Text segmented into words with confidence levels
- */
-async function printText(text) {
-    let wordsAreaText = '';
-    for (const word of text) {
-        let confidence = text[word];
-        wordsAreaText += `<a class="highlight" onclick="printDefinitions('${word}')">${word}</a>`;
-        wordsAreaText += '  ';
-    }
 }
 
 /**
  * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
  */
-async function loadVideoAndTranscript() {
+async function embedVideo(link) {
 
     // Convert user link to a link that can be embedded
-    let originalLink = new URL(document.getElementById('link').value);
-    let embedLink = `https://www.youtube.com/embed/${originalLink.searchParams.get('v')}`;
+    const originalLink = new URL(link);
+    const embedLink = `https://www.youtube.com/embed/${originalLink.searchParams.get('v')}`;
     
     // Embed video
     video.innerHTML = `<iframe width="560" height="315" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+}
 
-    // Generate transcript
+/**
+ * Requests the transcript of the YouTube video with the given link.
+ */
+async function requestVideoTranscript(link) {
     const transcriptResponse = await fetch('/generate_transcript', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
         },
-        body: originalLink.href,
+        body: link,
     });
     const transcript = await transcriptResponse.json();
 
-    // Print transcript line by line and including the timestamp
-    let wordsAreaText = '';
-    for (let index = 0; index < transcript.length; index++) {
-        let timestamp = transcript[index]['start'];
-        let text = await requestWordSegments(transcript[index]['text']);
+    return transcript;
+}
 
-        wordsAreaText += `${formatTimestamp(timestamp)}: `
-        for (const word of text) {
-            wordsAreaText += `<a class="highlight" onclick="printTranslations('${word}')">${word}</a>`;
-            wordsAreaText += '  ';
-        }
-        wordsAreaText += '<br>';
+/**
+ * Formats a YouTube transcript so that it can be printed to the screen
+ */
+function formatTranscript(transcript) {
+
+    // Format transcript line by line
+    let formattedTranscript = '';
+    for (let index = 0; index < transcript.length; index++) {
+        let timestamp = formatTimestamp(transcript[index]['start']);
+        let text = transcript[index]['text'];
+
+        formattedTranscript += `${timestamp}: ${text}\n`;
     }
-    document.getElementById('words').innerHTML = wordsAreaText;
+
+    return formattedTranscript;
+}
+
+/**
+ * Embeds video, loads transcript, and prints the transcript with clickable words
+ */
+async function loadVideoAndTranscript() {
+    const link = document.getElementById('link').value;
+    embedVideo(link);
+
+    const transcript = await requestVideoTranscript(link);
+    const formattedTranscript = formatTranscript(transcript);
+    const segmentedTranscript = await requestWordSegments(formattedTranscript);
+    const transcriptConfidencesLevels = await requestConfidenceLevels(segmentedTranscript);
+    console.log(segmentedTranscript)
+    console.log(transcriptConfidencesLevels)
+
+    printText(segmentedTranscript, transcriptConfidencesLevels);
 }
 
 /**
@@ -216,4 +227,4 @@ const videoButton = document.getElementById('videoButton');
 const textButton = document.getElementById('textButton');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
-textButton.addEventListener('click', segmentAndPrintText);
+textButton.addEventListener('click', function() {printText(loadVideoAndTranscript)});
