@@ -1,28 +1,85 @@
+const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'};
+
 /**
- * Converts a YouTube transcript timestamp from seconds to hh:mm:ss
- * 
- * @param {string|number} timestamp time of video in seconds
- * @returns {string} timestamp in mm:ss or hh:mm:ss
+ * Embeds video, loads transcript, and prints the transcript with clickable words
  */
-function formatTimestamp(timestamp) {
-    const totalSeconds = (Math.floor(Number(timestamp)));
+async function loadVideoAndTranscript() {
+    const link = document.getElementById('link').value;
+    embedVideo(link);
 
-    // Get hours, minutes, and seconds from total seconds
-    const minutes = Math.floor(totalSeconds / 60);
-    const hours = Math.floor(totalSeconds / 3600);
-    const seconds = totalSeconds % 60;
-
-    // Array with parts for final timestamp
-    const parts = [];
+    const transcript = await requestVideoTranscript(link);
+    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
     
-    // Add values to final timestamp
-    if (hours > 0) {
-        parts.push(String(hours).padStart(2, '0'));
+    let transcriptConfidencesLevels = {};
+    for (const timestamp in segmentedTranscript) {
+        let snippetConfidencesLevels = await requestConfidenceLevels(segmentedTranscript[timestamp]);
+        for (const word in snippetConfidencesLevels) {
+            transcriptConfidencesLevels[word] = snippetConfidencesLevels[word];
+        }
     }
-    parts.push(String(minutes).padStart(2, '0'));
-    parts.push(String(seconds).padStart(2, '0'));
 
-    return parts.join(':')
+    printText(segmentedTranscript, transcriptConfidencesLevels, true);
+}
+
+/**
+ * Segments and prints text pasted in by the user
+ */
+async function printUserText() {
+    const text = document.getElementById('text').value;
+
+    const segmentedText = await requestWordSegments(text);
+    const confidenceLevels = await requestConfidenceLevels(segmentedText);
+
+    printText(segmentedText, confidenceLevels, false);
+}
+
+/**
+ * Prints the text into the dedicated area with clickable words.
+ * 
+ * @param {Object} segmentedText Original text to be printed after being segmented
+ * @param {Object} confidenceLevels Confidence levels for each word
+ * @param {boolean} isTranscript Whether or not the text to be printed is a transcript
+ */
+function printText(segmentedText, confidenceLevels, isTranscript) {
+    let wordsAreaText = '';
+    if (isTranscript) {
+        for (const timestamp of Object.keys(segmentedText)) {
+            let text = segmentedText[timestamp];
+            wordsAreaText += formatTimestamp(timestamp);
+
+            wordsAreaText += createClickableWords(text, confidenceLevels);
+
+            wordsAreaText += "<br>";
+        }
+    }
+    else {
+        wordsAreaText += createClickableWords(segmentedText, confidenceLevels)
+    }
+
+    document.getElementById('words').innerHTML = wordsAreaText;
+}
+
+/**
+ * Translates and prints text into the dedicated area.
+ */
+async function printDefinitions(text) {
+    const translation = await requestTranslation(text);
+    const pinyin = await requestPinyin(text);
+
+    document.getElementById('translation').innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+}
+
+/**
+ * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
+ */
+async function embedVideo(link) {
+
+    // Convert user link to a link that can be embedded
+    const originalLink = new URL(link);
+    const embedLink = `https://www.youtube.com/embed/${originalLink.searchParams.get('v')}`;
+    
+    // Embed video
+    video.innerHTML = `<iframe width="560" height="315" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
 }
 
 /**
@@ -87,55 +144,6 @@ async function requestPinyin(text) {
 }
 
 /**
- * Translates and prints text into the dedicated area.
- */
-async function printDefinitions(text) {
-    const translation = await requestTranslation(text);
-    const pinyin = await requestPinyin(text);
-
-    document.getElementById('translation').innerHTML = `${text}<br>${pinyin}<br>${translation}`;
-}
-
-/**
- * Prints the text into the dedicated area with clickable words.
- * 
- * @param {Object} segmentedText Original text to be printed after being segmented
- * @param {Object} confidenceLevels Confidence levels for each word
- */
-async function printText(segmentedText, confidenceLevels) {
-    const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree', [-1]: 'confidenceNA'}
-
-    let wordsAreaText = '';
-    for (const word of segmentedText) {
-        if (word == '\n') {
-            wordsAreaText += '<br>';
-            continue;
-        }
-        if (word in confidenceLevels) {
-            wordsAreaText += `<a class="${confidenceClasses[confidenceLevels[word]]}" onclick="printDefinitions('${word}')">${word}</a>`;
-        }
-        else {
-            wordsAreaText += `<a>${word}</a>`
-        }
-    }
-
-    document.getElementById('words').innerHTML = wordsAreaText;
-}
-
-/**
- * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
- */
-async function embedVideo(link) {
-
-    // Convert user link to a link that can be embedded
-    const originalLink = new URL(link);
-    const embedLink = `https://www.youtube.com/embed/${originalLink.searchParams.get('v')}`;
-    
-    // Embed video
-    video.innerHTML = `<iframe width="560" height="315" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
-}
-
-/**
  * Requests the transcript of the YouTube video with the given link.
  */
 async function requestVideoTranscript(link) {
@@ -152,41 +160,9 @@ async function requestVideoTranscript(link) {
 }
 
 /**
- * Formats a YouTube transcript so that it can be printed to the screen
- */
-function formatTranscript(transcript) {
-
-    // Format transcript line by line
-    let formattedTranscript = '';
-    for (let index = 0; index < transcript.length; index++) {
-        let timestamp = formatTimestamp(transcript[index]['start']);
-        let text = transcript[index]['text'];
-
-        formattedTranscript += `${timestamp}: ${text}\n`;
-    }
-
-    return formattedTranscript;
-}
-
-/**
- * Embeds video, loads transcript, and prints the transcript with clickable words
- */
-async function loadVideoAndTranscript() {
-    const link = document.getElementById('link').value;
-    embedVideo(link);
-
-    const transcript = await requestVideoTranscript(link);
-    const formattedTranscript = formatTranscript(transcript);
-    const segmentedTranscript = await requestWordSegments(formattedTranscript);
-    const transcriptConfidencesLevels = await requestConfidenceLevels(segmentedTranscript);
-    console.log(segmentedTranscript)
-    console.log(transcriptConfidencesLevels)
-
-    printText(segmentedTranscript, transcriptConfidencesLevels);
-}
-
-/**
  * Segments Mandarin text into individual words using Python
+ * 
+ * @param {string} text Text for function to segment
  */
 async function requestWordSegments(text) {
 
@@ -199,6 +175,27 @@ async function requestWordSegments(text) {
         body: text,
     });
     const segmentedText = await segmentationResponse.json();
+
+    return segmentedText;
+}
+
+/**
+ * Requests a video transcript to be segmented into individual words while preserving timestamps
+ */
+async function requestTranscriptWordSegments(transcript) {
+
+    // Get segmented text
+    const segmentationResponse = await fetch('/segment_transcript', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transcript),
+    });
+    const segmentedText = await Map(segmentationResponse.json());
+    
+    // let segmentedTextMap = new Map(Object.entries(segmentedText));
+    console.log(segmentedTextMap);
 
     return segmentedText;
 }
@@ -221,10 +218,69 @@ async function requestConfidenceLevels(text) {
     return confidenceLevels;
 }
 
+/**
+ * Converts a YouTube transcript timestamp from seconds to hh:mm:ss
+ * 
+ * @param {string|number} timestamp time of video in seconds
+ * @returns {string} timestamp in mm:ss or hh:mm:ss
+ */
+function formatTimestamp(timestamp) {
+    const totalSeconds = (Math.floor(Number(timestamp)));
+
+    // Get hours, minutes, and seconds from total seconds
+    const minutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const seconds = totalSeconds % 60;
+
+    // Array with parts for final timestamp
+    const parts = [];
+    
+    // Add values to final timestamp
+    if (hours > 0) {
+        parts.push(String(hours).padStart(2, '0'));
+    }
+    parts.push(String(minutes).padStart(2, '0'));
+    parts.push(String(seconds).padStart(2, '0'));
+
+    return parts.join(':')
+}
+
+/**
+ * Creates color-coded words that the user can click to see definitions
+ * 
+ * @param {Object} text The segmented text to print in the words area
+ * @param {Object} confidenceLevels Confidencen levels of each word in the text
+ * @returns {string}
+ */
+function createClickableWords(text, confidenceLevels) {
+    let wordsAreaText = '';
+
+    for (const word of text) {
+        if (word == '\n') {
+            wordsAreaText += '<br>';
+            continue;
+        }
+        if (word in confidenceLevels) {
+            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+        }
+        else {
+            wordsAreaText += `<span>${word}</span>`
+        }
+    }
+
+    return wordsAreaText;
+}
+
 // Event listeners
 const video = document.getElementById('video');
 const videoButton = document.getElementById('videoButton');
 const textButton = document.getElementById('textButton');
+const words = document.getElementById('words');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
-textButton.addEventListener('click', function() {printText(loadVideoAndTranscript)});
+textButton.addEventListener('click', printUserText);
+words.addEventListener('click', function(event) {
+    if (event.target.hasAttribute('data-word')) {
+        printDefinitions(event.target.dataset.word);
+    }
+});
