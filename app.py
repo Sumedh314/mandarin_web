@@ -96,8 +96,8 @@ def get_confidence_levels():
     text = request.json
     text_confidence_levels = {}
 
-    with open('word_confidence_levels.json', 'r') as confidence_levels:
-        word_confidence_levels = json.load(confidence_levels)
+    with open('word_confidence_levels.json', 'r') as word_confidence_levels_file:
+        word_confidence_levels = json.load(word_confidence_levels_file)
 
     for word in text:
 
@@ -121,6 +121,39 @@ def get_confidence_levels():
         json.dump(word_confidence_levels, confidence_levels, ensure_ascii=False, indent=4)
 
     return jsonify(text_confidence_levels)
+
+
+@app.route('/update_confidence_levels', methods=['POST'])
+def update_confidence_levels():
+    """Updates the word confidence levels with new data from JavaScript"""
+    confidence_levels_to_update = request.json
+
+    with open('word_confidence_levels.json', 'r') as word_confidence_levels_file:
+        word_confidence_levels = json.load(word_confidence_levels_file)
+    
+    current_word = confidence_levels_to_update['current']
+    confidence = word_confidence_levels[current_word]
+    if confidence == 0:
+        confidence = 1
+    elif 1 < confidence <= 3:
+        confidence -= 1
+    word_confidence_levels[current_word] = confidence
+
+    previous_words = confidence_levels_to_update['previous']
+    for word in previous_words:
+        confidence = word_confidence_levels[word]
+
+        if confidence == 0:
+            confidence = 3
+        elif 0 < confidence < 3:
+            confidence += 1
+        
+        word_confidence_levels[word] = confidence
+        
+    with open('word_confidence_levels.json', 'w') as word_confidence_levels_file:
+        json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
+    
+    return jsonify(word_confidence_levels)
 
 
 @app.route('/generate_transcript', methods=['POST'])

@@ -1,7 +1,12 @@
+const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
+let lastIndex = -1;
+
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words
  */
 async function loadVideoAndTranscript() {
+    lastIndex = -1;
+
     const link = document.getElementById('link').value;
     embedVideo(link);
 
@@ -17,6 +22,8 @@ async function loadVideoAndTranscript() {
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
+    lastIndex = -1;
+
     const text = document.getElementById('text').value;
 
     const segmentedText = await requestWordSegments(text);
@@ -32,19 +39,19 @@ async function printUserText() {
  * @param {Object} confidenceLevels Confidence levels for each word
  */
 function printText(segmentedText, confidenceLevels) {
-    const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
-
     let wordsAreaText = '';
+    let wordIndex = 0;
     for (const word of segmentedText) {
         if (word == '\n') {
             wordsAreaText += '<br>';
             continue;
         }
         if (word in confidenceLevels) {
-            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+            wordIndex++;
         }
         else {
-            wordsAreaText += `<span>${word}</span>`
+            wordsAreaText += `<span>${word}</span>`;
         }
     }
 
@@ -188,6 +195,66 @@ async function requestConfidenceLevels(text) {
 }
 
 /**
+ * Updates the confidence levels of words based on the word the user clicked
+ * 
+ * @param {string} currentIndex Index of the word that the user clicked
+ * @returns object with new confidence levels of all words
+ */
+async function updateConfidenceLevels(currentIndex) {
+    currentIndex = parseInt(currentIndex, 10);
+    const words = document.getElementById('words').getElementsByTagName('span');
+
+    let wordsToUpdate = {'previous': [], 'current': ''};
+    for (const word of words) {
+        if (word.hasAttribute('data-index')){
+            wordIndex = parseInt(word.dataset.index, 10);
+
+            if (wordIndex < currentIndex) {
+                if (wordIndex > lastIndex) {
+                    wordsToUpdate['previous'].push(word.dataset.word);
+                }
+            }
+            else if (wordIndex == currentIndex) {
+                wordsToUpdate['current'] = word.dataset.word;
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            continue;
+        }
+    }
+
+    if (lastIndex < currentIndex) {
+        lastIndex = currentIndex;
+    }
+
+    const updatedConfidenceLevelsResponse = await fetch('/update_confidence_levels', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(wordsToUpdate),
+    });
+    const updatedConfidenceLevels = await updatedConfidenceLevelsResponse.json();
+
+    return updatedConfidenceLevels;
+}
+
+/**
+ * Updates the colors of the words on the screen
+ */
+function updateWordColors(confidenceLevels) {
+    const words = document.getElementById('words').getElementsByTagName('span');
+    
+    for (const word of words) {
+        word.dataset.confidence = confidenceLevels[word.dataset.word];
+        word.setAttribute('class', confidenceClasses[word.dataset.confidence]);
+    }
+}
+
+/**
  * Formats a YouTube transcript so that it can be printed to the screen
  */
 function formatTranscript(transcript) {
@@ -239,8 +306,10 @@ const words = document.getElementById('words');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
-words.addEventListener('click', function(event) {
+words.addEventListener('click', async function(event) {
     if (event.target.hasAttribute('data-word')) {
         printDefinitions(event.target.dataset.word);
+        confidenceLevels = await updateConfidenceLevels(event.target.dataset.index);
+        updateWordColors(confidenceLevels);
     }
 });
