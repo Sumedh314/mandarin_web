@@ -70,11 +70,19 @@ function printText(segmentedText, confidenceLevels) {
         }
     }
 
-    document.getElementById('words').innerHTML = wordsAreaText;
+    words.innerHTML = wordsAreaText;
     wordsLoaded = true;
 }
 
+/**
+ * Prints a transcript to the screen while preserving timestamps
+ * 
+ * @param {Object} segmentedTranscript Transcript with snippets at each timestamp segmented into words
+ * @param {Object} confidenceLevels Confidence levels of each word in the transcript
+ */
 function printTranscript(segmentedTranscript, confidenceLevels) {
+    words.innerHTML = 'Loading...';
+
     timestampElements = [];
     let timestamps = [];
 
@@ -87,7 +95,7 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
     let wordIndex = 0;
     for (const timestamp of timestamps) {
         wordsAreaText += `<span data-timestamp="${timestamp}">`;
-        wordsAreaText += `${formatTimestamp(timestamp)}: `;
+        wordsAreaText += `${formatTimestamp(timestamp)} `;
 
         for (const word of segmentedTranscript[timestamp]) {
             if (word == '\n') {
@@ -106,7 +114,7 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
         wordsAreaText += '</span><br>';
     }
 
-    document.getElementById('words').innerHTML = wordsAreaText;
+    words.innerHTML = wordsAreaText;
     wordsLoaded = true;
 
     for (const timestamp of words.children) {
@@ -115,18 +123,24 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
         }
     }
 
+    words.scrollIntoView({
+        behavior: 'smooth'
+    });
     scrollToTimestamp = requestAnimationFrame(scrollTranscript);
     console.log('a;sldkfjasl;as;ldfj')
 }
 
 /**
- * Translates and prints text into the dedicated area.
+ * Prints the selected characters, pinyin, and English definitions into the dedicated area.
+ * 
+ * @param {string} text Text to translate
  */
 async function printDefinitions(text) {
+    translationArea.innerHTML = 'Loading...';
     const translation = await requestTranslation(text);
     const pinyin = await requestPinyin(text);
 
-    document.getElementById('translation').innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+    translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }
 
 /**
@@ -227,6 +241,8 @@ async function requestPinyin(text) {
 
 /**
  * Requests the transcript of the YouTube video with the given link.
+ * 
+ * @param {string} link Link of YouTube video
  */
 async function requestVideoTranscript(link) {
     const transcriptResponse = await fetch('/generate_transcript', {
@@ -243,6 +259,8 @@ async function requestVideoTranscript(link) {
 
 /**
  * Segments Mandarin text into individual words using Python
+ * 
+ * @param {string} text Text to segment into words
  */
 async function requestWordSegments(text) {
 
@@ -281,6 +299,8 @@ async function requestTranscriptWordSegments(transcript) {
 
 /**
  * Requests the confidence levels of each word of the given text
+ * 
+ * @param {Array} text Text segmented into individual words
  */
 async function requestConfidenceLevels(text) {
 
@@ -301,17 +321,16 @@ async function requestConfidenceLevels(text) {
  * Updates the confidence levels of words based on the word the user clicked
  * 
  * @param {string} currentIndex Index of the word that the user clicked
- * @returns object with new confidence levels of all words
  */
 async function updateConfidenceLevels(currentIndex) {
     currentIndex = parseInt(currentIndex, 10);
     if (currentIndex == lastIndex) {
         return {};
     }
-    const words = document.getElementById('words').getElementsByTagName('span');
+    const segmentedWords = words.getElementsByTagName('span');
 
     let wordsToUpdate = {'previous': [], 'current': ''};
-    for (const word of words) {
+    for (const word of segmentedWords) {
         if (word.hasAttribute('data-index')){
             wordIndex = parseInt(word.dataset.index, 10);
 
@@ -349,12 +368,14 @@ async function updateConfidenceLevels(currentIndex) {
 }
 
 /**
- * Updates the colors of the words on the screen
+ * Updates the colors of the words on the screen based on the confidence levels of each word.
+ * 
+ * @param {Object} confidenceLevels Confidence levels of each word
  */
 function updateWordColors(confidenceLevels) {
-    const words = document.getElementById('words').getElementsByTagName('span');
+    const segmentedWords = words.getElementsByTagName('span');
     
-    for (const word of words) {
+    for (const word of segmentedWords) {
         if (word.dataset.word in confidenceLevels) {
             word.dataset.confidence = confidenceLevels[word.dataset.word];
             word.setAttribute('class', confidenceClasses[word.dataset.confidence]);
@@ -464,11 +485,18 @@ firstTagScript.parentNode.insertBefore(tag, firstTagScript);
 const videoLocation = document.getElementById('videoLocation');
 const videoButton = document.getElementById('videoButton');
 const textButton = document.getElementById('textButton');
+const translationArea = document.getElementById('translation');
 const words = document.getElementById('words');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
-words.addEventListener('click', async function(event) {
+words.addEventListener('mouseup', function() {
+    if (window.getSelection().toString() != '') {
+        printDefinitions(window.getSelection().toString());
+    }
+});
+words.addEventListener('mouseup', async function(event) {
+    console.log('a;sldfkjads;lkfjas')
     if (event.target.hasAttribute('data-word')) {
         printDefinitions(event.target.dataset.word);
         confidenceLevels = await updateConfidenceLevels(event.target.dataset.index);
@@ -484,7 +512,7 @@ words.addEventListener('click', async function(event) {
         }
     }
     else {
-        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
             videoPlayer.pauseVideo();
         }
         else {

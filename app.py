@@ -98,8 +98,6 @@ def segment_transcript():
     
     for snippet in transcript:
         segmented_transcript[snippet['start']] = [word for word in jieba.cut(snippet['text'])]
-    
-    print(segmented_transcript)
 
     return jsonify(segmented_transcript)
 
@@ -180,10 +178,10 @@ def generate_transcript():
     query = urlparse(link).query
     video_id = parse_qs(query)['v'][0]
 
-    transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
+    # transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
 
-    # with open('transcript.json', 'r') as transcript_file:
-    #     transcript = json.load(transcript_file)
+    with open('transcript.json', 'r') as transcript_file:
+        transcript = json.load(transcript_file)
 
     return jsonify(transcript)
 
