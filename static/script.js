@@ -1,5 +1,8 @@
 const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
 let lastIndex = -1;
+let iframe_api_ready = false;
+let videoPlayer;
+let clickedWord = '';
 
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words
@@ -70,15 +73,35 @@ async function printDefinitions(text) {
 
 /**
  * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
+ * 
+ * @param {string} link Link to YouTube video
  */
 async function embedVideo(link) {
 
-    // Convert user link to a link that can be embedded
+    // Extract the video ID from the link the user gave
     const originalLink = new URL(link);
-    const embedLink = `https://www.youtube.com/embed/${originalLink.searchParams.get('v')}`;
-    
+    const videoId = originalLink.searchParams.get('v');
+
+    if (!iframe_api_ready) {
+        return alert('Iframe API not ready');
+    }
+
     // Embed video
-    video.innerHTML = `<iframe width="560" height="315" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+    if (!videoPlayer) {
+        videoPlayer = new YT.Player('videoLocation', {
+            height: 450,
+            width: 800,
+            videoId: videoId,
+            playerVars: {
+                'enablejsapi': true,
+                'autoplay': true
+            }
+        });
+    }
+    else {
+        videoPlayer.loadVideoById(videoId);
+    }
+    // videoLocation.innerHTML = `<iframe id="video" width="800" height="450" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
 }
 
 /**
@@ -90,7 +113,7 @@ async function embedVideo(link) {
 async function requestGeminiPrompt(prompt) {
 
     // Prompt Gemini
-    const geminiResponse = await fetch('/translate_text', {
+    const geminiResponse = await fetch('/prompt_gemini', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
@@ -202,6 +225,9 @@ async function requestConfidenceLevels(text) {
  */
 async function updateConfidenceLevels(currentIndex) {
     currentIndex = parseInt(currentIndex, 10);
+    if (currentIndex == lastIndex) {
+        return {};
+    }
     const words = document.getElementById('words').getElementsByTagName('span');
 
     let wordsToUpdate = {'previous': [], 'current': ''};
@@ -249,8 +275,10 @@ function updateWordColors(confidenceLevels) {
     const words = document.getElementById('words').getElementsByTagName('span');
     
     for (const word of words) {
-        word.dataset.confidence = confidenceLevels[word.dataset.word];
-        word.setAttribute('class', confidenceClasses[word.dataset.confidence]);
+        if (word.dataset.word in confidenceLevels) {
+            word.dataset.confidence = confidenceLevels[word.dataset.word];
+            word.setAttribute('class', confidenceClasses[word.dataset.confidence]);
+        }
     }
 }
 
@@ -298,8 +326,25 @@ function formatTimestamp(timestamp) {
     return parts.join(':')
 }
 
+function onYouTubeIframeAPIReady() {
+    iframe_api_ready = true;
+}
+
+/**
+ * Play the current video
+ */
+function playYouTubeVideo() {
+    videoPlayer.playVideo();
+}
+
+// YouTube Iframe stuff
+var tag = document.createElement('script');
+tag.src = 'https://youtube.com/iframe_api';
+var firstTagScript = document.getElementsByTagName('script')[0]
+firstTagScript.parentNode.insertBefore(tag, firstTagScript);
+
 // Event listeners
-const video = document.getElementById('video');
+const videoLocation = document.getElementById('videoLocation');
 const videoButton = document.getElementById('videoButton');
 const textButton = document.getElementById('textButton');
 const words = document.getElementById('words');
@@ -311,5 +356,22 @@ words.addEventListener('click', async function(event) {
         printDefinitions(event.target.dataset.word);
         confidenceLevels = await updateConfidenceLevels(event.target.dataset.index);
         updateWordColors(confidenceLevels);
+        
+        if (!(clickedWord == event.target.dataset.word) || videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            videoPlayer.pauseVideo();
+            clickedWord = event.target.dataset.word;
+        }
+        else {
+            videoPlayer.playVideo();
+            clickedWord = '';
+        }
+    }
+    else {
+        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            videoPlayer.pauseVideo();
+        }
+        else {
+            videoPlayer.playVideo();
+        }
     }
 });

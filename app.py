@@ -185,6 +185,3 @@ def prompt_gemini():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    # text = '因为今天下大雨，所以我们只能在家里看电影，不能去公园玩'
-    # get_confidence_levels(segment_text(text))
