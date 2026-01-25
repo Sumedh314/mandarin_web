@@ -13,6 +13,13 @@ body {
     font-size: large;
 }
 
+.normal {
+    text-decoration: none;
+}
+.currentTime {
+    text-decoration: underline;
+}
+
 .confidenceZero {
     background-color: lightblue;
     border-radius: 3px;

@@ -90,6 +90,20 @@ def segment_text():
     return segmented_text
 
 
+@app.route('/segment_transcript', methods=['POST'])
+def segment_transcript():
+    """Segments a video transcript into individual words using the jieba library while preserving timestamps"""
+    transcript = request.json
+    segmented_transcript = {}
+    
+    for snippet in transcript:
+        segmented_transcript[snippet['start']] = [word for word in jieba.cut(snippet['text'])]
+    
+    print(segmented_transcript)
+
+    return jsonify(segmented_transcript)
+
+
 @app.route('/get_confidence_levels', methods=['POST'])
 def get_confidence_levels():
     """Returns the confidence levels of each word of the given text"""
@@ -104,7 +118,6 @@ def get_confidence_levels():
         word_is_mandarin = True
         for character in word:
             if character in non_mandarin_characters:
-                confidence = 5
                 word_is_mandarin = False
                 break
         if not word_is_mandarin:
@@ -127,6 +140,7 @@ def get_confidence_levels():
 def update_confidence_levels():
     """Updates the word confidence levels with new data from JavaScript"""
     confidence_levels_to_update = request.json
+    updated_confidence_levels = {}
 
     with open('word_confidence_levels.json', 'r') as word_confidence_levels_file:
         word_confidence_levels = json.load(word_confidence_levels_file)
@@ -138,6 +152,7 @@ def update_confidence_levels():
     elif 1 < confidence <= 3:
         confidence -= 1
     word_confidence_levels[current_word] = confidence
+    updated_confidence_levels[current_word] = confidence
 
     previous_words = confidence_levels_to_update['previous']
     for word in previous_words:
@@ -149,11 +164,12 @@ def update_confidence_levels():
             confidence += 1
         
         word_confidence_levels[word] = confidence
+        updated_confidence_levels[word] = confidence
         
     with open('word_confidence_levels.json', 'w') as word_confidence_levels_file:
         json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
     
-    return jsonify(word_confidence_levels)
+    return jsonify(updated_confidence_levels)
 
 
 @app.route('/generate_transcript', methods=['POST'])
@@ -164,10 +180,10 @@ def generate_transcript():
     query = urlparse(link).query
     video_id = parse_qs(query)['v'][0]
 
-    # transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
+    transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
 
-    with open('transcript.json', 'r') as transcript_file:
-        transcript = json.load(transcript_file)
+    # with open('transcript.json', 'r') as transcript_file:
+    #     transcript = json.load(transcript_file)
 
     return jsonify(transcript)
 

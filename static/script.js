@@ -3,28 +3,40 @@ let lastIndex = -1;
 let iframe_api_ready = false;
 let videoPlayer;
 let clickedWord = '';
+let wordsLoaded = false;
+let scrollToTimestamp = null;
+let timestampElements = [];
 
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words
  */
 async function loadVideoAndTranscript() {
+    wordsLoaded = false;
     lastIndex = -1;
 
     const link = document.getElementById('link').value;
     embedVideo(link);
 
     const transcript = await requestVideoTranscript(link);
-    const formattedTranscript = formatTranscript(transcript);
-    const segmentedTranscript = await requestWordSegments(formattedTranscript);
-    const transcriptConfidencesLevels = await requestConfidenceLevels(segmentedTranscript);
+    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
+    
+    let transcriptWords = []
+    for (const snippet of Object.keys(segmentedTranscript)) {
+        for (const word of segmentedTranscript[snippet]) {
+            transcriptWords.push(word)
+        }
+    }
 
-    printText(segmentedTranscript, transcriptConfidencesLevels);
+    const transcriptConfidencesLevels = await requestConfidenceLevels(transcriptWords);
+
+    printTranscript(segmentedTranscript, transcriptConfidencesLevels);
 }
 
 /**
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
+    wordsLoaded = false;
     lastIndex = -1;
 
     const text = document.getElementById('text').value;
@@ -59,6 +71,52 @@ function printText(segmentedText, confidenceLevels) {
     }
 
     document.getElementById('words').innerHTML = wordsAreaText;
+    wordsLoaded = true;
+}
+
+function printTranscript(segmentedTranscript, confidenceLevels) {
+    timestampElements = [];
+    let timestamps = [];
+
+    for (const timestamp of Object.keys(segmentedTranscript)) {
+        timestamps.push(timestamp)
+    }
+    timestamps = timestamps.sort((a, b) => a - b);
+
+    let wordsAreaText = '';
+    let wordIndex = 0;
+    for (const timestamp of timestamps) {
+        wordsAreaText += `<span data-timestamp="${timestamp}">`;
+        wordsAreaText += `${formatTimestamp(timestamp)}: `;
+
+        for (const word of segmentedTranscript[timestamp]) {
+            if (word == '\n') {
+                wordsAreaText += '<br>';
+                continue;
+            }
+            if (word in confidenceLevels) {
+                wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+                wordIndex++;
+            }
+            else {
+                wordsAreaText += `<span>${word}</span>`;
+            }
+        }
+
+        wordsAreaText += '</span><br>';
+    }
+
+    document.getElementById('words').innerHTML = wordsAreaText;
+    wordsLoaded = true;
+
+    for (const timestamp of words.children) {
+        if (timestamp.tagName == 'SPAN') {
+            timestampElements.push(timestamp);
+        }
+    }
+
+    scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+    console.log('a;sldkfjasl;as;ldfj')
 }
 
 /**
@@ -95,13 +153,15 @@ async function embedVideo(link) {
             playerVars: {
                 'enablejsapi': true,
                 'autoplay': true
+            },
+            events: {
+                'onStateChange': onPlayerStateChange
             }
         });
     }
     else {
         videoPlayer.loadVideoById(videoId);
     }
-    // videoLocation.innerHTML = `<iframe id="video" width="800" height="450" src=${embedLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
 }
 
 /**
@@ -200,6 +260,26 @@ async function requestWordSegments(text) {
 }
 
 /**
+ * Segments a transcript into words while preserving timestamps.
+ * 
+ * @param {Object} transcript Transcript to segment into words
+ */
+async function requestTranscriptWordSegments(transcript) {
+
+    // Get segmented transcript
+    const segmentationResponse = await fetch('/segment_transcript', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transcript),
+    });
+    const segmentedTranscript = await segmentationResponse.json();
+
+    return segmentedTranscript;
+}
+
+/**
  * Requests the confidence levels of each word of the given text
  */
 async function requestConfidenceLevels(text) {
@@ -283,23 +363,6 @@ function updateWordColors(confidenceLevels) {
 }
 
 /**
- * Formats a YouTube transcript so that it can be printed to the screen
- */
-function formatTranscript(transcript) {
-
-    // Format transcript line by line
-    let formattedTranscript = '';
-    for (let index = 0; index < transcript.length; index++) {
-        let timestamp = formatTimestamp(transcript[index]['start']);
-        let text = transcript[index]['text'];
-
-        formattedTranscript += `${timestamp}: ${text}\n`;
-    }
-
-    return formattedTranscript;
-}
-
-/**
  * Converts a YouTube transcript timestamp from seconds to hh:mm:ss
  * 
  * @param {string|number} timestamp time of video in seconds
@@ -326,6 +389,60 @@ function formatTimestamp(timestamp) {
     return parts.join(':')
 }
 
+/**
+ * Automatically scrolls the transcript to the location of the video
+ */
+function scrollTranscript() {
+    let currentTime = videoPlayer.getCurrentTime();
+    let candidates = [];
+    
+    for (const timestamp of timestampElements) {
+        if (currentTime > Number(timestamp.dataset.timestamp)) {
+            candidates.push(timestamp);
+        }
+    }
+
+    let final_candidate = candidates[candidates.length - 1];
+
+    if (!final_candidate) {
+        scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+        return;
+    }
+
+    final_candidate.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+    for (const item of timestampElements) {
+        item.setAttribute('class', 'normal');
+    }
+    final_candidate.setAttribute('class', 'currentTime')
+
+    if (videoPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
+        clearInterval(scrollToTimestamp);
+    }
+
+    scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+}
+
+/**
+ * Runs when the YouTube video player changes state
+ */
+async function onPlayerStateChange() {
+    if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+        if (scrollToTimestamp === null) {
+            scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+        }
+    }
+    else {
+        cancelAnimationFrame(scrollToTimestamp);
+        scrollToTimestamp = null;
+    }
+}
+
+/**
+ * Runs when the YouTube IFrame API is ready
+ */
 function onYouTubeIframeAPIReady() {
     iframe_api_ready = true;
 }
