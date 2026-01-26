@@ -13,12 +13,19 @@ body {
     font-size: large;
 }
 
+
 .normal {
+    padding-left: 3px;
+    border: none;
     text-decoration: none;
+    transition: ease;
 }
 .currentTime {
-    text-decoration: underline;
-    text-underline-offset: 5px;
+    background-color: #bfe6f370;
+    border-radius: 6px;
+    padding: 3px;
+    padding-left: 6px;
+    opacity: 1;
 }
 
 .confidenceZero {
