@@ -97,6 +97,12 @@ async function printTranscript(transcript) {
 
     let wordsAreaText = '';
     let wordIndex = 0;
+
+    if (videoPlayer) {
+        wordsAreaText += videoPlayer.getVideoData().title;
+        wordsAreaText += '<br><br>';
+    }
+
     for (const timestamp of timestamps) {
         wordsAreaText += `<span data-timestamp="${timestamp}" class="normal">`;
         wordsAreaText += `<span class="timestamp">${formatTimestamp(timestamp)}</span> `;
@@ -168,9 +174,9 @@ async function embedVideo(link) {
             width: 800,
             videoId: videoId,
             playerVars: {
+                'origin': 'http://localhost:5000',
                 'enablejsapi': true,
                 'autoplay': true,
-                'autohide': false
             },
             events: {
                 'onStateChange': onPlayerStateChange
@@ -588,6 +594,7 @@ words.addEventListener('click', async function(event) {
 
     // Toggle video if the user clicked in the transcript area but not on a word
     else {
+        clickedWord = '';
         if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
             videoPlayer.pauseVideo();
         }

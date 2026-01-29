@@ -1,2 +1,3 @@
 env/
 .env
+word_confidence_levels.json
