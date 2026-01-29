@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from urllib.parse import parse_qs, urlparse
 
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranslationLanguageNotAvailable
 
 from deep_translator import GoogleTranslator
 from google import genai
@@ -25,8 +25,10 @@ app = Flask(__name__)
 translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
 client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+chat = client.chats.create(model='gemini-2.5-flash')
 
-non_mandarin_characters = string.printable + '！？。，、「」（）“‘：…～\n '
+mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
+mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
 
 
 @app.route('/')
@@ -38,7 +40,7 @@ def home():
 @app.route('/translate_text', methods=['POST'])
 def translate_text():
     """Translates a given word or phrase and returns it to JavaScript"""
-    text = request.data.decode('utf-8')
+    text = request.data.decode()
 
     translation = ''
     translation_found = False
@@ -60,7 +62,7 @@ def translate_text():
 @app.route('/get_pinyin', methods=['POST'])
 def get_pinyin():
     """Returns the pinyin representation of a Mandarin word"""
-    text = request.data.decode('utf-8')
+    text = request.data.decode()
 
     pinyin_text = []
     pinyin_found = False
@@ -72,8 +74,8 @@ def get_pinyin():
         if word['s'] == text:
             for form in word['f']:
                 pinyin_text.append(form['i']['y'])
-            pinyin_text = ', '.join(pinyin_text)
             pinyin_found = True
+    pinyin_text = ', '.join(pinyin_text)
     
     if not pinyin_found:
         pinyin_text = pinyin.get(text)
@@ -84,7 +86,7 @@ def get_pinyin():
 @app.route('/segment_text', methods=['POST'])
 def segment_text():
     """Segments Mandarin text into individual words using the jieba library"""
-    text = request.data.decode('utf-8')
+    text = request.data.decode()
     segmented_text = [word for word in jieba.cut(text)]
 
     return segmented_text
@@ -115,9 +117,10 @@ def get_confidence_levels():
 
         word_is_mandarin = True
         for character in word:
-            if character in non_mandarin_characters:
+            if not '\u4e00' <= character <= '\u9fff':
                 word_is_mandarin = False
                 break
+
         if not word_is_mandarin:
             continue
         
@@ -173,29 +176,76 @@ def update_confidence_levels():
 @app.route('/generate_transcript', methods=['POST'])
 def generate_transcript():
     """Generates the transcript of a YouTube video"""
-    link = request.data.decode('utf-8')
+    link = request.data.decode()
 
     query = urlparse(link).query
     video_id = parse_qs(query)['v'][0]
 
-    # transcript = transcript_generator.fetch(video_id=video_id, languages=['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']).to_raw_data()
+    transcript_found = True
+    transcript_is_new = False
+    transcripts_json = 'transcripts.json'
 
-    with open('transcript.json', 'r') as transcript_file:
-        transcript = json.load(transcript_file)
+    with open(transcripts_json, 'r') as transcript_file:
+        transcripts: dict = json.load(transcript_file)
+
+        if video_id in transcripts:
+            transcript = transcripts[video_id]
+        else:
+            transcript_is_new = True
+
+            try:
+                transcript = transcript_generator.list(video_id=video_id).find_transcript(mandarin_and_english_language_codes)
+            except NoTranscriptFound:
+                transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
+                transcript_found = False
+
+            if transcript_found:
+                transcript = transcript.fetch().to_raw_data()
+
+    if transcript_is_new:
+        with open(transcripts_json, 'w') as transcript_file:
+            transcripts[video_id] = transcript
+            json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
 
     return jsonify(transcript)
+
+
+@app.route('/translate_transcript', methods=['POST'])
+def translate_transcript():
+    """Translates a transcript from English to Mandarin if available"""
+    video_id = request.data.decode()
+
+    transcript = transcript_generator.list(video_id=video_id).find_transcript(['en'])
+
+    if transcript.is_translatable:
+        for code in mandarin_language_codes:
+            try:
+                transcript = transcript.translate(code).fetch().to_raw_data()
+                break
+            except TranslationLanguageNotAvailable:
+                pass
+    else:
+        transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
+    
+    print(transcript)
+    
+    return transcript
 
 
 @app.route('/prompt_gemini', methods=['POST'])
 def prompt_gemini():
     """Prompts Google Gemini using its API"""
-    prompt = request.data.decode('utf-8')
+    prompt = request.data.decode()
 
-    chat = client.chats.create(model='gemini-2.0-flash')
+    chat = client.chats.create(model='gemini-2.5-flash')
     response = chat.send_message(prompt).text
+
+    print(response)
 
     return response
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+    # print(transcript)

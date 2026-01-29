@@ -13,13 +13,19 @@ body {
     font-size: large;
 }
 
-
 .normal {
     padding-left: 3px;
     border: none;
     text-decoration: none;
     transition: ease;
 }
+
+.timestamp:hover {
+    cursor: pointer;
+    background-color: lightgray;
+    border-radius: 3px;
+}
+
 .currentTime {
     background-color: #bfe6f370;
     border-radius: 6px;

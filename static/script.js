@@ -1,7 +1,9 @@
 const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
+const loadingSign = 'Loading...';
 let lastIndex = -1;
 let iframe_api_ready = false;
 let videoPlayer;
+let videoId = '';
 let clickedWord = '';
 let scrollToTimestamp = null;
 let timestampElements = [];
@@ -10,6 +12,8 @@ let timestampElements = [];
  * Embeds video, loads transcript, and prints the transcript with clickable words
  */
 async function loadVideoAndTranscript() {
+    words.innerHTML = loadingSign;
+
     lastIndex = -1;
 
     // Embed video
@@ -17,19 +21,19 @@ async function loadVideoAndTranscript() {
     embedVideo(link);
 
     const transcript = await requestVideoTranscript(link);
-    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
-    
-    // Push all words of transcript into transcriptWords without including timestamps.
-    let transcriptWords = []
-    for (const snippet of Object.keys(segmentedTranscript)) {
-        for (const word of segmentedTranscript[snippet]) {
-            transcriptWords.push(word)
-        }
-    }
 
-    const transcriptConfidencesLevels = await requestConfidenceLevels(transcriptWords);
+    printTranscript(transcript);
+}
 
-    printTranscript(segmentedTranscript, transcriptConfidencesLevels);
+/**
+ * Prompts Google Gemini to generate a story in Mandarin.
+ */
+async function generateStory() {
+    const prompt = "I'm trying to learn Mandarin, and I'm currently a beginner. Can you generate a short, beginner-friendly story in Mandarin for me?";
+
+    const response = await requestGeminiPrompt(prompt);
+
+    printText(response);
 }
 
 /**
@@ -40,21 +44,20 @@ async function printUserText() {
 
     const text = document.getElementById('text').value;
 
-    const segmentedText = await requestWordSegments(text);
-    const confidenceLevels = await requestConfidenceLevels(segmentedText);
-
-    printText(segmentedText, confidenceLevels);
+    printText(text);
 }
 
 /**
  * Prints the text into the dedicated area with clickable words.
  * 
- * @param {Object} segmentedText Original text to be printed after being segmented
- * @param {Object} confidenceLevels Confidence levels for each word
+ * @param {string} text Original text to be printed
  */
-function printText(segmentedText, confidenceLevels) {
+async function printText(text) {
     let wordsAreaText = '';
     let wordIndex = 0;
+
+    const segmentedText = await requestWordSegments(text);
+    const confidenceLevels = await requestConfidenceLevels(segmentedText);
 
     for (const word of segmentedText) {
         if (word == '\n') {
@@ -62,7 +65,7 @@ function printText(segmentedText, confidenceLevels) {
             continue;
         }
         if (word in confidenceLevels) {
-            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+            wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span>`;
             wordIndex++;
         }
         else {
@@ -76,11 +79,13 @@ function printText(segmentedText, confidenceLevels) {
 /**
  * Prints a transcript to the screen while preserving timestamps
  * 
- * @param {Object} segmentedTranscript Transcript with snippets at each timestamp segmented into words
- * @param {Object} confidenceLevels Confidence levels of each word in the transcript
+ * @param {Object} transcript Original transcript with snippets at each timestamp
  */
-function printTranscript(segmentedTranscript, confidenceLevels) {
-    words.innerHTML = 'Loading...';
+async function printTranscript(transcript) {
+    words.innerHTML = loadingSign;
+
+    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
+    const confidenceLevels = await requestTranscriptConfidenceLevels(segmentedTranscript);
 
     timestampElements = [];
     let timestamps = [];
@@ -94,7 +99,7 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
     let wordIndex = 0;
     for (const timestamp of timestamps) {
         wordsAreaText += `<span data-timestamp="${timestamp}" class="normal">`;
-        wordsAreaText += `${formatTimestamp(timestamp)} `;
+        wordsAreaText += `<span class="timestamp">${formatTimestamp(timestamp)}</span> `;
 
         for (const word of segmentedTranscript[timestamp]) {
             if (word == '\n') {
@@ -102,11 +107,11 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
                 continue;
             }
             if (word in confidenceLevels) {
-                wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span> `;
+                wordsAreaText += `<span class="${confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span>`;
                 wordIndex++;
             }
             else {
-                wordsAreaText += `<span>${word}</span> `;
+                wordsAreaText += `<span>${word}</span>`;
             }
         }
 
@@ -126,7 +131,6 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
     words.scrollIntoView({
         behavior: 'smooth'
     });
-    scrollToTimestamp = requestAnimationFrame(scrollTranscript);
 }
 
 /**
@@ -135,7 +139,7 @@ function printTranscript(segmentedTranscript, confidenceLevels) {
  * @param {string} text Text to translate
  */
 async function printDefinitions(text) {
-    translationArea.innerHTML = 'Loading...';
+    translationArea.innerHTML = loadingSign;
     const translation = await requestTranslation(text);
     const pinyin = await requestPinyin(text);
 
@@ -151,7 +155,7 @@ async function embedVideo(link) {
 
     // Extract the video ID from the link the user gave
     const originalLink = new URL(link);
-    const videoId = originalLink.searchParams.get('v');
+    videoId = originalLink.searchParams.get('v');
 
     if (!iframe_api_ready) {
         return alert('Iframe API not ready');
@@ -165,7 +169,8 @@ async function embedVideo(link) {
             videoId: videoId,
             playerVars: {
                 'enablejsapi': true,
-                'autoplay': true
+                'autoplay': true,
+                'autohide': false
             },
             events: {
                 'onStateChange': onPlayerStateChange
@@ -182,12 +187,9 @@ async function embedVideo(link) {
 /**
  * Sends a prompt to Google Gemini
  * 
- * @param {string} prompt the prompt to send to gemini
- * @returns {string} Gemini's response
+ * @param {string} prompt The prompt to send to gemini
  */
 async function requestGeminiPrompt(prompt) {
-
-    // Prompt Gemini
     const geminiResponse = await fetch('/prompt_gemini', {
         method: 'POST',
         headers: {
@@ -259,6 +261,22 @@ async function requestVideoTranscript(link) {
 }
 
 /**
+ * Translates a transcript into Chinese if available
+ */
+async function translateTranscript() {
+    const transcriptResponse = await fetch('/translate_transcript', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: videoId,
+    });
+    const transcript = await transcriptResponse.json();
+
+    printTranscript(transcript);
+}
+
+/**
  * Segments Mandarin text into individual words using Python
  * 
  * @param {string} text Text to segment into words
@@ -301,9 +319,9 @@ async function requestTranscriptWordSegments(transcript) {
 /**
  * Requests the confidence levels of each word of the given text
  * 
- * @param {Array} text Text segmented into individual words
+ * @param {Array} segmentedText Text segmented into individual words
  */
-async function requestConfidenceLevels(text) {
+async function requestConfidenceLevels(segmentedText) {
 
     // Get confidence levels
     const confidenceLevelsResponse = await fetch('/get_confidence_levels', {
@@ -311,11 +329,26 @@ async function requestConfidenceLevels(text) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(text),
+        body: JSON.stringify(segmentedText),
     });
     const confidenceLevels = await confidenceLevelsResponse.json();
 
     return confidenceLevels;
+}
+
+async function requestTranscriptConfidenceLevels(segmentedTranscript) {
+    
+    // Push all words of transcript into transcriptWords without including timestamps.
+    let transcriptWords = []
+    for (const snippet of Object.keys(segmentedTranscript)) {
+        for (const word of segmentedTranscript[snippet]) {
+            transcriptWords.push(word)
+        }
+    }
+
+    const transcriptConfidencesLevels = await requestConfidenceLevels(transcriptWords);
+
+    return transcriptConfidencesLevels;
 }
 
 /**
@@ -417,6 +450,9 @@ function formatTimestamp(timestamp) {
  * Automatically scrolls the transcript to the location of the video
  */
 function scrollTranscript() {
+    const wordsAreaTop = words.getBoundingClientRect()['top'];
+    const wordsAreaBottom = words.getBoundingClientRect()['bottom'];
+
     let currentTime = videoPlayer.getCurrentTime();
     let candidates = [];
     
@@ -428,24 +464,29 @@ function scrollTranscript() {
     }
 
     // Final candidate is the last element in candidates
-    let final_candidate = candidates[candidates.length - 1];
-
-    if (!final_candidate) {
+    const finalCandidate = candidates[candidates.length - 1];
+    
+    if (!finalCandidate) {
         scrollToTimestamp = requestAnimationFrame(scrollTranscript);
         return;
     }
+    
+    const finalCandidateTop = finalCandidate.getBoundingClientRect()['top'];
+    const finalCandidateBottom = finalCandidate.getBoundingClientRect()['bottom'];
 
-    // Scroll to timestamp
-    final_candidate.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-    });
+    // Scroll to timestamp if not in view
+    if (finalCandidateTop < wordsAreaTop || finalCandidateBottom > wordsAreaBottom) {
+        finalCandidate.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
 
     // Change class attributes to highlight the current line
     for (const item of timestampElements) {
         item.setAttribute('class', 'normal');
     }
-    final_candidate.setAttribute('class', 'currentTime')
+    finalCandidate.setAttribute('class', 'currentTime')
 
     if (videoPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
         clearInterval(scrollToTimestamp);
@@ -496,31 +537,35 @@ const videoLocation = document.getElementById('videoLocation');
 const videoButton = document.getElementById('videoButton');
 const textButton = document.getElementById('textButton');
 const translationArea = document.getElementById('translation');
+const translateTranscriptButton = document.getElementById('translateTranscriptButton');
+const generateStoryButton = document.getElementById('generateStory');
 const words = document.getElementById('words');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
+translateTranscriptButton.addEventListener('click', translateTranscript);
+generateStoryButton.addEventListener('click', generateStory);
 words.addEventListener('click', async function(event) {
 
     // If the user highlighted something, print its translation and pinyin
     if (window.getSelection().toString() != '') {
         printDefinitions(window.getSelection().toString());
     }
-
-    // Scroll to time in the video if the user clicked a word at a different timestamp
-    if (!event.target.parentNode.classList.contains('currentTime')) {
-        console.log(event.target.parentNode.classList);
-        for (const element of timestampElements) {
-            if (element.classList.contains('currentTime')) {
-                element.classList.replace('currentTime', 'normal');
-            }
-        }
-        event.target.parentNode.classList.replace('normal', 'currentTime');
-        videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
-    }
-
+    
     // If the user clicked a word
     if (event.target.hasAttribute('data-word')) {
+
+        // Scroll to time in the video if the user clicked a word at a different timestamp
+        if (!event.target.parentNode.classList.contains('currentTime') && !event.target.parentNode.classList.contains('words')) {
+            for (const element of timestampElements) {
+                if (element.classList.contains('currentTime')) {
+                    element.classList.replace('currentTime', 'normal');
+                }
+            }
+            event.target.parentNode.classList.replace('normal', 'currentTime');
+            videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
+        }
+
         printDefinitions(event.target.dataset.word);
         confidenceLevels = await updateConfidenceLevels(event.target.dataset.index);
         updateWordColors(confidenceLevels);
@@ -534,6 +579,11 @@ words.addEventListener('click', async function(event) {
             videoPlayer.playVideo();
             clickedWord = '';
         }
+    }
+
+    // If the user clicked a timestamp, move the video to that timestamp
+    else if (event.target.classList.contains('timestamp')) {
+        videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
     }
 
     // Toggle video if the user clicked in the transcript area but not on a word
