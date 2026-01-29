@@ -16,7 +16,6 @@ import requests
 import json
 
 import time
-import string
 
 
 load_dotenv()
@@ -29,6 +28,8 @@ chat = client.chats.create(model='gemini-2.5-flash')
 
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
+
+word_confidence_levels_json = 'user_progress/word_confidence_levels.json'
 
 
 @app.route('/')
@@ -45,7 +46,7 @@ def translate_text():
     translation = ''
     translation_found = False
 
-    with open('words.json' , 'r') as words_list:
+    with open('mandarin_words/words.json' , 'r') as words_list:
         words = json.load(words_list)
 
     for word in words:
@@ -67,7 +68,7 @@ def get_pinyin():
     pinyin_text = []
     pinyin_found = False
     
-    with open('words.json', 'r') as words_list:
+    with open('mandarin_words/words.json', 'r') as words_list:
         words = json.load(words_list)
     
     for word in words:
@@ -110,7 +111,7 @@ def get_confidence_levels():
     text = request.json
     text_confidence_levels = {}
 
-    with open('word_confidence_levels.json', 'r') as word_confidence_levels_file:
+    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
         word_confidence_levels = json.load(word_confidence_levels_file)
 
     for word in text:
@@ -131,8 +132,8 @@ def get_confidence_levels():
             confidence = 0
         text_confidence_levels[word] = confidence
 
-    with open('word_confidence_levels.json', 'w') as confidence_levels:
-        json.dump(word_confidence_levels, confidence_levels, ensure_ascii=False, indent=4)
+    with open(word_confidence_levels_json, 'w') as word_confidence_levels_file:
+        json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
 
     return jsonify(text_confidence_levels)
 
@@ -143,7 +144,7 @@ def update_confidence_levels():
     confidence_levels_to_update = request.json
     updated_confidence_levels = {}
 
-    with open('word_confidence_levels.json', 'r') as word_confidence_levels_file:
+    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
         word_confidence_levels = json.load(word_confidence_levels_file)
     
     current_word = confidence_levels_to_update['current']
@@ -167,7 +168,7 @@ def update_confidence_levels():
         word_confidence_levels[word] = confidence
         updated_confidence_levels[word] = confidence
         
-    with open('word_confidence_levels.json', 'w') as word_confidence_levels_file:
+    with open(word_confidence_levels_json, 'w') as word_confidence_levels_file:
         json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
     
     return jsonify(updated_confidence_levels)
@@ -183,7 +184,7 @@ def generate_transcript():
 
     transcript_found = True
     transcript_is_new = False
-    transcripts_json = 'transcripts.json'
+    transcripts_json = 'user_progress/transcripts.json'
 
     with open(transcripts_json, 'r') as transcript_file:
         transcripts: dict = json.load(transcript_file)
