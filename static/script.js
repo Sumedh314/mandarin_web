@@ -1,12 +1,146 @@
+import {
+    fetchGeminiPrompt,
+    fetchTranslation,
+    fetchPinyin,
+    fetchVideoTranscript,
+    fetchTranscriptTranslation,
+    fetchWordSegments,
+    fetchTranscriptWordSegments,
+    fetchConfidenceLevels,
+    fetchTranscriptConfidenceLevels,
+    fetchUpdatedConfidenceLevels
+} from './fetch_functions.js';
+
 const confidenceClasses = {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'}
 const loadingSign = 'Loading...';
 let lastIndex = -1;
 let iframe_api_ready = false;
 let videoPlayer;
+let videoReady = false;
 let videoId = '';
 let clickedWord = '';
 let scrollToTimestamp = null;
 let timestampElements = [];
+
+/**
+ * Runs when the words area is clicked. Prints word definition and movese transcript if word clicked and toggles video.
+ * 
+ * @param {object} event Space in the words area that was clicked.
+ */
+async function onWordClick(event) {
+
+    // If the user highlighted something, print its translation and pinyin
+    if (window.getSelection().toString() != '') {
+        printDefinitions(window.getSelection().toString());
+    }
+    
+    // If the user clicked a word
+    if (event.target.hasAttribute('data-word')) {
+
+        // Scroll to time in the video of the word
+        if (!event.target.parentNode.classList.contains('words')) {
+            for (const element of timestampElements) {
+                if (element.classList.contains('currentTime')) {
+                    element.classList.replace('currentTime', 'normal');
+                }
+            }
+            event.target.parentNode.classList.replace('normal', 'currentTime');
+            videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
+        }
+
+        printDefinitions(event.target.dataset.word);
+        const confidenceLevels = await fetchUpdatedConfidenceLevels(event.target.dataset.index);
+        updateWordColors(confidenceLevels);
+        
+        // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
+        if (!(clickedWord == event.target.dataset.word) || videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            videoPlayer.pauseVideo();
+            clickedWord = event.target.dataset.word;
+        }
+        else {
+            videoPlayer.playVideo();
+            clickedWord = '';
+        }
+    }
+
+    // If the user clicked a timestamp, move the video to that timestamp
+    else if (event.target.classList.contains('timestamp')) {
+        videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
+    }
+
+    // Toggle video if the user clicked in the transcript area but not on a word
+    else {
+        clickedWord = '';
+        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
+            videoPlayer.pauseVideo();
+        }
+        else {
+            videoPlayer.playVideo();
+        }
+    }
+}
+
+/**
+ * Runs when a key is pressed
+ * 
+ * @param {object} event Key that was pressed
+ */
+async function onKeyPressed(event) {
+
+    // Make sure video is ready
+    if (videoReady) {
+        const currentTime = videoPlayer.getCurrentTime();
+        const currentTimestamp = findTimestamp(currentTime);
+        const indexOfCurrentTimestamp = timestampElements.indexOf(currentTimestamp);
+
+        const allKeys = [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'j', 'l'];
+
+        if (allKeys.includes(event.key)) {
+            event.preventDefault();
+
+            let newTime = 0;
+            switch (event.key) {
+
+                // Toggle video is spacebar is pressed
+                case ' ':
+                    toggleVideo();
+                    break;
+
+                // Move video back and forth 5 seconds if left or right arrow keys are pressed
+                case 'ArrowLeft':
+                    newTime = currentTime - 5;
+                    break;
+                case 'ArrowRight':
+                    newTime = currentTime + 5;
+                    break;
+
+                // Move video back and forth 10 seconds if j or l are pressed
+                case 'j':
+                    newTime = currentTime - 10;
+                    break;
+                case 'l':
+                    newTime = currentTime + 10;
+                    break;
+
+                // Move to previous or next timestamp if user clicked up or down arrow
+                case 'ArrowUp':
+                    newTime = Number(timestampElements[indexOfCurrentTimestamp - 1].dataset.timestamp);
+                    break;
+                case 'ArrowDown':
+                    newTime = Number(timestampElements[indexOfCurrentTimestamp + 1].dataset.timestamp);
+                    break;
+                
+                default:
+                    break;
+            }
+
+            console.log(timestampElements);
+            console.log(indexOfCurrentTimestamp);
+            console.log(newTime);
+            videoPlayer.seekTo(newTime);
+        }
+    }
+}
 
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words
@@ -19,9 +153,8 @@ async function loadVideoAndTranscript() {
     // Embed video
     const link = document.getElementById('link').value;
     embedVideo(link);
-
-    const transcript = await requestVideoTranscript(link);
-
+    
+    const transcript = await fetchVideoTranscript(link);
     printTranscript(transcript);
 }
 
@@ -31,7 +164,7 @@ async function loadVideoAndTranscript() {
 async function generateStory() {
     const prompt = "I'm trying to learn Mandarin, and I'm currently a beginner. Can you generate a short, beginner-friendly story in Mandarin for me?";
 
-    const response = await requestGeminiPrompt(prompt);
+    const response = await fetchGeminiPrompt(prompt);
 
     printText(response);
 }
@@ -56,8 +189,8 @@ async function printText(text) {
     let wordsAreaText = '';
     let wordIndex = 0;
 
-    const segmentedText = await requestWordSegments(text);
-    const confidenceLevels = await requestConfidenceLevels(segmentedText);
+    const segmentedText = await fetchWordSegments(text);
+    const confidenceLevels = await fetchConfidenceLevels(segmentedText);
 
     for (const word of segmentedText) {
         if (word == '\n') {
@@ -84,8 +217,8 @@ async function printText(text) {
 async function printTranscript(transcript) {
     words.innerHTML = loadingSign;
 
-    const segmentedTranscript = await requestTranscriptWordSegments(transcript);
-    const confidenceLevels = await requestTranscriptConfidenceLevels(segmentedTranscript);
+    const segmentedTranscript = await fetchTranscriptWordSegments(transcript);
+    const confidenceLevels = await fetchTranscriptConfidenceLevels(segmentedTranscript);
 
     timestampElements = [];
     let timestamps = [];
@@ -98,10 +231,7 @@ async function printTranscript(transcript) {
     let wordsAreaText = '';
     let wordIndex = 0;
 
-    if (videoPlayer) {
-        wordsAreaText += videoPlayer.getVideoData().title;
-        wordsAreaText += '<br><br>';
-    }
+    videoTitle.textContent = videoPlayer.videoTitle;
 
     for (const timestamp of timestamps) {
         wordsAreaText += `<span data-timestamp="${timestamp}" class="normal">`;
@@ -146,8 +276,8 @@ async function printTranscript(transcript) {
  */
 async function printDefinitions(text) {
     translationArea.innerHTML = loadingSign;
-    const translation = await requestTranslation(text);
-    const pinyin = await requestPinyin(text);
+    const translation = await fetchTranslation(text);
+    const pinyin = await fetchPinyin(text);
 
     translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }
@@ -168,7 +298,7 @@ async function embedVideo(link) {
     }
 
     // Embed video
-    if (!videoPlayer) {
+    if (!videoReady) {
         videoPlayer = new YT.Player('videoLocation', {
             height: 450,
             width: 800,
@@ -179,6 +309,7 @@ async function embedVideo(link) {
                 'autoplay': true,
             },
             events: {
+                'onReady': onPlayerReady,
                 'onStateChange': onPlayerStateChange
             }
         });
@@ -186,227 +317,6 @@ async function embedVideo(link) {
     else {
         videoPlayer.loadVideoById(videoId);
     }
-
-    videoLocation.focus();
-}
-
-/**
- * Sends a prompt to Google Gemini
- * 
- * @param {string} prompt The prompt to send to gemini
- */
-async function requestGeminiPrompt(prompt) {
-    const geminiResponse = await fetch('/prompt_gemini', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: prompt,
-    });
-    const message = await geminiResponse.text();
-
-    return message;
-}
-
-/**
- * Gets the English translation of a word from Python.
- * 
- * @param {string} text text user wants to translate
- */
-async function requestTranslation(text) {
-
-    // Get translation from Python
-    const translationResponse = await fetch('/translate_text', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: text,
-    });
-    const translation = await translationResponse.text();
-
-    return translation;
-}
-
-/**
- * Gets the pinyin representation of a word from Python.
- * 
- * @param {string} text text user wants to get pinyin of
- */
-async function requestPinyin(text) {
-
-    // Get translation from Python
-    const translationResponse = await fetch('/get_pinyin', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: text,
-    });
-    const pinyin = await translationResponse.text();
-
-    return pinyin;
-}
-
-/**
- * Requests the transcript of the YouTube video with the given link.
- * 
- * @param {string} link Link of YouTube video
- */
-async function requestVideoTranscript(link) {
-    const transcriptResponse = await fetch('/generate_transcript', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: link,
-    });
-    const transcript = await transcriptResponse.json();
-
-    return transcript;
-}
-
-/**
- * Translates a transcript into Chinese if available
- */
-async function translateTranscript() {
-    const transcriptResponse = await fetch('/translate_transcript', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: videoId,
-    });
-    const transcript = await transcriptResponse.json();
-
-    printTranscript(transcript);
-}
-
-/**
- * Segments Mandarin text into individual words using Python
- * 
- * @param {string} text Text to segment into words
- */
-async function requestWordSegments(text) {
-
-    // Get segmented text
-    const segmentationResponse = await fetch('/segment_text', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-        },
-        body: text,
-    });
-    const segmentedText = await segmentationResponse.json();
-
-    return segmentedText;
-}
-
-/**
- * Segments a transcript into words while preserving timestamps.
- * 
- * @param {Object} transcript Transcript to segment into words
- */
-async function requestTranscriptWordSegments(transcript) {
-
-    // Get segmented transcript
-    const segmentationResponse = await fetch('/segment_transcript', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transcript),
-    });
-    const segmentedTranscript = await segmentationResponse.json();
-
-    return segmentedTranscript;
-}
-
-/**
- * Requests the confidence levels of each word of the given text
- * 
- * @param {Array} segmentedText Text segmented into individual words
- */
-async function requestConfidenceLevels(segmentedText) {
-
-    // Get confidence levels
-    const confidenceLevelsResponse = await fetch('/get_confidence_levels', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(segmentedText),
-    });
-    const confidenceLevels = await confidenceLevelsResponse.json();
-
-    return confidenceLevels;
-}
-
-async function requestTranscriptConfidenceLevels(segmentedTranscript) {
-    
-    // Push all words of transcript into transcriptWords without including timestamps.
-    let transcriptWords = []
-    for (const snippet of Object.keys(segmentedTranscript)) {
-        for (const word of segmentedTranscript[snippet]) {
-            transcriptWords.push(word)
-        }
-    }
-
-    const transcriptConfidencesLevels = await requestConfidenceLevels(transcriptWords);
-
-    return transcriptConfidencesLevels;
-}
-
-/**
- * Updates the confidence levels of words based on the word the user clicked
- * 
- * @param {string} currentIndex Index of the word that the user clicked
- */
-async function updateConfidenceLevels(currentIndex) {
-    currentIndex = parseInt(currentIndex, 10);
-    if (currentIndex == lastIndex) {
-        return {};
-    }
-    const segmentedWords = words.getElementsByTagName('span');
-
-    // Put all words from lastIndex to currentIndex in 'previous', and put current word in 'current'
-    let wordsToUpdate = {'previous': [], 'current': ''};
-    for (const word of segmentedWords) {
-        if (word.hasAttribute('data-index')){
-            wordIndex = parseInt(word.dataset.index, 10);
-
-            if (wordIndex < currentIndex) {
-                if (wordIndex > lastIndex) {
-                    wordsToUpdate['previous'].push(word.dataset.word);
-                }
-            }
-            else if (wordIndex == currentIndex) {
-                wordsToUpdate['current'] = word.dataset.word;
-            }
-            else {
-                break;
-            }
-        }
-        else {
-            continue;
-        }
-    }
-
-    if (lastIndex < currentIndex) {
-        lastIndex = currentIndex;
-    }
-
-    // Get confidence levels from Python
-    const updatedConfidenceLevelsResponse = await fetch('/update_confidence_levels', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(wordsToUpdate),
-    });
-    const updatedConfidenceLevels = await updatedConfidenceLevelsResponse.json();
-
-    return updatedConfidenceLevels;
 }
 
 /**
@@ -423,6 +333,25 @@ function updateWordColors(confidenceLevels) {
             word.setAttribute('class', confidenceClasses[word.dataset.confidence]);
         }
     }
+}
+
+/**
+ * Finds the timestamp of the current portion of the transcript the video is playing.
+ * 
+ * @param {Number} currentTime The current time of the video
+*/
+function findTimestamp(currentTime) {
+    const candidates = [];
+    
+    // Push all timestamps before the current video location into candidates
+    for (const timestamp of timestampElements) {
+        if (currentTime > Number(timestamp.dataset.timestamp)) {
+            candidates.push(timestamp);
+        }
+    }
+    
+    // Final candidate is the last element in candidates
+    return candidates[candidates.length - 1];
 }
 
 /**
@@ -459,30 +388,21 @@ function scrollTranscript() {
     const wordsAreaTop = words.getBoundingClientRect()['top'];
     const wordsAreaBottom = words.getBoundingClientRect()['bottom'];
 
-    let currentTime = videoPlayer.getCurrentTime();
-    let candidates = [];
-    
-    // Push all timestamps before the current video location into candidates
-    for (const timestamp of timestampElements) {
-        if (currentTime > Number(timestamp.dataset.timestamp)) {
-            candidates.push(timestamp);
-        }
-    }
+    const currentTime = videoPlayer.getCurrentTime();
 
-    // Final candidate is the last element in candidates
-    const finalCandidate = candidates[candidates.length - 1];
+    const currentTimestamp = findTimestamp(currentTime);
     
-    if (!finalCandidate) {
+    if (!currentTimestamp) {
         scrollToTimestamp = requestAnimationFrame(scrollTranscript);
         return;
     }
     
-    const finalCandidateTop = finalCandidate.getBoundingClientRect()['top'];
-    const finalCandidateBottom = finalCandidate.getBoundingClientRect()['bottom'];
+    const currentTimestampTop = currentTimestamp.getBoundingClientRect()['top'];
+    const currentTimestampBottom = currentTimestamp.getBoundingClientRect()['bottom'];
 
     // Scroll to timestamp if not in view
-    if (finalCandidateTop < wordsAreaTop || finalCandidateBottom > wordsAreaBottom) {
-        finalCandidate.scrollIntoView({
+    if (currentTimestampTop < wordsAreaTop || currentTimestampBottom > wordsAreaBottom) {
+        currentTimestamp.scrollIntoView({
             behavior: 'smooth',
             block: 'center'
         });
@@ -492,13 +412,20 @@ function scrollTranscript() {
     for (const item of timestampElements) {
         item.setAttribute('class', 'normal');
     }
-    finalCandidate.setAttribute('class', 'currentTime')
+    currentTimestamp.setAttribute('class', 'currentTime')
 
     if (videoPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
-        clearInterval(scrollToTimestamp);
+        cancelAnimationFrame(scrollToTimestamp);
     }
 
     scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+}
+
+/**
+ * Runs when the YouTube video player is ready.
+ */
+function onPlayerReady() {
+    videoReady = true;
 }
 
 /**
@@ -519,17 +446,24 @@ async function onPlayerStateChange() {
 }
 
 /**
- * Runs when the YouTube IFrame API is ready
+ * If the video is playing, the video pauses. If the video is paused, the video starts playing.
  */
-function onYouTubeIframeAPIReady() {
-    iframe_api_ready = true;
+function toggleVideo() {
+    if (videoReady) {
+        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+            videoPlayer.pauseVideo();
+        }
+        else {
+            videoPlayer.playVideo()
+        }
+    }
 }
 
 /**
- * Play the current video
+ * Runs when the YouTube IFrame API is ready
  */
-function playYouTubeVideo() {
-    videoPlayer.playVideo();
+window.onYouTubeIframeAPIReady = function() {
+    iframe_api_ready = true;
 }
 
 // YouTube Iframe stuff
@@ -546,60 +480,11 @@ const translationArea = document.getElementById('translation');
 const translateTranscriptButton = document.getElementById('translateTranscriptButton');
 const generateStoryButton = document.getElementById('generateStory');
 const words = document.getElementById('words');
+const videoTitle = document.getElementById('videoTitle');
 
 videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
-translateTranscriptButton.addEventListener('click', translateTranscript);
+translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
 generateStoryButton.addEventListener('click', generateStory);
-words.addEventListener('click', async function(event) {
-
-    // If the user highlighted something, print its translation and pinyin
-    if (window.getSelection().toString() != '') {
-        printDefinitions(window.getSelection().toString());
-    }
-    
-    // If the user clicked a word
-    if (event.target.hasAttribute('data-word')) {
-
-        // Scroll to time in the video if the user clicked a word at a different timestamp
-        if (!event.target.parentNode.classList.contains('currentTime') && !event.target.parentNode.classList.contains('words')) {
-            for (const element of timestampElements) {
-                if (element.classList.contains('currentTime')) {
-                    element.classList.replace('currentTime', 'normal');
-                }
-            }
-            event.target.parentNode.classList.replace('normal', 'currentTime');
-            videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
-        }
-
-        printDefinitions(event.target.dataset.word);
-        confidenceLevels = await updateConfidenceLevels(event.target.dataset.index);
-        updateWordColors(confidenceLevels);
-        
-        // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
-        if (!(clickedWord == event.target.dataset.word) || videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-            videoPlayer.pauseVideo();
-            clickedWord = event.target.dataset.word;
-        }
-        else {
-            videoPlayer.playVideo();
-            clickedWord = '';
-        }
-    }
-
-    // If the user clicked a timestamp, move the video to that timestamp
-    else if (event.target.classList.contains('timestamp')) {
-        videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
-    }
-
-    // Toggle video if the user clicked in the transcript area but not on a word
-    else {
-        clickedWord = '';
-        if (videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
-            videoPlayer.pauseVideo();
-        }
-        else {
-            videoPlayer.playVideo();
-        }
-    }
-});
+words.addEventListener('click', (event) => onWordClick(event));
+window.addEventListener('keydown', (event) => onKeyPressed(event));

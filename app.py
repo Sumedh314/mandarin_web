@@ -247,6 +247,24 @@ def prompt_gemini():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
+
+    # words_list = []
+    # with open('mandarin_words/new_hsk_levels/new_hsk7.json', 'r') as file:
+    #     words = json.load(file)
+    #     for word in words:
+    #         words_list.append(word['simplified'])
+    #     print(words_list)
+
+    # with open(word_confidence_levels_json, 'r') as file:
+    #     words = json.load(file)
+    #     known_words = 0
+    #     for test_word in words:
+    #         if test_word in words_list:
+    #             if words[test_word] == 3:
+    #                 known_words += 1
+    #                 print(test_word)
+        
+    #     print(known_words)
 
     # print(transcript)
