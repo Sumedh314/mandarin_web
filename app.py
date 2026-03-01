@@ -15,8 +15,6 @@ import os
 import requests
 import json
 
-import time
-
 
 load_dotenv()
 

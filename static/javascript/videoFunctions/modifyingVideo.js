@@ -5,6 +5,7 @@ import {
 } from "./videoStates.js";
 
 import {
+    wordsArea,
     state
 } from "../documentAreas.js";
 
@@ -50,8 +51,8 @@ export async function embedVideo(link) {
  * Automatically scrolls the transcript to the location of the video
  */
 export function scrollTranscript() {
-    const wordsAreaTop = words.getBoundingClientRect()['top'];
-    const wordsAreaBottom = words.getBoundingClientRect()['bottom'];
+    const wordsAreaTop = wordsArea.getBoundingClientRect()['top'];
+    const wordsAreaBottom = wordsArea.getBoundingClientRect()['bottom'];
 
     const currentTime = state.videoPlayer.getCurrentTime();
 

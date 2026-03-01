@@ -1,3 +1,5 @@
+import {wordsArea} from "./documentAreas.js";
+
 /**
  * Sends a prompt to Google Gemini
  * 
@@ -180,7 +182,7 @@ export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
     if (currentIndex == lastIndex) {
         return {};
     }
-    const segmentedWords = words.getElementsByTagName('span');
+    const segmentedWords = wordsArea.getElementsByTagName('span');
 
     // Put all words from state.lastIndex to currentIndex in 'previous', and put current word in 'current'
     let wordsToUpdate = {'previous': [], 'current': ''};

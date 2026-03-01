@@ -10,7 +10,7 @@ import {
 import {
     translationArea,
     videoTitle,
-    words,
+    wordsArea,
     state
 } from "./documentAreas.js";
 
@@ -24,6 +24,8 @@ const loadingSign = 'Loading...';
  * @param {string} text Original text to be printed
  */
 export async function printText(text) {
+    state.lastIndex = -1;
+
     let wordsAreaText = '';
     let wordIndex = 0;
 
@@ -44,7 +46,7 @@ export async function printText(text) {
         }
     }
 
-    words.innerHTML = wordsAreaText;
+    wordsArea.innerHTML = wordsAreaText;
 }
 
 /**
@@ -53,7 +55,7 @@ export async function printText(text) {
  * @param {Object} transcript Original transcript with snippets at each timestamp
  */
 export async function printTranscript(transcript) {
-    words.innerHTML = loadingSign;
+    wordsArea.innerHTML = loadingSign;
 
     const segmentedTranscript = await fetchTranscriptWordSegments(transcript);
     const confidenceLevels = await fetchTranscriptConfidenceLevels(segmentedTranscript);
@@ -92,17 +94,17 @@ export async function printTranscript(transcript) {
         wordsAreaText += '</span><br>';
     }
 
-    words.innerHTML = wordsAreaText;
+    wordsArea.innerHTML = wordsAreaText;
 
     // Push timestamps to timestampElements for other functions to use
-    for (const timestamp of words.children) {
+    for (const timestamp of wordsArea.children) {
         if (timestamp.tagName == 'SPAN') {
             state.timestampElements.push(timestamp);
         }
     }
 
     // Automatically scroll to line in the transcript that the video is currently paying in
-    words.scrollIntoView({
+    wordsArea.scrollIntoView({
         behavior: 'smooth'
     });
 }
@@ -124,8 +126,6 @@ export async function printDefinitions(text) {
  * Segments and prints text pasted in by the user
  */
 export async function printUserText() {
-    state.lastIndex = -1;
-
     const text = document.getElementById('text').value;
 
     printText(text);
@@ -137,7 +137,7 @@ export async function printUserText() {
  * @param {Object} confidenceLevels Confidence levels of each word
  */
 export function updateWordColors(confidenceLevels) {
-    const segmentedWords = words.getElementsByTagName('span');
+    const segmentedWords = wordsArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {
         if (word.dataset.word in confidenceLevels) {

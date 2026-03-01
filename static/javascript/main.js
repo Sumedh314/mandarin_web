@@ -1,27 +1,18 @@
 import {
-    fetchGeminiPrompt,
-    fetchTranslation,
-    fetchPinyin,
-    fetchVideoTranscript,
-    fetchTranscriptTranslation,
-    fetchWordSegments,
-    fetchTranscriptWordSegments,
-    fetchConfidenceLevels,
-    fetchTranscriptConfidenceLevels,
-    fetchUpdatedConfidenceLevels
-} from './fetchFunctions.js';
-
-import {
-    videoTitle,
-    videoLocation,
     videoButton,
     textButton,
-    translationArea,
     translateTranscriptButton,
     generateStoryButton,
-    words,
+    wordsArea,
     state
 } from "./documentAreas.js";
+
+import {
+    fetchGeminiPrompt,
+    fetchVideoTranscript,
+    fetchTranscriptTranslation,
+    fetchUpdatedConfidenceLevels
+} from './fetchFunctions.js';
 
 import {
     printText,
@@ -47,7 +38,6 @@ const loadingSign = 'Loading...';
  * @param {object} event Space in the words area that was clicked.
 */
 async function onWordClick(event) {
-    let clickedWord = '';
 
     // If the user highlighted something, print its translation and pinyin
     if (window.getSelection().toString() != '') {
@@ -69,7 +59,6 @@ async function onWordClick(event) {
         }
 
         printDefinitions(event.target.dataset.word);
-        console.log(state.lastIndex);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         const confidenceLevels = await fetchUpdatedConfidenceLevels(state.lastIndex, currentIndex);
         updateWordColors(confidenceLevels);
@@ -79,13 +68,13 @@ async function onWordClick(event) {
         }
         
         // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
-        if (!(clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+        if (!(state.clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
             state.videoPlayer.pauseVideo();
-            clickedWord = event.target.dataset.word;
+            state.clickedWord = event.target.dataset.word;
         }
         else {
             state.videoPlayer.playVideo();
-            clickedWord = '';
+            state.clickedWord = '';
         }
     }
 
@@ -96,7 +85,7 @@ async function onWordClick(event) {
 
     // Toggle video if the user clicked in the transcript area but not on a word
     else {
-        clickedWord = '';
+        state.clickedWord = '';
         if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
             state.videoPlayer.pauseVideo();
         }
@@ -161,9 +150,6 @@ async function onKeyPressed(event) {
                     break;
             }
 
-            console.log(state.timestampElements);
-            console.log(indexOfCurrentTimestamp);
-            console.log(newTime);
             state.videoPlayer.seekTo(newTime);
         }
     }
@@ -173,7 +159,7 @@ async function onKeyPressed(event) {
  * Embeds video, loads transcript, and prints the transcript with clickable words
  */
 async function loadVideoAndTranscript() {
-    words.innerHTML = loadingSign;
+    wordsArea.innerHTML = loadingSign;
 
     state.lastIndex = -1;
 
@@ -206,5 +192,5 @@ videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
 translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
 generateStoryButton.addEventListener('click', generateStory);
-words.addEventListener('click', (event) => onWordClick(event));
+wordsArea.addEventListener('click', (event) => onWordClick(event));
 window.addEventListener('keydown', (event) => onKeyPressed(event));
