@@ -173,20 +173,20 @@ export async function fetchTranscriptConfidenceLevels(segmentedTranscript) {
 /**
  * Updates the confidence levels of words based on the word the user clicked
  * 
- * @param {string} currentIndex Index of the word that the user clicked
+ * @param {Number} lastIndex Index of the last word that the user clicked
+ * @param {Number} currentIndex Index of the word that the user clicked
  */
-export async function fetchUpdatedConfidenceLevels(currentIndex) {
-    currentIndex = parseInt(currentIndex, 10);
+export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
     if (currentIndex == lastIndex) {
         return {};
     }
     const segmentedWords = words.getElementsByTagName('span');
 
-    // Put all words from lastIndex to currentIndex in 'previous', and put current word in 'current'
+    // Put all words from state.lastIndex to currentIndex in 'previous', and put current word in 'current'
     let wordsToUpdate = {'previous': [], 'current': ''};
     for (const word of segmentedWords) {
         if (word.hasAttribute('data-index')){
-            wordIndex = parseInt(word.dataset.index, 10);
+            let wordIndex = parseInt(word.dataset.index, 10);
 
             if (wordIndex < currentIndex) {
                 if (wordIndex > lastIndex) {
@@ -203,10 +203,6 @@ export async function fetchUpdatedConfidenceLevels(currentIndex) {
         else {
             continue;
         }
-    }
-
-    if (lastIndex < currentIndex) {
-        lastIndex = currentIndex;
     }
 
     // Get confidence levels from Python
