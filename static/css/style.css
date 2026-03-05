@@ -2,6 +2,25 @@ body {
     background-color: white;
 }
 
+.textbox {
+    border-radius: 99999px;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.button {
+    background-color: white;
+    height: 20px;
+    border-color: white;
+    border-style: none;
+    border-radius: 99999px;
+}
+
+.button:hover {
+    cursor: pointer;
+    background-color: lightgray;
+}
+
 .words {
     border-style: solid;
     border-width: 1px;
