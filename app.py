@@ -21,8 +21,8 @@ load_dotenv()
 app = Flask(__name__)
 translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
-client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-chat = client.chats.create(model='gemini-2.5-flash')
+# client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+# chat = client.chats.create(model='gemini-2.5-flash')
 
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
@@ -236,12 +236,12 @@ def prompt_gemini():
     """Prompts Google Gemini using its API"""
     prompt = request.data.decode()
 
-    chat = client.chats.create(model='gemini-2.5-flash')
-    response = chat.send_message(prompt).text
+    # chat = client.chats.create(model='gemini-2.5-flash')
+    # response = chat.send_message(prompt).text
 
-    print(response)
+    # print(response)
 
-    return response
+    # return response
 
 
 if __name__ == '__main__':
