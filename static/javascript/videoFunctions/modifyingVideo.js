@@ -55,7 +55,6 @@ export function scrollTranscript() {
     const wordsAreaBottom = wordsArea.getBoundingClientRect()['bottom'];
 
     const currentTime = state.videoPlayer.getCurrentTime();
-
     const currentTimestamp = findTimestamp(currentTime);
     
     if (!currentTimestamp) {
@@ -127,7 +126,7 @@ export async function onPlayerStateChange() {
  * If the video is playing, the video pauses. If the video is paused, the video starts playing.
  */
 export function toggleVideo() {
-    if (videoIsReady) {
+    if (videoReady()) {
         if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
             state.videoPlayer.pauseVideo();
         }

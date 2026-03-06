@@ -40,6 +40,10 @@ td, th {
     background-color: lightgray;
 }
 
+.translationArea {
+    height: 80px;
+}
+
 .words {
     border-style: solid;
     border-width: 1px;

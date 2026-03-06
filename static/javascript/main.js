@@ -11,15 +11,15 @@ import {
     fetchGeminiPrompt,
     fetchVideoTranscript,
     fetchTranscriptTranslation,
-    fetchUpdatedConfidenceLevels
+    fetchUpdatedConfidenceLevels,
 } from './fetchFunctions.js';
 
 import {
     printText,
     printTranscript,
     printDefinitions,
-    printUserText,
-    updateWordColors
+    updateWordColors,
+    updateHskLevels
 } from "./renderText.js";
 
 import {
@@ -47,34 +47,39 @@ async function onWordClick(event) {
     // If the user clicked a word
     if (event.target.hasAttribute('data-word')) {
 
-        // Scroll to time in the video of the word
-        if (!event.target.parentNode.classList.contains('words')) {
-            for (const element of state.timestampElements) {
-                if (element.classList.contains('currentTime')) {
-                    element.classList.replace('currentTime', 'normal');
+        // Adjust video state if there is one
+        if (state.transcriptShowing) {
+
+            // Scroll to time in the video of the word if a transcript is currently showing
+            if (!event.target.parentNode.classList.contains('words')) {
+                for (const element of state.timestampElements) {
+                    if (element.classList.contains('currentTime')) {
+                        element.classList.replace('currentTime', 'normal');
+                    }
                 }
+                event.target.parentNode.classList.replace('normal', 'currentTime');
+                state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
             }
-            event.target.parentNode.classList.replace('normal', 'currentTime');
-            state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
+            
+            // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
+            if (!(state.clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+                state.videoPlayer.pauseVideo();
+                state.clickedWord = event.target.dataset.word;
+            }
+            else {
+                state.videoPlayer.playVideo();
+                state.clickedWord = '';
+            }
         }
 
         printDefinitions(event.target.dataset.word);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         const confidenceLevels = await fetchUpdatedConfidenceLevels(state.lastIndex, currentIndex);
         updateWordColors(confidenceLevels);
+        updateHskLevels();
 
         if (state.lastIndex < currentIndex) {
             state.lastIndex = currentIndex;
-        }
-        
-        // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
-        if (!(state.clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-            state.videoPlayer.pauseVideo();
-            state.clickedWord = event.target.dataset.word;
-        }
-        else {
-            state.videoPlayer.playVideo();
-            state.clickedWord = '';
         }
     }
 
@@ -86,11 +91,14 @@ async function onWordClick(event) {
     // Toggle video if the user clicked in the transcript area but not on a word
     else {
         state.clickedWord = '';
-        if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
-            state.videoPlayer.pauseVideo();
-        }
-        else {
-            state.videoPlayer.playVideo();
+
+        if (state.transcriptShowing) {
+            if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
+                state.videoPlayer.pauseVideo();
+            }
+            else {
+                state.videoPlayer.playVideo();
+            }
         }
     }
 }
@@ -169,6 +177,19 @@ async function loadVideoAndTranscript() {
     
     const transcript = await fetchVideoTranscript(link);
     printTranscript(transcript);
+
+    state.transcriptShowing = true;
+}
+
+/**
+ * Segments and prints text pasted in by the user
+ */
+export async function printUserText() {
+    const text = document.getElementById('text').value;
+
+    printText(text);
+
+    state.transcriptShowing = false;
 }
 
 /**
@@ -180,7 +201,12 @@ async function generateStory() {
     const response = await fetchGeminiPrompt(prompt);
 
     printText(response);
+
+    state.transcriptShowing = false;
 }
+
+// Show HSK levels as soon as page loads
+updateHskLevels();
 
 // YouTube Iframe stuff
 var tag = document.createElement('script');

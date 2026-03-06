@@ -4,7 +4,8 @@ import {
     fetchTranscriptWordSegments,
     fetchTranscriptConfidenceLevels,
     fetchTranslation,
-    fetchPinyin
+    fetchPinyin,
+    fetchHskPercentages
 } from "./fetchFunctions.js";
 
 import {
@@ -123,15 +124,6 @@ export async function printDefinitions(text) {
 }
 
 /**
- * Segments and prints text pasted in by the user
- */
-export async function printUserText() {
-    const text = document.getElementById('text').value;
-
-    printText(text);
-}
-
-/**
  * Updates the colors of the words on the screen based on the confidence levels of each word.
  * 
  * @param {Object} confidenceLevels Confidence levels of each word
@@ -144,5 +136,16 @@ export function updateWordColors(confidenceLevels) {
             word.dataset.confidence = confidenceLevels[word.dataset.word];
             word.setAttribute('class', state.confidenceClasses[word.dataset.confidence]);
         }
+    }
+}
+
+/**
+ * Updates the table with percent of HSK words user knows
+ */
+export async function updateHskLevels() {
+    const hskPercentages = await fetchHskPercentages();
+
+    for (const level of Object.keys(hskPercentages)) {
+        document.getElementById(level).innerHTML = `${hskPercentages[level]}%`;
     }
 }

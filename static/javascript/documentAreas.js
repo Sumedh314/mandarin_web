@@ -4,7 +4,8 @@ export let state = {
     confidenceClasses: {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'},
     scrollToTimestamp: null,
     lastIndex: -1,
-    clickedWord: ''
+    clickedWord: '',
+    transcriptShowing: false
 };
 
 export const videoTitle = document.getElementById('videoTitle');

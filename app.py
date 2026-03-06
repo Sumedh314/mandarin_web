@@ -21,8 +21,8 @@ load_dotenv()
 app = Flask(__name__)
 translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
-# client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-# chat = client.chats.create(model='gemini-2.5-flash')
+client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+chat = client.chats.create(model='gemini-2.5-flash')
 
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
@@ -236,33 +236,73 @@ def prompt_gemini():
     """Prompts Google Gemini using its API"""
     prompt = request.data.decode()
 
-    # chat = client.chats.create(model='gemini-2.5-flash')
-    # response = chat.send_message(prompt).text
+    chat = client.chats.create(model='gemini-2.5-flash')
+    response = chat.send_message(prompt).text
 
-    # print(response)
+    print(response)
 
-    # return response
+    return response
+
+
+@app.route('/get_hsk_percentages', methods=['GET'])
+def get_hsk_percentages():
+    hsk_percentages = {}
+
+    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
+        user_words = json.load(word_confidence_levels_file)
+
+    with open(f'mandarin_words/words_by_hsk.json', 'r') as hsk_words_file:
+        hsk_words = json.load(hsk_words_file)
+
+    known_words = 0
+
+    hsk_level = 1
+    hsk_standard = 'old'
+
+    while hsk_standard != 'new' or hsk_level <= 7:
+
+        words_to_check = hsk_words[f'{hsk_standard}_{hsk_level}']
+        for word in user_words:
+            if user_words[word] == 3:
+                if word in words_to_check:
+                    known_words += 1
+
+        percent = round(known_words / len(words_to_check) * 100, 2)
+
+        hsk_percentages[f'{hsk_standard}Hsk{hsk_level}Percent'] = percent
+        hsk_level += 1
+        known_words = 0
+
+        if hsk_level == 7:
+            if hsk_standard == 'old':
+                hsk_standard = 'new'
+                hsk_level = 1
+
+    return jsonify(hsk_percentages)
 
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
 
-    # words_list = []
-    # with open('mandarin_words/new_hsk_levels/new_hsk7.json', 'r') as file:
-    #     words = json.load(file)
-    #     for word in words:
-    #         words_list.append(word['simplified'])
-    #     print(words_list)
+    # level = 1
+    # standard = 'old'
 
-    # with open(word_confidence_levels_json, 'r') as file:
-    #     words = json.load(file)
-    #     known_words = 0
-    #     for test_word in words:
-    #         if test_word in words_list:
-    #             if words[test_word] == 3:
-    #                 known_words += 1
-    #                 print(test_word)
-        
-    #     print(known_words)
+    # new_file = {}
+    # with open('mandarin_words/words_by_hsk.json', 'w') as file:
+    #     while standard != 'new' or level <= 7:
+    #         with open(f'mandarin_words/{standard}_hsk_levels/{standard}_hsk{level}.json', 'r') as hsk:
+    #             new_word_list = []
+    #             hsk_words = json.load(hsk)
 
-    # print(transcript)
+    #             for word in hsk_words:
+    #                 new_word_list.append(word['simplified'])
+                
+    #             new_file[f'{standard}_{level}'] = new_word_list
+                
+    #             level += 1
+
+    #             if level == 7:
+    #                 if standard == 'old':
+    #                     standard = 'new'
+    #                     level = 1
+    #     file.write(json.dumps(new_file, indent=4, ensure_ascii=False))

@@ -219,3 +219,15 @@ export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
 
     return updatedConfidenceLevels;
 }
+
+/**
+ * Fetches the percent of each HSK level the user knows to be displayed on the table.
+ */
+export async function fetchHskPercentages() {
+    const hskLevelsResponse = await fetch('/get_hsk_percentages', {
+        method: 'GET'
+    });
+    const hskLevels = await hskLevelsResponse.json();
+
+    return hskLevels;
+}
