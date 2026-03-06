@@ -4,7 +4,8 @@ body {
 
 .upperElements {
     display: flex;
-    width: 500px;
+    width: 1000px;
+    gap: 50px;
 }
 
 table {
@@ -17,6 +18,7 @@ th {
 }
 
 td, th {
+    width: 200px;
     border-width: 1px;
     border-style: solid;
 }

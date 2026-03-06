@@ -15,6 +15,9 @@ import os
 import requests
 import json
 
+import random
+import time
+
 
 load_dotenv()
 
@@ -246,6 +249,7 @@ def prompt_gemini():
 
 @app.route('/get_hsk_percentages', methods=['GET'])
 def get_hsk_percentages():
+    """Returns the percentages of HSK words user knows and is learning for each level and HSK standard"""
     hsk_percentages = {}
 
     with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
@@ -255,6 +259,7 @@ def get_hsk_percentages():
         hsk_words = json.load(hsk_words_file)
 
     known_words = 0
+    learning_words = 0
 
     hsk_level = 1
     hsk_standard = 'old'
@@ -263,15 +268,22 @@ def get_hsk_percentages():
 
         words_to_check = hsk_words[f'{hsk_standard}_{hsk_level}']
         for word in user_words:
-            if user_words[word] == 3:
-                if word in words_to_check:
-                    known_words += 1
+            if user_words[word] != 0:
+                if user_words[word] == 3:
+                    if word in words_to_check:
+                        known_words += 1
+                else:
+                    if word in words_to_check:
+                        learning_words += 1
 
-        percent = round(known_words / len(words_to_check) * 100, 2)
+        known_percent = round(known_words / len(words_to_check) * 100, 2)
+        learning_percent = round(learning_words / len(words_to_check) * 100, 2)
+        total_percent = round(known_percent + learning_percent, 2)
 
-        hsk_percentages[f'{hsk_standard}Hsk{hsk_level}Percent'] = percent
+        hsk_percentages[f'{hsk_standard}Hsk{hsk_level}Percent'] = f'{known_percent}% + {learning_percent}% = {total_percent}%'
         hsk_level += 1
         known_words = 0
+        learning_words = 0
 
         if hsk_level == 7:
             if hsk_standard == 'old':
@@ -281,28 +293,22 @@ def get_hsk_percentages():
     return jsonify(hsk_percentages)
 
 
+@app.route('/get_random_list_words_learning', methods=['POST'])
+def get_random_list_words_learning():
+    num_words = int(request.data.decode())
+    word_list = []
+
+    with open(word_confidence_levels_json, 'r') as words_file:
+        words = json.load(words_file)
+    
+    for word in words:
+        if 0 < words[word] < 3:
+            word_list.append(word)
+    
+    word_list = random.choices(word_list, k=num_words)
+    
+    return jsonify(word_list)
+
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
-
-    # level = 1
-    # standard = 'old'
-
-    # new_file = {}
-    # with open('mandarin_words/words_by_hsk.json', 'w') as file:
-    #     while standard != 'new' or level <= 7:
-    #         with open(f'mandarin_words/{standard}_hsk_levels/{standard}_hsk{level}.json', 'r') as hsk:
-    #             new_word_list = []
-    #             hsk_words = json.load(hsk)
-
-    #             for word in hsk_words:
-    #                 new_word_list.append(word['simplified'])
-                
-    #             new_file[f'{standard}_{level}'] = new_word_list
-                
-    #             level += 1
-
-    #             if level == 7:
-    #                 if standard == 'old':
-    #                     standard = 'new'
-    #                     level = 1
-    #     file.write(json.dumps(new_file, indent=4, ensure_ascii=False))
+    app.run(debug=False, port=5000)

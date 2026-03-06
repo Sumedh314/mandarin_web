@@ -24,8 +24,6 @@ export async function fetchGeminiPrompt(prompt) {
  * @param {string} text text user wants to translate
  */
 export async function fetchTranslation(text) {
-
-    // Get translation from Python
     const translationResponse = await fetch('/translate_text', {
         method: 'POST',
         headers: {
@@ -44,8 +42,6 @@ export async function fetchTranslation(text) {
  * @param {string} text text user wants to get pinyin of
  */
 export async function fetchPinyin(text) {
-
-    // Get translation from Python
     const translationResponse = await fetch('/get_pinyin', {
         method: 'POST',
         headers: {
@@ -98,8 +94,6 @@ export async function fetchTranscriptTranslation() {
  * @param {string} text Text to segment into words
  */
 export async function fetchWordSegments(text) {
-
-    // Get segmented text
     const segmentationResponse = await fetch('/segment_text', {
         method: 'POST',
         headers: {
@@ -230,4 +224,22 @@ export async function fetchHskPercentages() {
     const hskLevels = await hskLevelsResponse.json();
 
     return hskLevels;
+}
+
+/**
+ * Fetches a list of words the user is currently learning.
+ * 
+ * @param {number} numWords Number of words to return in list
+ */
+export async function fetchRandomListWordsLearning(numWords) {
+    const segmentationResponse = await fetch('/get_random_list_words_learning', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: numWords,
+    });
+    const segmentedText = await segmentationResponse.json();
+
+    return segmentedText;
 }

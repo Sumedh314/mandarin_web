@@ -146,6 +146,6 @@ export async function updateHskLevels() {
     const hskPercentages = await fetchHskPercentages();
 
     for (const level of Object.keys(hskPercentages)) {
-        document.getElementById(level).innerHTML = `${hskPercentages[level]}%`;
+        document.getElementById(level).innerHTML = hskPercentages[level];
     }
 }

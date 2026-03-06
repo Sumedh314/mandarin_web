@@ -12,6 +12,7 @@ import {
     fetchVideoTranscript,
     fetchTranscriptTranslation,
     fetchUpdatedConfidenceLevels,
+    fetchRandomListWordsLearning,
 } from './fetchFunctions.js';
 
 import {
@@ -110,8 +111,8 @@ async function onWordClick(event) {
  */
 async function onKeyPressed(event) {
 
-    // Make sure video is ready
-    if (videoReady()) {
+    // Make sure video is ready and transcript is showing
+    if (videoReady() && state.transcriptShowing) {
         const currentTime = state.videoPlayer.getCurrentTime();
         const currentTimestamp = findTimestamp(currentTime);
         const indexOfCurrentTimestamp = state.timestampElements.indexOf(currentTimestamp);
@@ -184,7 +185,7 @@ async function loadVideoAndTranscript() {
 /**
  * Segments and prints text pasted in by the user
  */
-export async function printUserText() {
+async function printUserText() {
     const text = document.getElementById('text').value;
 
     printText(text);
@@ -196,8 +197,8 @@ export async function printUserText() {
  * Prompts Google Gemini to generate a story in Mandarin.
  */
 async function generateStory() {
-    const prompt = "I'm trying to learn Mandarin, and I'm currently a beginner. Can you generate a short, beginner-friendly story in Mandarin for me?";
-
+    const wordList = await fetchRandomListWordsLearning(10);
+    const prompt = `I'm trying to learn Mandarin, and I'm currently a beginner. Can you generate a short, beginner-friendly story in Mandarin for me? Here's a list of words I'm learning that I would like you to incorporate: ${wordList}`;
     const response = await fetchGeminiPrompt(prompt);
 
     printText(response);
