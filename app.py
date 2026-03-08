@@ -191,23 +191,23 @@ def generate_transcript():
     with open(transcripts_json, 'r') as transcript_file:
         transcripts: dict = json.load(transcript_file)
 
-        if video_id in transcripts:
-            transcript = transcripts[video_id]
-        else:
-            transcript_is_new = True
+    if video_id in transcripts:
+        transcript = transcripts[video_id]['transcript']
+    else:
+        transcript_is_new = True
 
-            try:
-                transcript = transcript_generator.list(video_id=video_id).find_transcript(mandarin_and_english_language_codes)
-            except NoTranscriptFound:
-                transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
-                transcript_found = False
+        try:
+            transcript = transcript_generator.list(video_id=video_id).find_transcript(mandarin_and_english_language_codes)
+        except NoTranscriptFound:
+            transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
+            transcript_found = False
 
-            if transcript_found:
-                transcript = transcript.fetch().to_raw_data()
+        if transcript_found:
+            transcript = transcript.fetch().to_raw_data()
 
     if transcript_is_new:
         with open(transcripts_json, 'w') as transcript_file:
-            transcripts[video_id] = transcript
+            transcripts[video_id] = {'transcript': transcript, 'last_index': -1}
             json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
 
     return jsonify(transcript)
@@ -233,6 +233,37 @@ def translate_transcript():
     print(transcript)
     
     return transcript
+
+
+@app.route('/get_last_index', methods=['POST'])
+def get_last_index():
+    """Gets the location of the place the user left off of a transcript"""
+    video_id = request.data.decode()
+
+    with open('user_progress/transcripts.json', 'r') as transcript_file:
+        transcripts = json.load(transcript_file)
+    
+    if video_id in transcripts:
+        return str(transcripts[video_id]['last_index'])
+    else:
+        return None
+
+
+@app.route('/set_last_index', methods=['POST'])
+def set_last_index():
+    """Sets the index of the place the user left off of a transcript"""
+    data = request.json
+    print(data)
+
+    with open('user_progress/transcripts.json', 'r') as transcript_file:
+        transcripts = json.load(transcript_file)
+
+    transcripts[data['videoId']]['last_index'] = data['lastIndex']
+
+    with open('user_progress/transcripts.json', 'w') as transcript_file:
+        json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
+    
+    return ''
 
 
 @app.route('/prompt_gemini', methods=['POST'])

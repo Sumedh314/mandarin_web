@@ -5,17 +5,20 @@ import {
     fetchTranscriptProficiencyLevels,
     fetchTranslation,
     fetchPinyin,
-    fetchHskPercentages
+    fetchHskPercentages,
+    fetchSetLastIndex
 } from "./fetchFunctions.js";
 
 import {
     translationArea,
     videoTitle,
     wordsArea,
-    state
+    state,
+    locationMarker
 } from "./documentAreas.js";
 
 import {formatTimestamp} from "./utils.js"
+import { scrollToLocationMarker } from "./videoFunctions/modifyingVideo.js";
 
 const loadingSign = 'Loading...';
 
@@ -58,8 +61,6 @@ export async function printText(text) {
  * @param {Object} transcript Original transcript with snippets at each timestamp
  */
 export async function printTranscript(transcript) {
-    wordsArea.innerHTML = loadingSign;
-
     const segmentedTranscript = await fetchTranscriptWordSegments(transcript);
     const proficiencyLevels = await fetchTranscriptProficiencyLevels(segmentedTranscript);
 
@@ -71,35 +72,64 @@ export async function printTranscript(transcript) {
     }
     timestamps = timestamps.sort((a, b) => a - b);
 
-    let wordsAreaText = '';
     let wordIndex = 0;
 
     videoTitle.textContent = state.videoPlayer.videoTitle;
+    wordsArea.textContent = '';
 
     for (const timestamp of timestamps) {
-        wordsAreaText += `<span data-timestamp="${timestamp}" class="normal">`;
-        wordsAreaText += `<span class="timestamp">${formatTimestamp(timestamp)}</span> `;
+        let transcriptLine = document.createElement('span');
+        transcriptLine.className = 'normal';
+        transcriptLine.dataset.timestamp = timestamp;
 
+        let timestampElement = document.createElement('span');
+        timestampElement.className = 'timestamp';
+        timestampElement.textContent = formatTimestamp(timestamp);
+
+        transcriptLine.appendChild(timestampElement);
+        
         for (const word of segmentedTranscript[timestamp]) {
             if (word == '\n') {
-                wordsAreaText += '<br>';
+                wordsArea.appendChild(document.createElement('br'));
                 continue;
             }
             if (word in proficiencyLevels) {
-                wordsAreaText += `<span class="${state.proficiencyClasses[proficiencyLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-proficiency="${proficiencyLevels[word]}">${word}</span>`;
+                let wordElement = document.createElement('span');
+                wordElement.className = state.proficiencyClasses[proficiencyLevels[word]];
+                wordElement.dataset.word = word;
+                wordElement.dataset.index = wordIndex;
+                wordElement.dataset.proficiency = proficiencyLevels[word];
+                wordElement.textContent = word;
+
+                transcriptLine.appendChild(wordElement);
+
                 wordIndex++;
             }
             else {
-                wordsAreaText += `<span>${word}</span>`;
+                let wordElement = document.createElement('span');
+                wordElement.textContent = word;
+
+                transcriptLine.appendChild(wordElement);
+            }
+
+            if (wordIndex == state.lastIndex + 1) {
+                transcriptLine.appendChild(locationMarker);
+                locationMarker.removeAttribute('hidden');
             }
         }
 
-        wordsAreaText += '</span><br>';
+        wordsArea.appendChild(transcriptLine);
+        wordsArea.appendChild(document.createElement('br'));
     }
 
-    wordsAreaText += `<br><br><span class="proficiencyThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
+    const doneButton = document.createElement('span');
+    doneButton.className = 'proficiencyThree';
+    doneButton.dataset.action = 'finalWord';
+    doneButton.dataset.index = wordIndex + 1;
+    doneButton.textContent = 'Done';
 
-    wordsArea.innerHTML = wordsAreaText;
+    wordsArea.appendChild(document.createElement('br'));
+    wordsArea.appendChild(doneButton);
 
     // Push timestamps to timestampElements for other functions to use
     for (const timestamp of wordsArea.children) {
@@ -112,6 +142,35 @@ export async function printTranscript(transcript) {
     wordsArea.scrollIntoView({
         behavior: 'smooth'
     });
+
+    state.transcriptShowing = true;
+    // scrollToLocationMarker();
+}
+
+/**
+ * Moves the location marker to show the user's farthest point in the text
+ */
+export function updateLocationMarker() {
+    for (const snippet of wordsArea.getElementsByTagName('span')) {
+        for (const word of snippet.children) {
+            if (word.hasAttribute('data-index')) {
+                if (word.dataset.index == state.lastIndex) {
+                    word.after(locationMarker);
+                    console.log(locationMarker.textContent);
+                    // locationMarker.innerHTML = '|';
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Sets the last index of where the user left off
+ * 
+ * @param {number} index Index to set lastIndex to
+ */
+export async function setLastIndex(index) {
+    await fetchSetLastIndex(state.videoLink, index);
 }
 
 /**

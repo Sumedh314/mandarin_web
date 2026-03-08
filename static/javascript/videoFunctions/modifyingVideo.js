@@ -6,7 +6,8 @@ import {
 
 import {
     wordsArea,
-    state
+    state,
+    locationMarker
 } from "../documentAreas.js";
 
 /**
@@ -84,6 +85,15 @@ export function scrollTranscript() {
     }
 
     state.scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+}
+
+/**
+ * Scrolls the video to the location that the user last left off
+ */
+export function scrollToLocationMarker() {
+    const timestamp = Number(locationMarker.parentNode.dataset.timestamp);
+
+    videoPlayer.seekTo(timestamp, true);
 }
 
 /**

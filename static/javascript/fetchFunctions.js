@@ -89,6 +89,52 @@ export async function fetchTranscriptTranslation() {
 }
 
 /**
+ * Gets the location of the place the user left off of a transcript
+ * 
+ * @param {string} link the link of the YouTube video with the desired transcript
+ */
+export async function fetchLastIndex(link) {
+    const originalLink = new URL(link);
+    const videoId = originalLink.searchParams.get('v');
+
+    const lastIndexResponse = await fetch('/get_last_index', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: videoId,
+    });
+    const lastIndex = await lastIndexResponse.text();
+    console.log(lastIndex);
+
+    return Number(lastIndex);
+}
+/**
+ * Sets the location of the place the user left off of a transcript
+ * 
+ * @param {string} link Link of YouTube video
+ * @param {number} index the index to set the last index to
+ */
+export async function fetchSetLastIndex(link, index) {
+    const originalLink = new URL(link);
+    const videoId = originalLink.searchParams.get('v');
+
+    const data = {'videoId': videoId, 'lastIndex': index};
+    console.log(data);
+
+    const setIndexResponse = await fetch('/set_last_index', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+    const setIndex = await setIndexResponse.text();
+
+    return setIndex;
+}
+
+/**
  * Segments Mandarin text into individual words using Python
  * 
  * @param {string} text Text to segment into words
@@ -132,8 +178,6 @@ export async function fetchTranscriptWordSegments(transcript) {
  * @param {Array} segmentedText Text segmented into individual words
  */
 export async function fetchProficiencyLevels(segmentedText) {
-
-    // Get proficiency levels
     const proficiencyLevelsResponse = await fetch('/get_proficiency_levels', {
         method: 'POST',
         headers: {
@@ -203,7 +247,6 @@ export async function fetchUpdatedProficiencyLevels(lastIndex, currentIndex, isF
             continue;
         }
     }
-    console.log(wordsToUpdate['current']);
 
     // Get proficiency levels from Python
     const updatedProficiencyLevelsResponse = await fetch('/update_proficiency_levels', {

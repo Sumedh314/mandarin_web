@@ -4,7 +4,8 @@ import {
     translateTranscriptButton,
     generateStoryButton,
     wordsArea,
-    state
+    state,
+    locationMarker
 } from "./documentAreas.js";
 
 import {
@@ -13,6 +14,7 @@ import {
     fetchTranscriptTranslation,
     fetchUpdatedProficiencyLevels,
     fetchRandomListWordsLearning,
+    fetchLastIndex,
 } from './fetchFunctions.js';
 
 import {
@@ -20,7 +22,9 @@ import {
     printTranscript,
     printDefinitions,
     updateWordColors,
-    updateHskLevels
+    updateHskLevels,
+    updateLocationMarker,
+    setLastIndex
 } from "./renderText.js";
 
 import {
@@ -78,10 +82,12 @@ async function onWordClick(event) {
         const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex);
         updateWordColors(proficiencyLevels);
         updateHskLevels();
-
+        
         if (state.lastIndex < currentIndex) {
             state.lastIndex = currentIndex;
         }
+        await setLastIndex(state.lastIndex);
+        updateLocationMarker();
     }
 
     // If the user clicked the "Done" button, update word colors, proficiency levels, and HSK levels
@@ -91,6 +97,10 @@ async function onWordClick(event) {
             const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex, true);
             updateWordColors(proficiencyLevels);
             updateHskLevels();
+
+            state.lastIndex = currentIndex;
+            await setLastIndex(state.lastIndex);
+            updateLocationMarker();
         }
     }
 
@@ -175,21 +185,21 @@ async function onKeyPressed(event) {
 }
 
 /**
- * Embeds video, loads transcript, and prints the transcript with clickable words
+ * Embeds video, loads transcript, and prints the transcript with clickable words. Scrolls video to place user left off.
  */
 async function loadVideoAndTranscript() {
-    wordsArea.innerHTML = loadingSign;
-
-    state.lastIndex = -1;
-
+    wordsArea.textContent = loadingSign;
+    
     // Embed video
     const link = document.getElementById('link').value;
+    state.videoLink = link;
     embedVideo(link);
+
+    const lastIndex = await fetchLastIndex(link);
+    state.lastIndex = lastIndex;
     
     const transcript = await fetchVideoTranscript(link);
     printTranscript(transcript);
-
-    state.transcriptShowing = true;
 }
 
 /**
