@@ -1,8 +1,8 @@
 import {
     fetchWordSegments,
-    fetchConfidenceLevels,
+    fetchProficiencyLevels,
     fetchTranscriptWordSegments,
-    fetchTranscriptConfidenceLevels,
+    fetchTranscriptProficiencyLevels,
     fetchTranslation,
     fetchPinyin,
     fetchHskPercentages
@@ -31,15 +31,15 @@ export async function printText(text) {
     let wordIndex = 0;
 
     const segmentedText = await fetchWordSegments(text);
-    const confidenceLevels = await fetchConfidenceLevels(segmentedText);
+    const proficiencyLevels = await fetchProficiencyLevels(segmentedText);
 
     for (const word of segmentedText) {
         if (word == '\n') {
             wordsAreaText += '<br>';
             continue;
         }
-        if (word in confidenceLevels) {
-            wordsAreaText += `<span class="${state.confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span>`;
+        if (word in proficiencyLevels) {
+            wordsAreaText += `<span class="${state.proficiencyClasses[proficiencyLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-proficiency="${proficiencyLevels[word]}">${word}</span>`;
             wordIndex++;
         }
         else {
@@ -47,7 +47,7 @@ export async function printText(text) {
         }
     }
 
-    wordsAreaText += `<br><br><span class="confidenceThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
+    wordsAreaText += `<br><br><span class="proficiencyThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
 
     wordsArea.innerHTML = wordsAreaText;
 }
@@ -61,7 +61,7 @@ export async function printTranscript(transcript) {
     wordsArea.innerHTML = loadingSign;
 
     const segmentedTranscript = await fetchTranscriptWordSegments(transcript);
-    const confidenceLevels = await fetchTranscriptConfidenceLevels(segmentedTranscript);
+    const proficiencyLevels = await fetchTranscriptProficiencyLevels(segmentedTranscript);
 
     state.timestampElements = [];
     let timestamps = [];
@@ -85,8 +85,8 @@ export async function printTranscript(transcript) {
                 wordsAreaText += '<br>';
                 continue;
             }
-            if (word in confidenceLevels) {
-                wordsAreaText += `<span class="${state.confidenceClasses[confidenceLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-confidence="${confidenceLevels[word]}">${word}</span>`;
+            if (word in proficiencyLevels) {
+                wordsAreaText += `<span class="${state.proficiencyClasses[proficiencyLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-proficiency="${proficiencyLevels[word]}">${word}</span>`;
                 wordIndex++;
             }
             else {
@@ -97,7 +97,7 @@ export async function printTranscript(transcript) {
         wordsAreaText += '</span><br>';
     }
 
-    wordsAreaText += `<br><br><span class="confidenceThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
+    wordsAreaText += `<br><br><span class="proficiencyThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
 
     wordsArea.innerHTML = wordsAreaText;
 
@@ -128,17 +128,17 @@ export async function printDefinitions(text) {
 }
 
 /**
- * Updates the colors of the words on the screen based on the confidence levels of each word.
+ * Updates the colors of the words on the screen based on the proficiency levels of each word.
  * 
- * @param {Object} confidenceLevels Confidence levels of each word
+ * @param {Object} proficiencyLevels Proficiency levels of each word
  */
-export function updateWordColors(confidenceLevels) {
+export function updateWordColors(proficiencyLevels) {
     const segmentedWords = wordsArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {
-        if (word.dataset.word in confidenceLevels) {
-            word.dataset.confidence = confidenceLevels[word.dataset.word];
-            word.setAttribute('class', state.confidenceClasses[word.dataset.confidence]);
+        if (word.dataset.word in proficiencyLevels) {
+            word.dataset.proficiency = proficiencyLevels[word.dataset.word];
+            word.setAttribute('class', state.proficiencyClasses[word.dataset.proficiency]);
         }
     }
 }

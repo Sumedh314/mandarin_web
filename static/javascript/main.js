@@ -11,7 +11,7 @@ import {
     fetchGeminiPrompt,
     fetchVideoTranscript,
     fetchTranscriptTranslation,
-    fetchUpdatedConfidenceLevels,
+    fetchUpdatedProficiencyLevels,
     fetchRandomListWordsLearning,
 } from './fetchFunctions.js';
 
@@ -75,8 +75,8 @@ async function onWordClick(event) {
 
         printDefinitions(event.target.dataset.word);
         let currentIndex = parseInt(event.target.dataset.index, 10);
-        const confidenceLevels = await fetchUpdatedConfidenceLevels(state.lastIndex, currentIndex);
-        updateWordColors(confidenceLevels);
+        const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex);
+        updateWordColors(proficiencyLevels);
         updateHskLevels();
 
         if (state.lastIndex < currentIndex) {
@@ -84,12 +84,12 @@ async function onWordClick(event) {
         }
     }
 
-    // If the user clicked the "Done" button, update word colors, confidence levels, and HSK levels
+    // If the user clicked the "Done" button, update word colors, proficiency levels, and HSK levels
     else if (event.target.hasAttribute('data-action')) {
         if (event.target.dataset.action == 'finalWord') {
             let currentIndex = parseInt(event.target.dataset.index, 10);
-            const confidenceLevels = await fetchUpdatedConfidenceLevels(state.lastIndex, currentIndex, true);
-            updateWordColors(confidenceLevels);
+            const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex, true);
+            updateWordColors(proficiencyLevels);
             updateHskLevels();
         }
     }

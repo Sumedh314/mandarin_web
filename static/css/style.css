@@ -78,38 +78,38 @@ td, th {
     opacity: 1;
 }
 
-.confidenceZero {
+.proficiencyZero {
     background-color: lightblue;
     border-radius: 3px;
 }
-.confidenceZero:hover {
+.proficiencyZero:hover {
     cursor: pointer;
     background-color: #add8e670;
 }
 
-.confidenceOne {
+.proficiencyOne {
     border-radius: 3px;
     background-color: #ffdd00;
 }
-.confidenceOne:hover {
+.proficiencyOne:hover {
     cursor: pointer;
     background-color: #ffdd0070;
 }
 
-.confidenceTwo {
+.proficiencyTwo {
     border-radius: 3px;
     background-color: #ffdd0080;
 }
-.confidenceTwo:hover {
+.proficiencyTwo:hover {
     cursor: pointer;
     background-color: #ffdd0030;
 }
 
-.confidenceThree {
+.proficiencyThree {
     border-radius: 3px;
     background-color: white;
 }
-.confidenceThree:hover {
+.proficiencyThree:hover {
     cursor: pointer;
     background-color: lightgray;
 }

@@ -1,7 +1,7 @@
 export let state = {
     timestampElements: [],
     videoPlayer: null,
-    confidenceClasses: {0: 'confidenceZero', 1: 'confidenceOne', 2: 'confidenceTwo', 3:'confidenceThree'},
+    proficiencyClasses: {0: 'proficiencyZero', 1: 'proficiencyOne', 2: 'proficiencyTwo', 3:'proficiencyThree'},
     scrollToTimestamp: null,
     lastIndex: -1,
     clickedWord: '',

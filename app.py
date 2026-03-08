@@ -30,7 +30,7 @@ chat = client.chats.create(model='gemini-2.5-flash')
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
 
-word_confidence_levels_json = 'user_progress/word_confidence_levels.json'
+word_proficiency_levels_json = 'user_progress/word_proficiency_levels.json'
 
 
 @app.route('/')
@@ -106,14 +106,14 @@ def segment_transcript():
     return jsonify(segmented_transcript)
 
 
-@app.route('/get_confidence_levels', methods=['POST'])
-def get_confidence_levels():
-    """Returns the confidence levels of each word of the given text"""
+@app.route('/get_proficiency_levels', methods=['POST'])
+def get_proficiency_levels():
+    """Returns the proficiency levels of each word of the given text"""
     text = request.json
-    text_confidence_levels = {}
+    text_proficiency_levels = {}
 
-    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
-        word_confidence_levels = json.load(word_confidence_levels_file)
+    with open(word_proficiency_levels_json, 'r') as word_proficiency_levels_file:
+        word_proficiency_levels = json.load(word_proficiency_levels_file)
 
     for word in text:
 
@@ -126,54 +126,54 @@ def get_confidence_levels():
         if not word_is_mandarin:
             continue
         
-        if word in word_confidence_levels:
-            confidence = word_confidence_levels[word]
+        if word in word_proficiency_levels:
+            proficiency = word_proficiency_levels[word]
         else:
-            word_confidence_levels[word] = 0
-            confidence = 0
-        text_confidence_levels[word] = confidence
+            word_proficiency_levels[word] = 0
+            proficiency = 0
+        text_proficiency_levels[word] = proficiency
 
-    with open(word_confidence_levels_json, 'w') as word_confidence_levels_file:
-        json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
+    with open(word_proficiency_levels_json, 'w') as word_proficiency_levels_file:
+        json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
 
-    return jsonify(text_confidence_levels)
+    return jsonify(text_proficiency_levels)
 
 
-@app.route('/update_confidence_levels', methods=['POST'])
-def update_confidence_levels():
-    """Updates the word confidence levels with new data from JavaScript"""
-    confidence_levels_to_update = request.json
-    updated_confidence_levels = {}
+@app.route('/update_proficiency_levels', methods=['POST'])
+def update_proficiency_levels():
+    """Updates the word proficiency levels with new data from JavaScript"""
+    proficiency_levels_to_update = request.json
+    updated_proficiency_levels = {}
 
-    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
-        word_confidence_levels = json.load(word_confidence_levels_file)
+    with open(word_proficiency_levels_json, 'r') as word_proficiency_levels_file:
+        word_proficiency_levels = json.load(word_proficiency_levels_file)
     
-    current_word = confidence_levels_to_update['current']
+    current_word = proficiency_levels_to_update['current']
     if current_word != '':
-        confidence = word_confidence_levels[current_word]
-        if confidence == 0:
-            confidence = 1
-        elif 1 < confidence <= 3:
-            confidence -= 1
-        word_confidence_levels[current_word] = confidence
-        updated_confidence_levels[current_word] = confidence
+        proficiency = word_proficiency_levels[current_word]
+        if proficiency == 0:
+            proficiency = 1
+        elif 1 < proficiency <= 3:
+            proficiency -= 1
+        word_proficiency_levels[current_word] = proficiency
+        updated_proficiency_levels[current_word] = proficiency
 
-    previous_words = confidence_levels_to_update['previous']
+    previous_words = proficiency_levels_to_update['previous']
     for word in previous_words:
-        confidence = word_confidence_levels[word]
+        proficiency = word_proficiency_levels[word]
 
-        if confidence == 0:
-            confidence = 3
-        elif 0 < confidence < 3:
-            confidence += 1
+        if proficiency == 0:
+            proficiency = 3
+        elif 0 < proficiency < 3:
+            proficiency += 1
         
-        word_confidence_levels[word] = confidence
-        updated_confidence_levels[word] = confidence
+        word_proficiency_levels[word] = proficiency
+        updated_proficiency_levels[word] = proficiency
         
-    with open(word_confidence_levels_json, 'w') as word_confidence_levels_file:
-        json.dump(word_confidence_levels, word_confidence_levels_file, ensure_ascii=False, indent=4)
+    with open(word_proficiency_levels_json, 'w') as word_proficiency_levels_file:
+        json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
     
-    return jsonify(updated_confidence_levels)
+    return jsonify(updated_proficiency_levels)
 
 
 @app.route('/generate_transcript', methods=['POST'])
@@ -253,8 +253,8 @@ def get_hsk_percentages():
     """Returns the percentages of HSK words user knows and is learning for each level and HSK standard"""
     hsk_percentages = {}
 
-    with open(word_confidence_levels_json, 'r') as word_confidence_levels_file:
-        user_words = json.load(word_confidence_levels_file)
+    with open(word_proficiency_levels_json, 'r') as word_proficiency_levels_file:
+        user_words = json.load(word_proficiency_levels_file)
 
     with open(f'mandarin_words/words_by_hsk.json', 'r') as hsk_words_file:
         hsk_words = json.load(hsk_words_file)
@@ -299,7 +299,7 @@ def get_random_list_words_learning():
     num_words = int(request.data.decode())
     word_list = []
 
-    with open(word_confidence_levels_json, 'r') as words_file:
+    with open(word_proficiency_levels_json, 'r') as words_file:
         words = json.load(words_file)
     
     for word in words:

@@ -127,31 +127,31 @@ export async function fetchTranscriptWordSegments(transcript) {
 }
 
 /**
- * fetchs the confidence levels of each word of the given text
+ * fetchs the proficiency levels of each word of the given text
  * 
  * @param {Array} segmentedText Text segmented into individual words
  */
-export async function fetchConfidenceLevels(segmentedText) {
+export async function fetchProficiencyLevels(segmentedText) {
 
-    // Get confidence levels
-    const confidenceLevelsResponse = await fetch('/get_confidence_levels', {
+    // Get proficiency levels
+    const proficiencyLevelsResponse = await fetch('/get_proficiency_levels', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(segmentedText),
     });
-    const confidenceLevels = await confidenceLevelsResponse.json();
+    const proficiencyLevels = await proficiencyLevelsResponse.json();
 
-    return confidenceLevels;
+    return proficiencyLevels;
 }
 
 /**
- * fetchs the confidence levels of each word in a transcript.
+ * fetchs the proficiency levels of each word in a transcript.
  * 
  * @param {Object} segmentedTranscript Transcript segmented into individual words
  */
-export async function fetchTranscriptConfidenceLevels(segmentedTranscript) {
+export async function fetchTranscriptProficiencyLevels(segmentedTranscript) {
     
     // Push all words of transcript into transcriptWords without including timestamps.
     let transcriptWords = []
@@ -161,19 +161,19 @@ export async function fetchTranscriptConfidenceLevels(segmentedTranscript) {
         }
     }
 
-    const transcriptConfidencesLevels = await fetchConfidenceLevels(transcriptWords);
+    const transcriptProficiencysLevels = await fetchProficiencyLevels(transcriptWords);
 
-    return transcriptConfidencesLevels;
+    return transcriptProficiencysLevels;
 }
 
 /**
- * Updates the confidence levels of words based on the word the user clicked
+ * Updates the proficiency levels of words based on the word the user clicked
  * 
  * @param {Number} lastIndex Index of the last word that the user clicked
  * @param {Number} currentIndex Index of the word that the user clicked
  * @param {Boolean} isFinished Whether or not the user clicked the "Done" button
  */
-export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex, isFinished = false) {
+export async function fetchUpdatedProficiencyLevels(lastIndex, currentIndex, isFinished = false) {
     if (currentIndex == lastIndex) {
         return {};
     }
@@ -205,17 +205,17 @@ export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex, isFi
     }
     console.log(wordsToUpdate['current']);
 
-    // Get confidence levels from Python
-    const updatedConfidenceLevelsResponse = await fetch('/update_confidence_levels', {
+    // Get proficiency levels from Python
+    const updatedProficiencyLevelsResponse = await fetch('/update_proficiency_levels', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(wordsToUpdate),
     });
-    const updatedConfidenceLevels = await updatedConfidenceLevelsResponse.json();
+    const updatedProficiencyLevels = await updatedProficiencyLevelsResponse.json();
 
-    return updatedConfidenceLevels;
+    return updatedProficiencyLevels;
 }
 
 /**
