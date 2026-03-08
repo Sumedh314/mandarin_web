@@ -84,6 +84,16 @@ async function onWordClick(event) {
         }
     }
 
+    // If the user clicked the "Done" button, update word colors, confidence levels, and HSK levels
+    else if (event.target.hasAttribute('data-action')) {
+        if (event.target.dataset.action == 'finalWord') {
+            let currentIndex = parseInt(event.target.dataset.index, 10);
+            const confidenceLevels = await fetchUpdatedConfidenceLevels(state.lastIndex, currentIndex, true);
+            updateWordColors(confidenceLevels);
+            updateHskLevels();
+        }
+    }
+
     // If the user clicked a timestamp, move the video to that timestamp
     else if (event.target.classList.contains('timestamp')) {
         state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);

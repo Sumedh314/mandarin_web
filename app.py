@@ -149,13 +149,14 @@ def update_confidence_levels():
         word_confidence_levels = json.load(word_confidence_levels_file)
     
     current_word = confidence_levels_to_update['current']
-    confidence = word_confidence_levels[current_word]
-    if confidence == 0:
-        confidence = 1
-    elif 1 < confidence <= 3:
-        confidence -= 1
-    word_confidence_levels[current_word] = confidence
-    updated_confidence_levels[current_word] = confidence
+    if current_word != '':
+        confidence = word_confidence_levels[current_word]
+        if confidence == 0:
+            confidence = 1
+        elif 1 < confidence <= 3:
+            confidence -= 1
+        word_confidence_levels[current_word] = confidence
+        updated_confidence_levels[current_word] = confidence
 
     previous_words = confidence_levels_to_update['previous']
     for word in previous_words:

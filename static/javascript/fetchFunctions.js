@@ -171,8 +171,9 @@ export async function fetchTranscriptConfidenceLevels(segmentedTranscript) {
  * 
  * @param {Number} lastIndex Index of the last word that the user clicked
  * @param {Number} currentIndex Index of the word that the user clicked
+ * @param {Boolean} isFinished Whether or not the user clicked the "Done" button
  */
-export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
+export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex, isFinished = false) {
     if (currentIndex == lastIndex) {
         return {};
     }
@@ -190,7 +191,9 @@ export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
                 }
             }
             else if (wordIndex == currentIndex) {
-                wordsToUpdate['current'] = word.dataset.word;
+                if (!isFinished) {
+                    wordsToUpdate['current'] = word.dataset.word;
+                }
             }
             else {
                 break;
@@ -200,6 +203,7 @@ export async function fetchUpdatedConfidenceLevels(lastIndex, currentIndex) {
             continue;
         }
     }
+    console.log(wordsToUpdate['current']);
 
     // Get confidence levels from Python
     const updatedConfidenceLevelsResponse = await fetch('/update_confidence_levels', {

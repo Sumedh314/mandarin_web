@@ -47,6 +47,8 @@ export async function printText(text) {
         }
     }
 
+    wordsAreaText += `<br><br><span class="confidenceThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
+
     wordsArea.innerHTML = wordsAreaText;
 }
 
@@ -94,6 +96,8 @@ export async function printTranscript(transcript) {
 
         wordsAreaText += '</span><br>';
     }
+
+    wordsAreaText += `<br><br><span class="confidenceThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
 
     wordsArea.innerHTML = wordsAreaText;
 
