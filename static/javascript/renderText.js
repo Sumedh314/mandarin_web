@@ -7,7 +7,7 @@ import {
     fetchPinyin,
     fetchHskPercentages,
     fetchSetLastIndex
-} from "./fetchFunctions.js";
+} from "./fetchData.js";
 
 import {
     translationArea,
@@ -18,7 +18,6 @@ import {
 } from "./documentAreas.js";
 
 import {formatTimestamp} from "./utils.js"
-import { scrollToLocationMarker } from "./videoFunctions/modifyingVideo.js";
 
 const loadingSign = 'Loading...';
 
@@ -156,8 +155,6 @@ export function updateLocationMarker() {
             if (word.hasAttribute('data-index')) {
                 if (word.dataset.index == state.lastIndex) {
                     word.after(locationMarker);
-                    console.log(locationMarker.textContent);
-                    // locationMarker.innerHTML = '|';
                 }
             }
         }

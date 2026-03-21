@@ -43,10 +43,11 @@ td, th {
 }
 
 .translationArea {
-    height: 80px;
+    min-height: 80px;
+    height: auto;
 }
 
-.words {
+.wordsArea {
     border-style: solid;
     border-width: 1px;
     border-color: lightgray;
@@ -116,4 +117,5 @@ td, th {
 
 .locationMarker {
     font-size: larger;
+    color: red;
 }

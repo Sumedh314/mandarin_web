@@ -31,6 +31,8 @@ mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
 
 word_proficiency_levels_json = 'user_progress/word_proficiency_levels.json'
+practice_sentences_json = 'user_progress/practice_sentences.json'
+saved_words_json = 'user_progress/saved_words.json'
 
 
 @app.route('/')
@@ -340,6 +342,28 @@ def get_random_list_words_learning():
     word_list = random.choices(word_list, k=num_words)
     
     return jsonify(word_list)
+
+
+@app.route('/update_practice_sentences', methods=['POST'])
+def update_practice_sentences():
+    """Adds to practice_sentences JSON file"""
+    sentencesList = request.json
+
+    with open(practice_sentences_json, 'a') as practice_sentences_file:
+        json.dump(sentencesList, practice_sentences_file, indent=4, ensure_ascii=False)
+    
+    return sentencesList
+
+
+@app.route('/add_saved_word', methods=['POST'])
+def add_saved_word():
+    """Adds a word to saved_words.json"""
+    word = request.data.decode()
+
+    with open(saved_words_json, 'a') as saved_words_file:
+        json.dump(word, saved_words_file, indent=4, ensure_ascii=False)
+    
+    return word
 
 
 if __name__ == '__main__':

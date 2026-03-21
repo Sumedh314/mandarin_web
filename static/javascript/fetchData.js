@@ -19,6 +19,24 @@ export async function fetchGeminiPrompt(prompt) {
 }
 
 /**
+ * Adds list of practice sentences to practice_sentences.json
+ * 
+ * @param {Array} sentencesList List of sentences to add
+ */
+export async function updatePracticeSentences(sentencesList) {
+    const updatePracticeSentencesResponse = await fetch('/update_practice_sentences', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sentencesList),
+    });
+    const result = await updatePracticeSentencesResponse.text();
+
+    return result;
+}
+
+/**
  * Gets the English translation of a word from Python.
  * 
  * @param {string} text text user wants to translate
@@ -105,7 +123,6 @@ export async function fetchLastIndex(link) {
         body: videoId,
     });
     const lastIndex = await lastIndexResponse.text();
-    console.log(lastIndex);
 
     return Number(lastIndex);
 }
@@ -289,4 +306,22 @@ export async function fetchRandomListWordsLearning(numWords) {
     const segmentedText = await segmentationResponse.json();
 
     return segmentedText;
+}
+
+/**
+ * Adds a word to saved_words.json
+ * 
+ * @param {string} word Word to save
+ */
+export async function addSavedWord(word) {
+    const addSavedWordResponse = await fetch('/add_saved_word', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: word,
+    });
+    const savedWord = await addSavedWordResponse.text();
+
+    return savedWord;
 }
