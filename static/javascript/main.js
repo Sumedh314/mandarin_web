@@ -17,7 +17,7 @@ import {
     fetchRandomListWordsLearning,
     fetchLastIndex,
     updatePracticeSentences,
-    addSavedWord,
+    toggleSavedWord,
 } from './fetchData.js';
 import { generatePracticeSentence } from "./practiceWords.js";
 
@@ -28,7 +28,8 @@ import {
     updateWordColors,
     updateHskLevels,
     updateLocationMarker,
-    setLastIndex
+    setLastIndex,
+    updateWordUnderlines
 } from "./renderText.js";
 
 import {
@@ -55,6 +56,7 @@ async function onWordClick(event) {
     
     // If the user clicked a word
     if (event.target.hasAttribute('data-word')) {
+        state.clickedWord = event.target.dataset.word;
 
         // Adjust video state if there is one
         if (state.transcriptShowing) {
@@ -77,7 +79,6 @@ async function onWordClick(event) {
             }
             else {
                 state.videoPlayer.playVideo();
-                state.clickedWord = '';
             }
         }
 
@@ -120,8 +121,6 @@ async function onWordClick(event) {
 
     // Toggle video if the user clicked in the transcript area but not on a word
     else {
-        state.clickedWord = '';
-
         if (state.transcriptShowing) {
             if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
                 state.videoPlayer.pauseVideo();
@@ -130,19 +129,6 @@ async function onWordClick(event) {
                 state.videoPlayer.playVideo();
             }
         }
-    }
-}
-
-/**
- * Runs when a word is double clicked
- * 
- * @param {object} event Word that was double clicked
- */
-async function onWordDoubleClick(event) {
-
-    // If the user clicked a word
-    if (event.target.hasAttribute('data-word')) {
-        await addSavedWord(event.target.dataset.word);
     }
 }
 
@@ -159,10 +145,10 @@ async function onKeyPressed(event) {
         const currentTimestamp = findTimestamp(currentTime);
         const indexOfCurrentTimestamp = state.timestampElements.indexOf(currentTimestamp);
 
-        const allKeys = [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'j', 'l'];
+        const timeChangeKeys = [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'j', 'l'];
 
-        // Make sure key pressed is within one of the keys that should do something
-        if (allKeys.includes(event.key)) {
+        // Make sure key pressed is within one of the keys that should adjust the video
+        if (timeChangeKeys.includes(event.key)) {
             event.preventDefault();
 
             let newTime = 0;
@@ -203,6 +189,14 @@ async function onKeyPressed(event) {
 
             state.videoPlayer.seekTo(newTime);
         }
+    }
+
+    console.log(';asldkfjas');
+    // Toggle word save if user presses the letter s
+    if (event.key === 's') {
+        console.log(state.clickedWord);
+        await toggleSavedWord(state.clickedWord);
+        updateWordUnderlines(state.clickedWord);
     }
 }
 
@@ -281,10 +275,4 @@ translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
 generateStoryButton.addEventListener('click', generateStory);
 practiceWordsButton.addEventListener('click', practiceWords);
 wordsArea.addEventListener('click', (event) => onWordClick(event));
-wordsArea.addEventListener('dblclick', (event) => onWordDoubleClick(event));
-wordsArea.addEventListener('mousedown', (event) => {
-    if (event.detail > 1) {
-        event.preventDefault();
-    }
-})
 window.addEventListener('keydown', (event) => onKeyPressed(event));

@@ -29,29 +29,45 @@ const loadingSign = 'Loading...';
 export async function printText(text) {
     state.lastIndex = -1;
 
-    let wordsAreaText = '';
     let wordIndex = 0;
+    wordsArea.textContent = '';
 
     const segmentedText = await fetchWordSegments(text);
     const proficiencyLevels = await fetchProficiencyLevels(segmentedText);
 
     for (const word of segmentedText) {
         if (word == '\n') {
-            wordsAreaText += '<br>';
+            wordsArea.appendChild(document.createElement('br'));
             continue;
         }
         if (word in proficiencyLevels) {
-            wordsAreaText += `<span class="${state.proficiencyClasses[proficiencyLevels[word]]}" data-word="${word}" data-index="${wordIndex}" data-proficiency="${proficiencyLevels[word]}">${word}</span>`;
+            let wordElement = document.createElement('span');
+            wordElement.classList.add('word');
+            wordElement.classList.add(state.proficiencyClasses[proficiencyLevels[word]]);
+            wordElement.dataset.word = word;
+            wordElement.dataset.index = wordIndex;
+            wordElement.dataset.proficiency = proficiencyLevels[word];
+            wordElement.textContent = word;
+
+            wordsArea.appendChild(wordElement);
             wordIndex++;
         }
         else {
-            wordsAreaText += `<span>${word}</span>`;
+            let wordElement = document.createElement('span');
+            wordElement.textContent = word;
+            wordsArea.appendChild(wordElement);
         }
     }
 
-    wordsAreaText += `<br><br><span class="proficiencyThree" data-action="finalWord" data-index="${wordIndex + 1}">Done</span>`;
+    const doneButton = document.createElement('span');
+    doneButton.className = 'proficiencyThree';
+    doneButton.dataset.action = 'finalWord';
+    doneButton.dataset.index = wordIndex + 1;
+    doneButton.textContent = 'Done';
 
-    wordsArea.innerHTML = wordsAreaText;
+    wordsArea.appendChild(document.createElement('br'));
+    wordsArea.appendChild(document.createElement('br'));
+    wordsArea.appendChild(doneButton);
 }
 
 /**
@@ -94,7 +110,8 @@ export async function printTranscript(transcript) {
             }
             if (word in proficiencyLevels) {
                 let wordElement = document.createElement('span');
-                wordElement.className = state.proficiencyClasses[proficiencyLevels[word]];
+                wordElement.classList.add('word');
+                wordElement.classList.add(state.proficiencyClasses[proficiencyLevels[word]]);
                 wordElement.dataset.word = word;
                 wordElement.dataset.index = wordIndex;
                 wordElement.dataset.proficiency = proficiencyLevels[word];
@@ -194,7 +211,22 @@ export function updateWordColors(proficiencyLevels) {
     for (const word of segmentedWords) {
         if (word.dataset.word in proficiencyLevels) {
             word.dataset.proficiency = proficiencyLevels[word.dataset.word];
-            word.setAttribute('class', state.proficiencyClasses[word.dataset.proficiency]);
+            word.classList.add(state.proficiencyClasses[word.dataset.proficiency]);
+        }
+    }
+}
+
+/**
+ * Updates the words that should be underlined based on if the user saved the word or not
+ * 
+ * @param {string} wordToUpdate Word to update underlines for
+ */
+export function updateWordUnderlines(wordToUpdate) {
+    const segmentedWords = wordsArea.getElementsByTagName('span');
+
+    for (const word of segmentedWords) {
+        if (word.dataset.word == wordToUpdate) {
+            word.classList.toggle('savedWord');
         }
     }
 }

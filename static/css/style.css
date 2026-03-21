@@ -80,8 +80,8 @@ td, th {
 }
 
 .proficiencyZero {
-    background-color: lightblue;
     border-radius: 3px;
+    background-color: lightblue;
 }
 .proficiencyZero:hover {
     cursor: pointer;
@@ -118,4 +118,16 @@ td, th {
 .locationMarker {
     font-size: larger;
     color: red;
+}
+
+.savedWord {
+    text-decoration: underline;
+}
+
+/* .saveWordButton {
+    opacity: 0;
+} */
+
+.word:hover .saveWordButton {
+    opacity: 1;
 }

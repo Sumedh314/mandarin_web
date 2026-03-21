@@ -296,16 +296,34 @@ export async function fetchHskPercentages() {
  * @param {number} numWords Number of words to return in list
  */
 export async function fetchRandomListWordsLearning(numWords) {
-    const segmentationResponse = await fetch('/get_random_list_words_learning', {
+    const wordListResponse = await fetch('/get_random_list_words_learning', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
         },
         body: numWords,
     });
-    const segmentedText = await segmentationResponse.json();
+    const wordList = await wordListResponse.json();
 
-    return segmentedText;
+    return wordList;
+}
+
+/**
+ * Fetches a list of words the user has saved.
+ * 
+ * @param {number} numWords Number of words to return in list
+ */
+export async function fetchRandomListWordsSaved(numWords) {
+    const wordListResponse = await fetch('/get_random_list_words_saved', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: numWords,
+    });
+    const wordList = await wordListResponse.json();
+
+    return wordList;
 }
 
 /**
@@ -313,8 +331,8 @@ export async function fetchRandomListWordsLearning(numWords) {
  * 
  * @param {string} word Word to save
  */
-export async function addSavedWord(word) {
-    const addSavedWordResponse = await fetch('/add_saved_word', {
+export async function toggleSavedWord(word) {
+    const addSavedWordResponse = await fetch('/toggle_saved_word', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',

@@ -344,6 +344,23 @@ def get_random_list_words_learning():
     return jsonify(word_list)
 
 
+@app.route('/get_random_list_words_saved', methods=['POST'])
+def get_random_list_words_saved():
+    num_words = int(request.data.decode())
+    word_list = []
+
+    with open(saved_words_json, 'r') as words_file:
+        words = json.load(words_file)
+    
+    for word in words:
+        if 0 < words[word] < 3:
+            word_list.append(word)
+    
+    word_list = random.choices(word_list, k=num_words)
+    
+    return jsonify(word_list)
+
+
 @app.route('/update_practice_sentences', methods=['POST'])
 def update_practice_sentences():
     """Adds to practice_sentences JSON file"""
@@ -355,13 +372,21 @@ def update_practice_sentences():
     return sentencesList
 
 
-@app.route('/add_saved_word', methods=['POST'])
-def add_saved_word():
+@app.route('/toggle_saved_word', methods=['POST'])
+def toggle_saved_word():
     """Adds a word to saved_words.json"""
     word = request.data.decode()
 
-    with open(saved_words_json, 'a') as saved_words_file:
-        json.dump(word, saved_words_file, indent=4, ensure_ascii=False)
+    with open(saved_words_json, 'r') as saved_words_file:
+        saved_words: list = json.load(saved_words_file)
+    
+    if word in saved_words:
+        saved_words.remove(word)
+    else:
+        saved_words.append(word)
+
+    with open(saved_words_json, 'w') as saved_words_file:
+        json.dump(saved_words, saved_words_file, indent=4, ensure_ascii=False)
     
     return word
 
