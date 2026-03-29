@@ -1,10 +1,17 @@
 {
-    "name": "Mandarin Extension",
-    "description": "al;sdkfj;k",
-    "version": "1.0",
     "manifest_version": 3,
-    "action": {
-        "default_popup": "hello.html",
-        "default_icon": "Untitled presentation.png"
-    }
+    "name": "Mandarin Extension",
+    "version": "1.0",
+    "description": "al;sdkfj;k",
+
+    "icons": {
+        "32": "Untitled presentation.png"
+    },
+
+    "content_scripts": [
+        {
+            "js": ["scripts/chrome-main.js"],
+            "matches": ["<all_urls>"]
+        }
+    ]
 }

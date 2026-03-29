@@ -6,7 +6,8 @@ import {
     wordsArea,
     state,
     locationMarker,
-    practiceWordsButton
+    practiceWordsButton,
+    wordMenu
 } from "./documentAreas.js";
 
 import {
@@ -29,7 +30,8 @@ import {
     updateHskLevels,
     updateLocationMarker,
     setLastIndex,
-    updateWordUnderlines
+    updateWordUnderlines,
+    showWordMenu
 } from "./renderText.js";
 
 import {
@@ -64,11 +66,11 @@ async function onWordClick(event) {
             // Scroll to time in the video of the word if a transcript is currently showing
             if (!event.target.parentNode.classList.contains('words')) {
                 for (const element of state.timestampElements) {
-                    if (element.classList.contains('currentTime')) {
-                        element.classList.replace('currentTime', 'normal');
+                    if (element.classList.contains('current-time')) {
+                        element.classList.replace('current-time', 'normal');
                     }
                 }
-                event.target.parentNode.classList.replace('normal', 'currentTime');
+                event.target.parentNode.classList.replace('normal', 'current-time');
                 state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
             }
             
@@ -83,9 +85,11 @@ async function onWordClick(event) {
         }
 
         // Print word's definitions and update colors and HSK table
-        printDefinitions(event.target.dataset.word);
+        // printDefinitions(event.target.dataset.word);
+        showWordMenu(event.target);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex);
+        console.log(proficiencyLevels);
         updateWordColors(proficiencyLevels);
         updateHskLevels();
         
@@ -100,7 +104,7 @@ async function onWordClick(event) {
 
     // If the user clicked the "Done" button, update word colors, proficiency levels, and HSK levels
     else if (event.target.hasAttribute('data-action')) {
-        if (event.target.dataset.action == 'finalWord') {
+        if (event.target.dataset.action == 'final-word') {
             let currentIndex = parseInt(event.target.dataset.index, 10);
             const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex, true);
             updateWordColors(proficiencyLevels);
@@ -191,7 +195,6 @@ async function onKeyPressed(event) {
         }
     }
 
-    console.log(';asldkfjas');
     // Toggle word save if user presses the letter s
     if (event.key === 's') {
         console.log(state.clickedWord);

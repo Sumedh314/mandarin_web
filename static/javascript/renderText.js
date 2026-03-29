@@ -14,7 +14,9 @@ import {
     videoTitle,
     wordsArea,
     state,
-    locationMarker
+    locationMarker,
+    wordMenu,
+    tooltipTranslation
 } from "./documentAreas.js";
 
 import {formatTimestamp} from "./utils.js"
@@ -60,8 +62,8 @@ export async function printText(text) {
     }
 
     const doneButton = document.createElement('span');
-    doneButton.className = 'proficiencyThree';
-    doneButton.dataset.action = 'finalWord';
+    doneButton.className = state.proficiencyClasses[3];
+    doneButton.dataset.action = 'final-word';
     doneButton.dataset.index = wordIndex + 1;
     doneButton.textContent = 'Done';
 
@@ -130,7 +132,7 @@ export async function printTranscript(transcript) {
 
             if (wordIndex == state.lastIndex + 1) {
                 transcriptLine.appendChild(locationMarker);
-                locationMarker.removeAttribute('hidden');
+                locationMarker.hidden = false;
             }
         }
 
@@ -139,8 +141,8 @@ export async function printTranscript(transcript) {
     }
 
     const doneButton = document.createElement('span');
-    doneButton.className = 'proficiencyThree';
-    doneButton.dataset.action = 'finalWord';
+    doneButton.className = state.proficiencyClasses[3];
+    doneButton.dataset.action = 'final-word';
     doneButton.dataset.index = wordIndex + 1;
     doneButton.textContent = 'Done';
 
@@ -201,6 +203,26 @@ export async function printDefinitions(text) {
 }
 
 /**
+ * Shows the word menu when the user clicks on a word.
+ * 
+ * @param {object} element The word for which to show the menu
+ */
+export async function showWordMenu(element) {
+    const wordLeftBoundary = element.getBoundingClientRect()['left'];
+    element.after(wordMenu);
+    wordMenu.style.left = wordLeftBoundary - 10 + 'px';
+    wordMenu.hidden = false;
+
+    console.log('al;sdkfja;sldkfjas;ldkj');
+
+    const translation = await fetchTranslation(element.dataset.word);
+    const pinyin = await fetchPinyin(element.dataset.word);
+    console.log(pinyin);
+
+    tooltipTranslation.innerHTML = `${element.dataset.word}<br>${pinyin}<br>${translation}`;
+}
+
+/**
  * Updates the colors of the words on the screen based on the proficiency levels of each word.
  * 
  * @param {Object} proficiencyLevels Proficiency levels of each word
@@ -211,6 +233,9 @@ export function updateWordColors(proficiencyLevels) {
     for (const word of segmentedWords) {
         if (word.dataset.word in proficiencyLevels) {
             word.dataset.proficiency = proficiencyLevels[word.dataset.word];
+            for (const proficiencyClass of Object.values(state.proficiencyClasses)) {
+                word.classList.remove(proficiencyClass);
+            }
             word.classList.add(state.proficiencyClasses[word.dataset.proficiency]);
         }
     }
@@ -226,7 +251,7 @@ export function updateWordUnderlines(wordToUpdate) {
 
     for (const word of segmentedWords) {
         if (word.dataset.word == wordToUpdate) {
-            word.classList.toggle('savedWord');
+            word.classList.toggle('saved-word');
         }
     }
 }

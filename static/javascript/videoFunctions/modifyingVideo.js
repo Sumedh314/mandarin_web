@@ -28,7 +28,7 @@ export async function embedVideo(link) {
 
     // Embed video
     if (!videoReady()) {
-        state.videoPlayer = new YT.Player('videoLocation', {
+        state.videoPlayer = new YT.Player('video-location', {
             height: 450,
             width: 800,
             videoId: videoId,

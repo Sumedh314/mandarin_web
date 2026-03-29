@@ -5,31 +5,31 @@
 {% endblock %}
 
 {% block body %}
-<h1>Program</h1>
+<h1 class="program">Program</h1>
 
-<div class="upperElements">
+<div class="upper-elements">
     <div id="inputs">
-        <div id="textEntry">
+        <div id="text-entry">
             <p>Text: </p>
-            <input id="text" type="text" class="textBox">
-            <button id="textButton" type="button" class="button">Submit</button>
+            <input id="text" type="text" class="text-box">
+            <button id="text-button" type="button">Enter</button>
         </div>
         
-        <div id="linkEntry">
+        <div id="link-entry">
             <p>YouTube link:</p>
-            <input id="link" type="text", class="textBox">
-            <button id="videoButton" type="button" class="button">Submit</button>
+            <input id="link" type="text", class="text-box">
+            <button id="video-button" type="button">Enter</button>
         </div>
         
-        <button id="translateTranscriptButton" type="button" class="button" hidden>Translate Transcript</button>
+        <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
         <br>
-        <button id="generateStoryButton" type="button" class="button">Generate Story</button>
+        <button id="generate-story-button" type="button">Generate Story</button>
         <br>
-        <button id="practiceWordsButton" type="button" class="button">Practice words</button>
+        <button id="practice-words-button" type="button">Practice words</button>
     </div>
 
-    <div id="hskProgress">
-        <table id="hskTable" class="hskTable">
+    <div id="hsk-progress">
+        <table id="hsk-table" class="hsk-table">
             <tr>
                 <th>HSK Level</th>
                 <th>Old Levels %</th>
@@ -37,38 +37,38 @@
             </tr>
             <tr>
                 <td>HSK 1</td>
-                <td id="oldHsk1Percent"></td>
-                <td id="newHsk1Percent"></td>
+                <td id="old-hsk-1-percent"></td>
+                <td id="new-hsk-1-percent"></td>
             </tr>
             <tr>
                 <td>HSK 2</td>
-                <td id="oldHsk2Percent"></td>
-                <td id="newHsk2Percent"></td>
+                <td id="old-hsk-2-percent"></td>
+                <td id="new-hsk-2-percent"></td>
             </tr>
             <tr>
                 <td>HSK 3</td>
-                <td id="oldHsk3Percent"></td>
-                <td id="newHsk3Percent"></td>
+                <td id="old-hsk-3-percent"></td>
+                <td id="new-hsk-3-percent"></td>
             </tr>
             <tr>
                 <td>HSK 4</td>
-                <td id="oldHsk4Percent"></td>
-                <td id="newHsk4Percent"></td>
+                <td id="old-hsk-4-percent"></td>
+                <td id="new-hsk-4-percent"></td>
             </tr>
             <tr>
                 <td>HSK 5</td>
-                <td id="oldHsk5Percent"></td>
-                <td id="newHsk5Percent"></td>
+                <td id="old-hsk-5-percent"></td>
+                <td id="new-hsk-5-percent"></td>
             </tr>
             <tr>
                 <td>HSK 6</td>
-                <td id="oldHsk6Percent"></td>
-                <td id="newHsk6Percent"></td>
+                <td id="old-hsk-6-percent"></td>
+                <td id="new-hsk-6-percent"></td>
             </tr>
             <tr>
                 <td>HSK 7-9</td>
-                <td id="oldHsk7Percent">N/A</td>
-                <td id="newHsk7Percent"></td>
+                <td id="old-hsk-7-percent">N/A</td>
+                <td id="new-hsk-7-percent"></td>
             </tr>
         </table>
     </div>
@@ -76,17 +76,23 @@
 
 <br>
 
-<div id="videoLocation"></div>
+<div id="video-location"></div>
 
-<div class="translationArea">
+<div class="translation-area">
     <p id="translation"></p>
 </div>
 
-<div id="wordsAreaDiv" class="wordsArea">
-    <span id="locationMarker" class="locationMarker" hidden>│</span>
+<div id="words-area-container" class="words-area">
+    <span id="location-marker" class="location-marker" hidden>│</span>
     
-    <span id="videoTitle"></span>
-    <p id="wordsArea" class="words"></p>
+    <span id="video-title"></span>
+    <p id="words-area" class="words"></p>
+
+    <div id="word-menu" class="word-menu" hidden>
+        <p id="word-tooltip-translation"></p>
+        <button id="save-word-button" type="button">Save</button>
+        <button id="set-index-button" type="button">Set location</button>
+    </div>
 </div>
 
 {% endblock %}

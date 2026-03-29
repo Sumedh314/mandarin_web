@@ -314,7 +314,7 @@ def get_hsk_percentages():
         learning_percent = round(learning_words / len(words_to_check) * 100, 2)
         total_percent = round(known_percent + learning_percent, 2)
 
-        hsk_percentages[f'{hsk_standard}Hsk{hsk_level}Percent'] = f'{known_percent}% + {learning_percent}% = {total_percent}%'
+        hsk_percentages[f'{hsk_standard}-hsk-{hsk_level}-percent'] = f'{known_percent}% + {learning_percent}% = {total_percent}%'
         hsk_level += 1
         known_words = 0
         learning_words = 0
@@ -366,7 +366,12 @@ def update_practice_sentences():
     """Adds to practice_sentences JSON file"""
     sentencesList = request.json
 
-    with open(practice_sentences_json, 'a') as practice_sentences_file:
+    with open(practice_sentences_file, 'r') as practice_sentences_file:
+        practice_sentences: list = json.load(practice_sentences_file)
+    
+    practice_sentences.extend(sentencesList)
+
+    with open(practice_sentences_json, 'w') as practice_sentences_file:
         json.dump(sentencesList, practice_sentences_file, indent=4, ensure_ascii=False)
     
     return sentencesList
@@ -392,4 +397,4 @@ def toggle_saved_word():
 
 
 if __name__ == '__main__':
-    app.run(debug=False, port=5000)
+    app.run(debug=True, port=5000)
