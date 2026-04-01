@@ -78,7 +78,7 @@ export function scrollTranscript() {
     for (const item of state.timestampElements) {
         item.setAttribute('class', 'normal');
     }
-    currentTimestamp.setAttribute('class', 'currentTime')
+    currentTimestamp.setAttribute('class', 'current-time')
 
     if (state.videoPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
         cancelAnimationFrame(state.scrollToTimestamp);

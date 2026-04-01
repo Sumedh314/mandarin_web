@@ -137,7 +137,6 @@ export async function fetchSetLastIndex(link, index) {
     const videoId = originalLink.searchParams.get('v');
 
     const data = {'videoId': videoId, 'lastIndex': index};
-    console.log(data);
 
     const setIndexResponse = await fetch('/set_last_index', {
         method: 'POST',

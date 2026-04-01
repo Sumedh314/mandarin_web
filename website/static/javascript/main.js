@@ -55,7 +55,7 @@ async function onWordClick(event) {
     if (window.getSelection().toString() != '') {
         printDefinitions(window.getSelection().toString());
     }
-    
+
     // If the user clicked a word
     if (event.target.hasAttribute('data-word')) {
         state.clickedWord = event.target.dataset.word;
@@ -63,16 +63,8 @@ async function onWordClick(event) {
         // Adjust video state if there is one
         if (state.transcriptShowing) {
 
-            // Scroll to time in the video of the word if a transcript is currently showing
-            if (!event.target.parentNode.classList.contains('words')) {
-                for (const element of state.timestampElements) {
-                    if (element.classList.contains('current-time')) {
-                        element.classList.replace('current-time', 'normal');
-                    }
-                }
-                event.target.parentNode.classList.replace('normal', 'current-time');
-                state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
-            }
+            // Scroll to time in the video of the word
+            state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
             
             // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
             if (!(state.clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
@@ -82,14 +74,19 @@ async function onWordClick(event) {
             else {
                 state.videoPlayer.playVideo();
             }
+
+            // Make sure correct transcript line is highlited
+            for (const element of event.target.parentNode.parentNode.children) {
+                element.classList.replace('current-time', 'normal');
+            }
+            event.target.parentNode.classList.replace('normal', 'current-time');
         }
 
         // Print word's definitions and update colors and HSK table
-        // printDefinitions(event.target.dataset.word);
-        showWordMenu(event.target);
+        printDefinitions(event.target.dataset.word);
+        // showWordMenu(event.target);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex);
-        console.log(proficiencyLevels);
         updateWordColors(proficiencyLevels);
         updateHskLevels();
         
