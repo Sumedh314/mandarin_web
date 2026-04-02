@@ -30,9 +30,9 @@ chat = client.chats.create(model='gemini-2.5-flash')
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
 
-word_proficiency_levels_json = 'user_progress/word_proficiency_levels.json'
-practice_sentences_json = 'user_progress/practice_sentences.json'
-saved_words_json = 'user_progress/saved_words.json'
+word_proficiency_levels_json = 'website/user_progress/word_proficiency_levels.json'
+practice_sentences_json = 'website/user_progress/practice_sentences.json'
+saved_words_json = 'website/user_progress/saved_words.json'
 
 
 @app.route('/')
@@ -289,7 +289,7 @@ def get_hsk_percentages():
     with open(word_proficiency_levels_json, 'r') as word_proficiency_levels_file:
         user_words = json.load(word_proficiency_levels_file)
 
-    with open(f'mandarin_words/words_by_hsk.json', 'r') as hsk_words_file:
+    with open(f'website/mandarin_words/words_by_hsk.json', 'r') as hsk_words_file:
         hsk_words = json.load(hsk_words_file)
 
     known_words = 0

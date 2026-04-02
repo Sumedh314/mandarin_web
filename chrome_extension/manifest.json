@@ -2,15 +2,24 @@
     "manifest_version": 3,
     "name": "Mandarin Extension",
     "version": "1.0",
-    "description": "al;sdkfj;k",
+    "description": "Extension for website to help me learn Mandarin",
 
     "icons": {
-        "32": "Untitled presentation.png"
+        "32": "icons/icon32.png"
+    },
+
+    "action": {
+        "default_popup": "popup/popup.html"
+    },
+
+    "background": {
+        "service_worker": "scripts/background.js"
     },
 
     "content_scripts": [
         {
-            "js": ["scripts/chrome-main.js"],
+            "js": ["scripts/content.js"],
+            "css": ["styles/content.css"],
             "matches": ["<all_urls>"]
         }
     ]
