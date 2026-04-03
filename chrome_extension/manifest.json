@@ -3,13 +3,16 @@
     "name": "Mandarin Extension",
     "version": "1.0",
     "description": "Extension for website to help me learn Mandarin",
+    "permissions": ["scripting", "activeTab"],
+    "host_permissions": ["http://localhost:5000/*"],
 
     "icons": {
         "32": "icons/icon32.png"
     },
 
     "action": {
-        "default_popup": "popup/popup.html"
+        "default_popup": "popup/popup.html",
+        "default_title": "qwertyuiop"
     },
 
     "background": {
