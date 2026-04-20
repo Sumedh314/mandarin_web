@@ -7,7 +7,9 @@ import {
     state,
     locationMarker,
     practiceWordsButton,
-    wordMenu
+    wordMenu,
+    textEntry,
+    linkEntry
 } from "./documentAreas.js";
 
 import {
@@ -207,7 +209,7 @@ async function loadVideoAndTranscript() {
     wordsArea.textContent = loadingSign;
     
     // Embed video
-    const link = document.getElementById('link').value;
+    const link = document.getElementById('link-entry').value;
     state.videoLink = link;
     embedVideo(link);
 
@@ -222,7 +224,7 @@ async function loadVideoAndTranscript() {
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
-    const text = document.getElementById('text').value;
+    const text = document.getElementById('text-entry').value;
 
     printText(text);
 
@@ -269,10 +271,16 @@ tag.src = 'https://youtube.com/iframe_api';
 var firstTagScript = document.getElementsByTagName('script')[0]
 firstTagScript.parentNode.insertBefore(tag, firstTagScript);
 
-videoButton.addEventListener('click', loadVideoAndTranscript);
 textButton.addEventListener('click', printUserText);
+textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUserText(event));
+
+videoButton.addEventListener('click', loadVideoAndTranscript);
+linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
+
 translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
 generateStoryButton.addEventListener('click', generateStory);
+
 practiceWordsButton.addEventListener('click', practiceWords);
-wordsArea.addEventListener('click', (event) => onWordClick(event));
-window.addEventListener('keydown', (event) => onKeyPressed(event));
+
+wordsArea.addEventListener('click', onWordClick);
+window.addEventListener('keydown', onKeyPressed);

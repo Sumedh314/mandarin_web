@@ -1,5 +1,16 @@
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
+
 from urllib.parse import parse_qs, urlparse
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+
+import requests
+import json
+
+import random
+import time
 
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranslationLanguageNotAvailable
 
@@ -9,30 +20,36 @@ from google import genai
 import jieba
 import pinyin
 
-from dotenv import load_dotenv
-import os
-
-import requests
-import json
-
-import random
-import time
-
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+
 translator = GoogleTranslator()
+
 transcript_generator = YouTubeTranscriptApi()
+
 client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 chat = client.chats.create(model='gemini-2.5-flash')
 
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
 
-word_proficiency_levels_json = 'website/user_progress/word_proficiency_levels.json'
-practice_sentences_json = 'website/user_progress/practice_sentences.json'
-saved_words_json = 'website/user_progress/saved_words.json'
+base_path = Path(__file__).parent
+
+word_proficiency_levels_json = base_path / 'user_progress' / 'word_proficiency_levels.json'
+practice_sentences_json = base_path / 'user_progress' / 'practice_sentences.json'
+saved_words_json = base_path / 'user_progress' / 'saved_words.json'
+transcripts_json = base_path / 'user_progress' / 'transcripts.json'
+hsk_words_json = base_path / 'mandarin_words' / 'words_by_hsk.json'
+words_list_json = base_path / 'mandarin_words' / 'words.json'
+
+with open(words_list_json, 'r') as words_list:
+    all_words = json.load(words_list)
+
+with open(hsk_words_json, 'r') as hsk_words_file:
+    hsk_words = json.load(hsk_words_file)
 
 
 @app.route('/')
@@ -49,10 +66,7 @@ def translate_text():
     translation = ''
     translation_found = False
 
-    with open('mandarin_words/words.json' , 'r') as words_list:
-        words = json.load(words_list)
-
-    for word in words:
+    for word in all_words:
         if word['s'] == text:
             translation = ', '.join(word['f'][0]['m'])
             translation_found = True
@@ -71,10 +85,7 @@ def get_pinyin():
     pinyin_text = []
     pinyin_found = False
     
-    with open('mandarin_words/words.json', 'r') as words_list:
-        words = json.load(words_list)
-    
-    for word in words:
+    for word in all_words:
         if word['s'] == text:
             for form in word['f']:
                 pinyin_text.append(form['i']['y'])
@@ -91,7 +102,10 @@ def get_pinyin():
 def segment_text():
     """Segments Mandarin text into individual words using the jieba library"""
     text = request.data.decode()
+    segmented_text = [word for word in jieba.cut_for_search(text)]
+    print(segment_text)
     segmented_text = [word for word in jieba.cut(text)]
+    print(segment_text)
 
     return segmented_text
 
@@ -118,7 +132,6 @@ def get_proficiency_levels():
         word_proficiency_levels = json.load(word_proficiency_levels_file)
 
     for word in text:
-
         word_is_mandarin = True
         for character in word:
             if not '\u4e00' <= character <= '\u9fff':
@@ -188,7 +201,6 @@ def generate_transcript():
 
     transcript_found = True
     transcript_is_new = False
-    transcripts_json = 'user_progress/transcripts.json'
 
     with open(transcripts_json, 'r') as transcript_file:
         transcripts: dict = json.load(transcript_file)
@@ -242,13 +254,13 @@ def get_last_index():
     """Gets the location of the place the user left off of a transcript"""
     video_id = request.data.decode()
 
-    with open('user_progress/transcripts.json', 'r') as transcript_file:
+    with open(transcripts_json, 'r') as transcript_file:
         transcripts = json.load(transcript_file)
     
     if video_id in transcripts:
         return str(transcripts[video_id]['last_index'])
     else:
-        return None
+        return '0'
 
 
 @app.route('/set_last_index', methods=['POST'])
@@ -257,12 +269,12 @@ def set_last_index():
     data = request.json
     print(data)
 
-    with open('user_progress/transcripts.json', 'r') as transcript_file:
+    with open(transcripts_json, 'r') as transcript_file:
         transcripts = json.load(transcript_file)
 
     transcripts[data['videoId']]['last_index'] = data['lastIndex']
 
-    with open('user_progress/transcripts.json', 'w') as transcript_file:
+    with open(transcripts_json, 'w') as transcript_file:
         json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
     
     return ''
@@ -288,9 +300,6 @@ def get_hsk_percentages():
 
     with open(word_proficiency_levels_json, 'r') as word_proficiency_levels_file:
         user_words = json.load(word_proficiency_levels_file)
-
-    with open(f'website/mandarin_words/words_by_hsk.json', 'r') as hsk_words_file:
-        hsk_words = json.load(hsk_words_file)
 
     known_words = 0
     learning_words = 0

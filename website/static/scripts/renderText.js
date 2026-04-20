@@ -95,15 +95,19 @@ export async function printTranscript(transcript) {
     wordsArea.textContent = '';
 
     for (const timestamp of timestamps) {
-        let transcriptLine = document.createElement('span');
+        const transcriptLine = document.createElement('span');
         transcriptLine.className = 'normal';
         transcriptLine.dataset.timestamp = timestamp;
 
-        let timestampElement = document.createElement('span');
+        const timestampElement = document.createElement('span');
         timestampElement.className = 'timestamp';
         timestampElement.textContent = formatTimestamp(timestamp);
 
+        const space = document.createElement('span');
+        space.textContent = ' ';
+
         transcriptLine.appendChild(timestampElement);
+        transcriptLine.appendChild(space);
         
         for (const word of segmentedTranscript[timestamp]) {
             if (word == '\n') {
@@ -111,7 +115,7 @@ export async function printTranscript(transcript) {
                 continue;
             }
             if (word in proficiencyLevels) {
-                let wordElement = document.createElement('span');
+                const wordElement = document.createElement('span');
                 wordElement.classList.add('word');
                 wordElement.classList.add(state.proficiencyClasses[proficiencyLevels[word]]);
                 wordElement.dataset.word = word;
@@ -124,7 +128,7 @@ export async function printTranscript(transcript) {
                 wordIndex++;
             }
             else {
-                let wordElement = document.createElement('span');
+                const wordElement = document.createElement('span');
                 wordElement.textContent = word;
 
                 transcriptLine.appendChild(wordElement);

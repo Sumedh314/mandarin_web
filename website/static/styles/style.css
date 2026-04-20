@@ -24,7 +24,7 @@ td, th {
 }
 
 .text-box {
-    border-radius: 99999px;
+    border-radius: 999px;
     border-style: solid;
     border-width: 1px;
 }
@@ -34,7 +34,7 @@ button {
     height: 20px;
     border-color: white;
     border-style: none;
-    border-radius: 99999px;
+    border-radius: 999px;
 }
 
 button:hover {

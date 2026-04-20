@@ -11,8 +11,10 @@ export let state = {
 
 export const videoTitle = document.getElementById('video-title');
 export const videoLocation = document.getElementById('video-location');
-export const videoButton = document.getElementById('video-button');
+export const textEntry = document.getElementById('text-entry');
 export const textButton = document.getElementById('text-button');
+export const linkEntry = document.getElementById('link-entry');
+export const videoButton = document.getElementById('video-button');
 export const generateStoryButton = document.getElementById('generate-story-button');
 export const translationArea = document.getElementById('translation');
 export const translateTranscriptButton = document.getElementById('translate-transcript-button');

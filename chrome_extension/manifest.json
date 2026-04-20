@@ -10,20 +10,27 @@
         "32": "icons/icon32.png"
     },
 
-    "action": {
-        "default_popup": "popup/popup.html",
-        "default_title": "qwertyuiop"
-    },
+    "action": {},
 
     "background": {
-        "service_worker": "scripts/background.js"
+        "service_worker": "background.js"
     },
 
     "content_scripts": [
         {
-            "js": ["scripts/content.js"],
-            "css": ["styles/content.css"],
+            "js": ["content_script/content.js"],
+            "css": ["content_script/content.css"],
             "matches": ["<all_urls>"]
         }
-    ]
+    ],
+
+    "commands": {
+        "reload_extension": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+O",
+                "mac": "Command+Shift+O"
+            },
+            "description": "Reload extension"
+        }
+    }
 }
