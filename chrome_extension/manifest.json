@@ -19,7 +19,13 @@
     "content_scripts": [
         {
             "js": ["content_script/content.js"],
-            "css": ["content_script/content.css"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+
+    "web_accessible_resources": [
+        {
+            "resources": ["content_script/content.css"],
             "matches": ["<all_urls>"]
         }
     ],

@@ -47,16 +47,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener(async (tab) => {
-    let state = await chrome.action.getBadgeText({});
-    console.log(state);
-    if (state == 'On') {
-        chrome.action.setBadgeText({text: ''});
-        chrome.tabs.sendMessage(tab.id, {action: 'disable'});
-    }
-    else {
-        chrome.action.setBadgeText({text: 'On'});
-        chrome.tabs.sendMessage(tab.id, {action: 'enable'});
-    }
+    const state = await chrome.action.getBadgeText({});
+    
+    const newState = state == 'On' ? '' : 'On';
+    const action = state == 'On' ? 'disable' : 'enable';
+
+    chrome.action.setBadgeText({ text: newState });
+    chrome.tabs.sendMessage(tab.id, { action: action });
 });
-chrome.runtime.onInstalled.addListener(tab => chrome.tabs.reload(tab.id));
+chrome.runtime.onInstalled.addListener(() => {
+    // const [tab] = await chrome.tabs.query({});
+    // chrome.scripting.executeScript({
+    //     target: { tabId: tab.id },
+    //     files: ['content_script/content.js'],
+    // });
+    // setTimeout(() => {
+    //     chrome.tabs.sendMessage(tab.id, { action: 'enable' });
+    //     chrome.action.setBadgeText({ text: 'On' });
+    // }, 2000);
+    chrome.tabs.reload();
+});
 chrome.commands.onCommand.addListener(command => command == 'reload_extension' && chrome.runtime.reload());

@@ -1,21 +1,16 @@
 #information-box {
+    position: absolute;;
     max-width: 300px;
-    width: auto;
-    height: auto;
-    position: absolute;
     background-color: white;
-    border: 1px solid black;
-    border-radius: 5px;
-    color: black;
-    font-size: large;
-    z-index: 5;
-    padding: 5px;
+    border: solid 1px black;
+    border-radius: 10px;
+    padding: 10px;
 }
 
 #save-word-button {
-    border-color: gray;
+    /* background-color: lightgray; */
 }
 
 #save-word-button:hover {
-    background-color: gray;
+    /* background-color: gray; */
 }
