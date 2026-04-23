@@ -95,16 +95,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
+chrome.action.onClicked.addListener(async () => {
     const state = await chrome.action.getBadgeText({});
     
     const newState = state == 'On' ? '' : 'On';
     const action = state == 'On' ? 'disable' : 'enable';
 
     await chrome.action.setBadgeText({ text: newState });
-    chrome.tabs.sendMessage(tab.id, { action: action });
+
+    const allTabs = await chrome.tabs.query({});
+    allTabs.forEach(tab => chrome.tabs.sendMessage(tab.id, { action: action }).catch(error => console.log(tab.index, error)));
 });
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.tabs.reload();
+chrome.runtime.onInstalled.addListener(async () => {
+    const allTabs = await chrome.tabs.query({});
+    allTabs.forEach(tab => chrome.tabs.reload(tab.id));
 });
 chrome.commands.onCommand.addListener(command => command == 'reload_extension' && chrome.runtime.reload());
