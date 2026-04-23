@@ -11,8 +11,47 @@ async function translateText(text) {
     return translateTextResult;
 }
 
+async function getPinyin(text) {
+    const getPinyinResponse = await fetch('http://localhost:5000/get_pinyin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain'
+        },
+        body: text
+    });
+    const getPinyinResult = await getPinyinResponse.text();
+
+    return getPinyinResult;
+}
+
+async function getProficiency(text) {
+    const getPinyinResponse = await fetch('http://localhost:5000/get_proficiency_levels', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(text)
+    });
+    const getPinyinResult = await getPinyinResponse.json();
+
+    return getPinyinResult;
+}
+
 async function saveWord(text) {
     const saveWordResponse = await fetch('http://localhost:5000/toggle_saved_word', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: text
+    });
+    const saveWordResult = await saveWordResponse.text();
+
+    return saveWordResult;
+}
+
+async function checkSaved(text) {
+    const saveWordResponse = await fetch('http://localhost:5000/check_saved', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
@@ -30,13 +69,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // let response = null;
     switch (message.action) {
         case 'saveWord':
-            saveWord(message.word);
-            sendResponse();
+            saveWord(message.word).then(response => sendResponse(response));
             break;
         
         case 'translateText':
             translateText(message.word).then(response => sendResponse(response));
-            // console.log(response);
+            break;
+
+        case 'getPinyin':
+            getPinyin(message.word).then(response => sendResponse(response));
+            break;
+
+            case 'getProficiency':
+                getProficiency(message.word).then(response => sendResponse(response));
+                break;
+
+        case 'checkSaved':
+            checkSaved(message.word).then(response => sendResponse(response));
             break;
     
         default:
@@ -52,19 +101,10 @@ chrome.action.onClicked.addListener(async (tab) => {
     const newState = state == 'On' ? '' : 'On';
     const action = state == 'On' ? 'disable' : 'enable';
 
-    chrome.action.setBadgeText({ text: newState });
+    await chrome.action.setBadgeText({ text: newState });
     chrome.tabs.sendMessage(tab.id, { action: action });
 });
 chrome.runtime.onInstalled.addListener(() => {
-    // const [tab] = await chrome.tabs.query({});
-    // chrome.scripting.executeScript({
-    //     target: { tabId: tab.id },
-    //     files: ['content_script/content.js'],
-    // });
-    // setTimeout(() => {
-    //     chrome.tabs.sendMessage(tab.id, { action: 'enable' });
-    //     chrome.action.setBadgeText({ text: 'On' });
-    // }, 2000);
     chrome.tabs.reload();
 });
 chrome.commands.onCommand.addListener(command => command == 'reload_extension' && chrome.runtime.reload());

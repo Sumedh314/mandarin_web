@@ -94,7 +94,7 @@ def get_pinyin():
     
     if not pinyin_found:
         pinyin_text = pinyin.get(text)
-    
+
     return pinyin_text
 
 
@@ -390,19 +390,32 @@ def update_practice_sentences():
 def toggle_saved_word():
     """Adds a word to saved_words.json"""
     word = request.data.decode()
+    saved = False
 
     with open(saved_words_json, 'r') as saved_words_file:
         saved_words: list = json.load(saved_words_file)
     
-    if word in saved_words:
-        saved_words.remove(word)
-    else:
+    if word not in saved_words:
+        saved = True
         saved_words.append(word)
+    else:
+        saved = False
+        saved_words.remove(word)
 
     with open(saved_words_json, 'w') as saved_words_file:
         json.dump(saved_words, saved_words_file, indent=4, ensure_ascii=False)
     
-    return word
+    return 'Saved' if saved else 'Unsaved'
+
+
+@app.route('/check_saved', methods=['POST'])
+def check_saved():
+    word = request.data.decode()
+    
+    with open(saved_words_json, 'r') as saved_words_file:
+        saved_words: list = json.load(saved_words_file)
+    
+    return 'Saved' if word in saved_words else 'Unsaved'
 
 
 if __name__ == '__main__':

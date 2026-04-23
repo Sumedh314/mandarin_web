@@ -1,67 +1,76 @@
-// import style from "./content.css";
-// console.log(style);
 let textSelected = false;
 
 async function popupAction(/** @type {MouseEvent} */ event) {
     const text = window.getSelection().toString();
     
-    console.log(event.target);
-    if (document.querySelector('#popup') != undefined && event.target.id != 'popup') {
-        document.querySelector('#popup').remove();
+    // Remove popup if user clicked out of the area
+    if (document.querySelector('#popupHost') != undefined && event.target.id != 'popupHost') {
+        document.querySelector('#popupHost').remove();
         return;
     }
     
-    if (!textSelected || text.trim() == '' || event.target.parentNode.id == 'information-box') {
+    // Don't do anything if user clicked inside popup or didn't select any text
+    if (!textSelected || text.trim() == '' || event.target.parentNode.id == 'popup') {
         return;
     }
     else {
         const cursorX = event.clientX;
         const cursorY = event.clientY;
         
+        // Create host element for shadow DOM
+        const popupHost = document.createElement('div');
+        popupHost.id = 'popupHost';
+        popupHost.style.all = 'initial';
+        popupHost.style.position = 'absolute';
+        popupHost.style.top = `${cursorY + window.scrollY + 20}px`;
+        popupHost.style.left = `${cursorX}px`;
+        document.body.appendChild(popupHost);
+
+        // Create shadow with external stylesheet
+        const shadow = popupHost.attachShadow({ mode: 'open' });
+        const link = document.createElement('link');
+        link.setAttribute('rel', 'stylesheet');
+        link.setAttribute('href', chrome.runtime.getURL('content_script/content.css'));
+        shadow.appendChild(link);
+
+        // Create content inside shadow DOM with information about the user's text selection
         const popup = document.createElement('div');
         popup.id = 'popup';
-        popup.style.position = 'absolute';
-        popup.style.top = `${cursorY + window.scrollY + 20}px`;
-        popup.style.left = `${cursorX}px`;
-        document.body.appendChild(popup);
-
-        const shadow = popup.attachShadow({ mode: 'open' });
-        shadow.innerHTML = `<link rel="stylesheet" href="${chrome.runtime.getURL('content_script/content.css')}">`;
-        // shadow.innerHTML = `<style>@import url('content.css');</style>`
-
-        const informationBox = document.createElement('div');
-        informationBox.id = 'information-box';
         
+        // Add information about user's text selection to popup
         const translation = await chrome.runtime.sendMessage({ action: 'translateText', word: text });
+        const pinyin = await chrome.runtime.sendMessage({ action: 'getPinyin', word: text });
+        const proficiency = await chrome.runtime.sendMessage({ action: 'getProficiency', word: text });
+        const wordStatus = await chrome.runtime.sendMessage({ action: 'checkSaved', word: text });
+
         const information = document.createElement('p');
         information.style.margin = '0px 0px 10px 0px';
-        information.textContent = translation;
+        information.innerHTML = `${pinyin}<br>${translation}<br>Proficiency: ${Object.values(proficiency)}`;
         
+        // Create button for user to save the test to review later
         const saveWordButton = document.createElement('button');
         saveWordButton.type = 'button';
         saveWordButton.id = 'save-word-button';
-        saveWordButton.textContent = 'Save';
+        saveWordButton.textContent = wordStatus == 'Saved' ? 'Unsave' : 'Save';
         
-        informationBox.appendChild(information);
-        informationBox.appendChild(saveWordButton);
-        shadow.appendChild(informationBox);
+        popup.appendChild(information);
+        popup.appendChild(saveWordButton);
+        shadow.appendChild(popup);
 
-        saveWordButton.addEventListener('click', () => {
+        // Save or unsave text when button is clicked
+        saveWordButton.addEventListener('click', async () => {
             chrome.runtime.sendMessage({ action: 'saveWord', word: text });
             let buttonText = saveWordButton.textContent;
             buttonText = buttonText == 'Save' ? 'Unsave' : 'Save';
             saveWordButton.textContent = buttonText;
         });
 
-        popup.addEventListener('mouseleave', () => {
-            popup.remove();
-        });
+        popupHost.addEventListener('mouseleave', () => popupHost.remove());
     }
 }
 
 function handleTextSelected() {
     const text = window.getSelection().toString();
-
     textSelected = text == '' ? true : false;
 }
 

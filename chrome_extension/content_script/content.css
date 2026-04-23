@@ -1,5 +1,6 @@
-#information-box {
-    position: absolute;;
+#popup {
+    position: absolute;
+    min-width: 100px;
     max-width: 300px;
     background-color: white;
     border: solid 1px black;
@@ -7,10 +8,14 @@
     padding: 10px;
 }
 
-#save-word-button {
-    /* background-color: lightgray; */
+button {
+    background-color: white;
+    height: 20px;
+    border: 1px solid black;
+    border-radius: 999px;
 }
 
-#save-word-button:hover {
-    /* background-color: gray; */
+button:hover {
+    cursor: pointer;
+    background-color: lightgray;
 }
