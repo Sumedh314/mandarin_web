@@ -7,7 +7,8 @@ import {
 import {
     wordsArea,
     state,
-    locationMarker
+    locationMarker,
+    videoTitle
 } from "../documentAreas.js";
 
 /**
@@ -124,6 +125,9 @@ export async function onPlayerStateChange() {
     if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
         if (state.scrollToTimestamp === null) {
             state.scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+        }
+        if (videoTitle.textContent == '') {
+            videoTitle.textContent = state.videoPlayer.videoTitle;
         }
     }
     else {

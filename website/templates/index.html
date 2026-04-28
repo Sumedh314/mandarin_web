@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block body %}
-<h1 id="program" class="program">Program</h1>
+<h1 id="program">Program</h1>
 
-<div class="upper-elements">
+<div id="upper-elements">
     <div id="inputs">
         <div id="text">
             <p>Text: </p>
@@ -29,7 +29,7 @@
     </div>
 
     <div id="hsk-progress">
-        <table id="hsk-table" class="hsk-table">
+        <table id="hsk-table">
             <tr>
                 <th>HSK Level</th>
                 <th>Old Levels %</th>
@@ -78,17 +78,17 @@
 
 <div id="video-location"></div>
 
-<div class="translation-area">
+<div id="translation-area">
     <p id="translation"></p>
 </div>
 
-<div id="words-area-container" class="words-area">
-    <span id="location-marker" class="location-marker" hidden>│</span>
+<span id="video-title"></span>
+<div id="words-area-container">
+    <span id="location-marker" hidden>│</span>
     
-    <span id="video-title"></span>
-    <p id="words-area" class="words"></p>
+    <p id="words-area"></p>
 
-    <div id="word-menu" class="word-menu" hidden>
+    <div id="word-menu" hidden>
         <p id="word-tooltip-translation"></p>
         <button id="save-word-button" type="button">Save</button>
         <button id="set-index-button" type="button">Set location</button>

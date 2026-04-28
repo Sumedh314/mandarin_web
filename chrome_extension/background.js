@@ -64,9 +64,6 @@ async function checkSaved(text) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('received');
-
-    // let response = null;
     switch (message.action) {
         case 'saveWord':
             saveWord(message.word).then(response => sendResponse(response));
@@ -80,9 +77,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             getPinyin(message.word).then(response => sendResponse(response));
             break;
 
-            case 'getProficiency':
-                getProficiency(message.word).then(response => sendResponse(response));
-                break;
+        case 'getProficiency':
+            getProficiency(message.word).then(response => sendResponse(response));
+            break;
 
         case 'checkSaved':
             checkSaved(message.word).then(response => sendResponse(response));
@@ -106,8 +103,32 @@ chrome.action.onClicked.addListener(async () => {
     const allTabs = await chrome.tabs.query({});
     allTabs.forEach(tab => chrome.tabs.sendMessage(tab.id, { action: action }).catch(error => console.log(tab.index, error)));
 });
+
 chrome.runtime.onInstalled.addListener(async () => {
-    const allTabs = await chrome.tabs.query({});
-    allTabs.forEach(tab => chrome.tabs.reload(tab.id));
+    const reloadTabsData = await chrome.storage.local.get('reloadTabs');
+    const reloadTabs = reloadTabsData.reloadTabs;
+
+    if (reloadTabs == 'all') {
+        const allTabs = await chrome.tabs.query({});
+        allTabs.forEach(tab => chrome.tabs.reload(tab.id));
+    }
+    else if (reloadTabs == 'current') {
+        chrome.tabs.reload();
+    }
 });
-chrome.commands.onCommand.addListener(command => command == 'reload_extension' && chrome.runtime.reload());
+
+chrome.commands.onCommand.addListener((command) => {
+    switch (command) {
+        case 'reload_extension_all_tabs':
+            chrome.storage.local.set({ 'reloadTabs': 'all' });
+            chrome.runtime.reload();
+            break;
+        
+        case 'reload_extension_current_tab':
+            chrome.storage.local.set({ 'reloadTabs': 'current' });
+            chrome.runtime.reload();
+    
+        default:
+            break;
+    }
+});

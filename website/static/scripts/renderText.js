@@ -45,7 +45,6 @@ export async function printText(text) {
         if (word in proficiencyLevels) {
             let wordElement = document.createElement('span');
             wordElement.classList.add('word');
-            wordElement.classList.add(state.proficiencyClasses[proficiencyLevels[word]]);
             wordElement.dataset.word = word;
             wordElement.dataset.index = wordIndex;
             wordElement.dataset.proficiency = proficiencyLevels[word];
@@ -61,15 +60,8 @@ export async function printText(text) {
         }
     }
 
-    const doneButton = document.createElement('span');
-    doneButton.className = state.proficiencyClasses[3];
-    doneButton.dataset.action = 'final-word';
-    doneButton.dataset.index = wordIndex + 1;
-    doneButton.textContent = 'Done';
-
     wordsArea.appendChild(document.createElement('br'));
-    wordsArea.appendChild(document.createElement('br'));
-    wordsArea.appendChild(doneButton);
+    addDoneButton(wordIndex);
 }
 
 /**
@@ -117,7 +109,6 @@ export async function printTranscript(transcript) {
             if (word in proficiencyLevels) {
                 const wordElement = document.createElement('span');
                 wordElement.classList.add('word');
-                wordElement.classList.add(state.proficiencyClasses[proficiencyLevels[word]]);
                 wordElement.dataset.word = word;
                 wordElement.dataset.index = wordIndex;
                 wordElement.dataset.proficiency = proficiencyLevels[word];
@@ -143,15 +134,7 @@ export async function printTranscript(transcript) {
         wordsArea.appendChild(transcriptLine);
         wordsArea.appendChild(document.createElement('br'));
     }
-
-    const doneButton = document.createElement('span');
-    doneButton.className = state.proficiencyClasses[3];
-    doneButton.dataset.action = 'final-word';
-    doneButton.dataset.index = wordIndex + 1;
-    doneButton.textContent = 'Done';
-
-    wordsArea.appendChild(document.createElement('br'));
-    wordsArea.appendChild(doneButton);
+    addDoneButton(wordIndex);
 
     // Push timestamps to timestampElements for other functions to use
     for (const timestamp of wordsArea.children) {
@@ -167,6 +150,23 @@ export async function printTranscript(transcript) {
 
     state.transcriptShowing = true;
     // scrollToLocationMarker();
+}
+
+/**
+ * Adds a "Done" button to the end of a transcript or text
+ * 
+ * @param {Number} wordIndex Index of the final word of the transcript or text
+ */
+export function addDoneButton(wordIndex) {
+    const doneButton = document.createElement('span');
+    doneButton.classList.add('word');
+    doneButton.dataset.proficiency = 3;
+    doneButton.dataset.action = 'final-word';
+    doneButton.dataset.index = wordIndex + 1;
+    doneButton.textContent = 'Done';
+
+    wordsArea.appendChild(document.createElement('br'));
+    wordsArea.appendChild(doneButton);
 }
 
 /**
@@ -237,10 +237,6 @@ export function updateWordColors(proficiencyLevels) {
     for (const word of segmentedWords) {
         if (word.dataset.word in proficiencyLevels) {
             word.dataset.proficiency = proficiencyLevels[word.dataset.word];
-            for (const proficiencyClass of Object.values(state.proficiencyClasses)) {
-                word.classList.remove(proficiencyClass);
-            }
-            word.classList.add(state.proficiencyClasses[word.dataset.proficiency]);
         }
     }
 }

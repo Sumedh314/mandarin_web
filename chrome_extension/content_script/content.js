@@ -29,8 +29,8 @@ async function popupAction(/** @type {MouseEvent} */ event) {
         // Create shadow with external stylesheet
         const shadow = popupHost.attachShadow({ mode: 'open' });
         const link = document.createElement('link');
-        link.setAttribute('rel', 'stylesheet');
-        link.setAttribute('href', chrome.runtime.getURL('content_script/content.css'));
+        link.rel = 'stylesheet';
+        link.href = chrome.runtime.getURL('content_script/content.css');
         shadow.appendChild(link);
 
         // Create content inside shadow DOM with information about the user's text selection

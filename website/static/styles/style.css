@@ -2,7 +2,7 @@ body {
     background-color: white;
 }
 
-.upper-elements {
+#upper-elements {
     display: flex;
     width: 1000px;
     gap: 50px;
@@ -42,12 +42,12 @@ button:hover {
     background-color: lightgray;
 }
 
-.translation-area {
+#translation-area {
     min-height: 80px;
     height: auto;
 }
 
-.words-area {
+#words-area-container {
     position: relative;
     border-style: solid;
     border-width: 1px;
@@ -56,6 +56,14 @@ button:hover {
     max-height: 250px;
     height: auto;
     overflow-y: auto;
+    font-size: large;
+}
+
+#words-area {
+    margin-top: 0px;
+}
+
+#video-title {
     font-size: large;
 }
 
@@ -80,52 +88,53 @@ button:hover {
     opacity: 1;
 }
 
-.proficiency-zero {
+.word {
     border-radius: 3px;
+}
+.word:hover {
+    cursor: pointer;
+}
+
+[data-proficiency='0'] {
     background-color: lightblue;
 }
-.proficiency-zero:hover {
-    cursor: pointer;
+[data-proficiency='0']:hover {
     background-color: #add8e670;
 }
 
-.proficiency-one {
-    border-radius: 3px;
+[data-proficiency='1'] {
     background-color: #ffdd00;
 }
-.proficiency-one:hover {
-    cursor: pointer;
+[data-proficiency='1']:hover {
     background-color: #ffdd0070;
 }
 
-.proficiency-two {
-    border-radius: 3px;
+[data-proficiency='2'] {
     background-color: #ffdd0080;
 }
-.proficiency-two:hover {
-    cursor: pointer;
+[data-proficiency='2']:hover {
     background-color: #ffdd0030;
 }
 
-.proficiency-three {
-    border-radius: 3px;
+[data-proficiency='3'] {
     background-color: white;
 }
-.proficiency-three:hover {
-    cursor: pointer;
+[data-proficiency='3']:hover {
     background-color: lightgray;
 }
 
-.location-marker {
+#location-marker {
+    position: absolute;
     font-size: larger;
     color: red;
+    transform: translate(-7px, 1px);
 }
 
 .saved-word {
     text-decoration: underline;
 }
 
-.word-menu {
+#word-menu {
     position: absolute;
     background-color: white;
     border: solid 1px;
