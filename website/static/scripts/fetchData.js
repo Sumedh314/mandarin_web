@@ -333,7 +333,7 @@ export async function fetchRandomListWordsSaved(numWords) {
  * 
  * @param {string} word Word to save
  */
-export async function toggleSavedWord(word) {
+export async function fetchToggleSavedWord(word) {
     const addSavedWordResponse = await fetch('/toggle_saved_word', {
         method: 'POST',
         headers: {
@@ -351,7 +351,7 @@ export async function toggleSavedWord(word) {
  * 
  * @param {string} word Word to check
  */
-export async function checkSaved(word) {
+export async function fetchCheckSaved(word) {
     const checkSaved = await fetch('/check_saved', {
         method: 'POST',
         headers: {
@@ -362,4 +362,16 @@ export async function checkSaved(word) {
     const savedWord = await checkSaved.text();
 
     return savedWord;
+}
+
+/**
+ * Creates all flashcards based on words that the user saved using flaskcards_data.json
+ */
+export async function fetchCreateCards() {
+    const createCardsResponse = await fetch('/create_cards', {
+        method: 'GET'
+    });
+    const createCards = await createCardsResponse.text();
+
+    return createCards;
 }

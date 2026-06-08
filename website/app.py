@@ -395,6 +395,19 @@ def update_practice_sentences():
     return practice_data
 
 
+@app.route('/create_cards', methods=['GET'])
+def create_cards():
+    """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
+    with open(flashcards_data_path, 'r') as flashcards_data_file:
+        flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
+    
+    for word in flashcards_data:
+        card = Card(*flashcards_data[word].values())
+        print(card)
+    
+    return None
+
+
 @app.route('/create_card', methods=['POST'])
 def create_card():
     """Creates a card for the Free Spaced Repetition System algorithm"""
@@ -452,4 +465,5 @@ def check_saved():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # app.run(debug=True, port=5000)
+    create_cards()

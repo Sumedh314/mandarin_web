@@ -7,7 +7,7 @@ import {
     fetchPinyin,
     fetchHskPercentages,
     fetchSetLastIndex,
-    checkSaved
+    fetchCheckSaved
 } from "./fetchData.js";
 
 import {
@@ -51,7 +51,7 @@ export async function printText(text) {
             wordElement.dataset.proficiency = proficiencyLevels[word];
             wordElement.textContent = word;
 
-            const wordIsSaved = await checkSaved(word) == 'Saved' ? true : false;
+            const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
             if (wordIsSaved) {
                 wordElement.classList.add('saved-word');
             }

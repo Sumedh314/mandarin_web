@@ -1,4 +1,7 @@
-import {fetchGeminiPrompt} from "./fetchData.js";
+import {
+    fetchCreateCards,
+    fetchGeminiPrompt
+} from "./fetchData.js";
 
 /**
  * Prompts Gemini to generate a sentence using a given word
@@ -6,7 +9,7 @@ import {fetchGeminiPrompt} from "./fetchData.js";
  * @param {Array} words Word for Gemini to use in sentence
  */
 export async function generatePracticeSentence(words) {
-    const prompt = `Using the following list of Mandarin words, generate a sentence, one sentence for each word: ${words}. Please simply list the sentences without any surrounding text in English.`;
+    const prompt = `Using the following list of Mandarin words, generate one sentence for each word: ${words}. Please format your response as "'Mandarin word': 'sentence'", with one sentence in each line. Please simply list the sentences without any surrounding text in English.`;
     const sentences = await fetchGeminiPrompt(prompt);
 
     const sentenceList = new Map();
@@ -29,4 +32,11 @@ export async function generatePracticeSentence(words) {
 
     console.log(sentenceList);
     return sentenceList;
+}
+
+/**
+ * Creates flashcards at the beginning of a session
+ */
+export async function createCards() {
+    await fetchCreateCards();
 }

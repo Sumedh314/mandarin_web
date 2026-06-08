@@ -20,9 +20,14 @@ import {
     fetchRandomListWordsLearning,
     fetchLastIndex,
     updatePracticeSentences,
-    toggleSavedWord,
+    fetchToggleSavedWord,
+    fetchRandomListWordsSaved
 } from './fetchData.js';
-import { generatePracticeSentence } from "./practiceWords.js";
+
+import {
+    createCards,
+    generatePracticeSentence
+} from "./practiceWords.js";
 
 import {
     printText,
@@ -39,7 +44,7 @@ import {
 import {
     embedVideo,
     findTimestamp,
-    toggleVideo,
+    toggleVideo
 } from "./videoFunctions/modifyingVideo.js";
 
 import {videoReady} from "./videoFunctions/videoStates.js";
@@ -200,7 +205,7 @@ async function onKeyPressed(event) {
         if (state.clickedWord == '') {
             return
         }
-        await toggleSavedWord(state.clickedWord);
+        await fetchToggleSavedWord(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
     }
 }
@@ -251,22 +256,17 @@ async function generateStory() {
  * Runs when the Practice Words button is clicked
  */
 async function practiceWords() {
-    let wordList = await fetchRandomListWordsLearning(25);
-    // word = word[0];
+    let wordList = await fetchRandomListWordsSaved(10);
     console.log(wordList);
 
     const sentenceList = await generatePracticeSentence(wordList);
-
-    let allSentences = '';
-    for (const sentence of sentenceList) {
-        allSentences += sentence + '\n';
-    }
-    printText(allSentences);
-    // updatePracticeSentences(['他把地图卷了起来。', '战争会毁灭家园。', '请你尽量早点来。', '我误以为他生病了。', '吃完饭后，她收拾了桌子。', '这是一种新型手机。', '这个问题关乎每个人的利益。', '孩子喜欢玩飞机模型。', '他负责管理这个项目。', '我今天精力充沛。', '安琪是我的好朋友。', '隔壁的邻居很友好。', '学习可以增长知识。', '他正在攻读博士学位。', '她在大学学习临床医学。', '他正在学习土耳其语。', '这座房子值几百万。', '我喜欢吃杏仁。', '他对自己的考试成绩很满意。', '我家有一只可爱的猫咪。', '科学家正在做实验。', '那个声音吓了我一跳。', '这本书分为三个部分。', '这代人面临很多挑战。', '他今天出了门。', '学校里有小卖部。', '不要把这当成儿戏。', '很高兴能来到这里，我感到非常荣幸。', '请保持联系。', '我喜欢在网上浏览新闻。', '我们可以再举一个例子。', '这个网站有很多有用的信息。', '他下定决心要学好中文。', '他是一个成功的商人。', '这代人对环保很重视。', '她很快适应了新环境。', '这是一个特殊的历史时期。', '他心灵受到了很大的创伤。', '他的话给了我很大的启发。', '她在大学辅修希腊语。', '比赛因雨暂停了。', '这位商人很懂得市场。', '他的头发已经全白了。', '成功取决于你的努力。', '这代人更有创新精神。', '服务员，我们要点餐。', '人类不是地球的唯一主宰者。', '这种情况以前也发生过类似的。', '他的办公室正对着公园。', '他的坏习惯很难改。', '她能说流利的波兰语。'])
 }
 
 // Show HSK levels as soon as page loads
 updateHskLevels();
+
+// Immediately create flashcards for later use
+createCards();
 
 // YouTube Iframe stuff
 var tag = document.createElement('script');
