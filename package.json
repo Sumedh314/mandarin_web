@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Sumedh314/mandarin_web#readme",
   "devDependencies": {
+    "@types/youtube": "^0.2.0",
     "chrome-types": "^0.1.425"
   }
 }

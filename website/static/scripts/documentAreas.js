@@ -1,6 +1,6 @@
 export let state = {
     timestampElements: [],
-    videoPlayer: null,
+    /** @type {YT.Player} */ videoPlayer: null,
     scrollToTimestamp: null,
     lastIndex: -1,
     clickedWord: '',
@@ -19,6 +19,7 @@ export const translationArea = document.getElementById('translation');
 export const translateTranscriptButton = document.getElementById('translate-transcript-button');
 export const practiceWordsButton = document.getElementById('practice-words-button');
 export const locationMarker = document.getElementById('location-marker');
+export const wordsAreaContainer = document.getElementById('words-area-container');
 export const wordsArea = document.getElementById('words-area');
 export const wordMenu = document.getElementById('word-menu');
 export const tooltipTranslation = document.getElementById('word-tooltip-translation');

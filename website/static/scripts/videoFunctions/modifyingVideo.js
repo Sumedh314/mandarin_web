@@ -8,7 +8,8 @@ import {
     wordsArea,
     state,
     locationMarker,
-    videoTitle
+    videoTitle,
+    wordsAreaContainer
 } from "../documentAreas.js";
 
 /**
@@ -53,8 +54,9 @@ export async function embedVideo(link) {
  * Automatically scrolls the transcript to the location of the video
  */
 export function scrollTranscript() {
-    const wordsAreaTop = wordsArea.getBoundingClientRect()['top'];
-    const wordsAreaBottom = wordsArea.getBoundingClientRect()['bottom'];
+    const wordsAreaTop = wordsAreaContainer.getBoundingClientRect()['top'];
+    const wordsAreaBottom = wordsAreaContainer.getBoundingClientRect()['bottom'];
+    console.log(wordsAreaTop, wordsAreaBottom);
 
     const currentTime = state.videoPlayer.getCurrentTime();
     const currentTimestamp = findTimestamp(currentTime);
@@ -94,7 +96,7 @@ export function scrollTranscript() {
 export function scrollToLocationMarker() {
     const timestamp = Number(locationMarker.parentNode.dataset.timestamp);
 
-    videoPlayer.seekTo(timestamp, true);
+    state.videoPlayer.seekTo(timestamp, true);
 }
 
 /**
@@ -117,7 +119,8 @@ export function findTimestamp(currentTime) {
 }
 
 /**
- * Runs when the YouTube video player changes state
+ * Runs when the 
+ *  video player changes state
  */
 export async function onPlayerStateChange() {
 
@@ -125,6 +128,7 @@ export async function onPlayerStateChange() {
     if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
         if (state.scrollToTimestamp === null) {
             state.scrollToTimestamp = requestAnimationFrame(scrollTranscript);
+            console.log('asdfla;ksdfj;alskjdf;alskdjfal;dsk');
         }
         if (videoTitle.textContent == '') {
             videoTitle.textContent = state.videoPlayer.videoTitle;

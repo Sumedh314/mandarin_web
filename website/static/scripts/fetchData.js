@@ -21,15 +21,18 @@ export async function fetchGeminiPrompt(prompt) {
 /**
  * Adds list of practice sentences to practice_sentences.json
  * 
+ * @param {string} word Word that sentences contain in common for user to practice
  * @param {Array} sentencesList List of sentences to add
  */
-export async function updatePracticeSentences(sentencesList) {
+export async function updatePracticeSentences(word, sentencesList) {
+    const practice_data = [word, sentencesList]
+
     const updatePracticeSentencesResponse = await fetch('/update_practice_sentences', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(sentencesList),
+        body: JSON.stringify(practice_data),
     });
     const result = await updatePracticeSentencesResponse.text();
 
@@ -339,6 +342,24 @@ export async function toggleSavedWord(word) {
         body: word,
     });
     const savedWord = await addSavedWordResponse.text();
+
+    return savedWord;
+}
+
+/**
+ * Checks if a word is saved by the user
+ * 
+ * @param {string} word Word to check
+ */
+export async function checkSaved(word) {
+    const checkSaved = await fetch('/check_saved', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: word,
+    });
+    const savedWord = await checkSaved.text();
 
     return savedWord;
 }

@@ -49,7 +49,7 @@ const loadingSign = 'Loading...';
 /**
  * Runs when the words area is clicked. Prints word definition and movese transcript if word clicked and toggles video.
  * 
- * @param {object} event Space in the words area that was clicked.
+ * @param {Event} event Space in the words area that was clicked.
 */
 async function onWordClick(event) {
 
@@ -138,7 +138,7 @@ async function onWordClick(event) {
 /**
  * Runs when a key is pressed
  * 
- * @param {object} event Key that was pressed
+ * @param {Event} event Key that was pressed
  */
 async function onKeyPressed(event) {
 
@@ -197,6 +197,9 @@ async function onKeyPressed(event) {
     // Toggle word save if user presses the letter s
     if (event.key === 's') {
         console.log(state.clickedWord);
+        if (state.clickedWord == '') {
+            return
+        }
         await toggleSavedWord(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
     }
