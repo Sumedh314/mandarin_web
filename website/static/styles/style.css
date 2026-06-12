@@ -2,12 +2,6 @@ body {
     background-color: white;
 }
 
-#upper-elements {
-    display: flex;
-    width: 1000px;
-    gap: 50px;
-}
-
 table {
     border-collapse: collapse;
     text-align: left;
@@ -23,12 +17,6 @@ td, th {
     border-style: solid;
 }
 
-.text-box {
-    border-radius: 999px;
-    border-style: solid;
-    border-width: 1px;
-}
-
 button {
     background-color: white;
     height: 20px;
@@ -40,6 +28,18 @@ button {
 button:hover {
     cursor: pointer;
     background-color: lightgray;
+}
+
+#upper-elements {
+    display: flex;
+    width: 1000px;
+    gap: 50px;
+}
+
+.text-box {
+    border-radius: 999px;
+    border-style: solid;
+    border-width: 1px;
 }
 
 #translation-area {
@@ -131,7 +131,8 @@ button:hover {
 }
 
 .saved-word {
-    text-decoration: underline;
+    text-decoration: green underline;
+    text-underline-offset: 4px;
 }
 
 #word-menu {
@@ -141,4 +142,32 @@ button:hover {
     border-radius: 13px;
     padding: 5px;
     z-index: 10;
+}
+
+#card-rating-selection {
+    display: flex;
+    gap: 10px;
+}
+
+.card-rating {
+    width: 60px;
+    height: 60px;
+    border: 2px solid;
+    border-radius: 5px;
+}
+
+#rating-again-button {
+    border-color: red;
+}
+
+#rating-hard-button {
+    border-color: black;
+}
+
+#rating-good-button {
+    border-color: green;
+}
+
+#rating-easy-button {
+    border-color: blue;
 }

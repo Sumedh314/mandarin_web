@@ -120,6 +120,11 @@ export async function printTranscript(transcript) {
                 wordElement.dataset.proficiency = proficiencyLevels[word];
                 wordElement.textContent = word;
 
+                const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
+                if (wordIsSaved) {
+                    wordElement.classList.add('saved-word');
+                }
+
                 transcriptLine.appendChild(wordElement);
 
                 wordIndex++;

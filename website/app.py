@@ -29,6 +29,8 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+scheduler = Scheduler()
+
 translator = GoogleTranslator()
 
 transcript_generator = YouTubeTranscriptApi()
@@ -49,11 +51,13 @@ transcripts_path = base_path / 'user_progress' / 'transcripts.json'
 hsk_words_path = base_path / 'mandarin_words' / 'words_by_hsk.json'
 words_list_path = base_path / 'mandarin_words' / 'words.json'
 
-with open(words_list_path, 'r') as words_list:
-    all_words = json.load(words_list)
+flashcards_by_word = {}
 
-with open(hsk_words_path, 'r') as hsk_words_file:
-    hsk_words = json.load(hsk_words_file)
+# with open(words_list_path, 'r') as words_list:
+#     all_words = json.load(words_list)
+
+# with open(hsk_words_path, 'r') as hsk_words_file:
+#     hsk_words = json.load(hsk_words_file)
 
 
 @app.route('/')
@@ -66,6 +70,8 @@ def home():
 def translate_text():
     """Translates a given word or phrase and returns it to JavaScript"""
     text = request.data.decode()
+
+    all_words = load_json(words_list_path)
 
     translation = ''
     translation_found = False
@@ -85,6 +91,8 @@ def translate_text():
 def get_pinyin():
     """Returns the pinyin representation of a Mandarin word"""
     text = request.data.decode()
+
+    all_words = load_json(words_list_path)
 
     pinyin_text = []
     pinyin_found = False
@@ -132,8 +140,9 @@ def get_proficiency_levels():
     text = request.json
     text_proficiency_levels = {}
 
-    with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-        word_proficiency_levels = json.load(word_proficiency_levels_file)
+    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
+    #     word_proficiency_levels = json.load(word_proficiency_levels_file)
+    word_proficiency_levels = load_json(word_proficiency_levels_path)
 
     for word in text:
         word_is_mandarin = True
@@ -152,8 +161,9 @@ def get_proficiency_levels():
             proficiency = 0
         text_proficiency_levels[word] = proficiency
 
-    with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
-        json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
+    # with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
+    #     json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
+    dump_json(word_proficiency_levels_path, word_proficiency_levels)
 
     return jsonify(text_proficiency_levels)
 
@@ -164,8 +174,9 @@ def update_proficiency_levels():
     proficiency_levels_to_update = request.json
     updated_proficiency_levels = {}
 
-    with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-        word_proficiency_levels = json.load(word_proficiency_levels_file)
+    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
+    #     word_proficiency_levels = json.load(word_proficiency_levels_file)
+    word_proficiency_levels = load_json(word_proficiency_levels_path)
     
     current_word = proficiency_levels_to_update['current']
     if current_word != '':
@@ -189,8 +200,9 @@ def update_proficiency_levels():
         word_proficiency_levels[word] = proficiency
         updated_proficiency_levels[word] = proficiency
         
-    with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
-        json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
+    # with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
+    #     json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
+    dump_json(word_proficiency_levels_path, word_proficiency_levels)
     
     return jsonify(updated_proficiency_levels)
 
@@ -206,8 +218,9 @@ def generate_transcript():
     transcript_found = True
     transcript_is_new = False
 
-    with open(transcripts_path, 'r') as transcript_file:
-        transcripts: dict = json.load(transcript_file)
+    # with open(transcripts_path, 'r') as transcript_file:
+    #     transcripts: dict = json.load(transcript_file)
+    transcripts: dict = load_json(transcripts_path)
 
     if video_id in transcripts:
         transcript = transcripts[video_id]['transcript']
@@ -224,9 +237,10 @@ def generate_transcript():
             transcript = transcript.fetch().to_raw_data()
 
     if transcript_is_new:
-        with open(transcripts_path, 'w') as transcript_file:
-            transcripts[video_id] = {'transcript': transcript, 'last_index': -1}
-            json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
+        transcripts[video_id] = {'transcript': transcript, 'last_index': -1}
+        # with open(transcripts_path, 'w') as transcript_file:
+        #     json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
+        dump_json(transcripts_path, transcripts)
 
     return jsonify(transcript)
 
@@ -258,8 +272,9 @@ def get_last_index():
     """Gets the location of the place the user left off of a transcript"""
     video_id = request.data.decode()
 
-    with open(transcripts_path, 'r') as transcript_file:
-        transcripts = json.load(transcript_file)
+    # with open(transcripts_path, 'r') as transcript_file:
+    #     transcripts = json.load(transcript_file)
+    transcripts = load_json(transcripts_path)
     
     if video_id in transcripts:
         return str(transcripts[video_id]['last_index'])
@@ -273,13 +288,15 @@ def set_last_index():
     data = request.json
     print(data)
 
-    with open(transcripts_path, 'r') as transcript_file:
-        transcripts = json.load(transcript_file)
+    # with open(transcripts_path, 'r') as transcript_file:
+    #     transcripts = json.load(transcript_file)
+    transcripts = load_json(transcripts_path)
 
     transcripts[data['videoId']]['last_index'] = data['lastIndex']
 
-    with open(transcripts_path, 'w') as transcript_file:
-        json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
+    # with open(transcripts_path, 'w') as transcript_file:
+    #     json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
+    dump_json(transcripts_path, transcripts)
     
     return ''
 
@@ -302,8 +319,10 @@ def get_hsk_percentages():
     """Returns the percentages of HSK words user knows and is learning for each level and HSK standard"""
     hsk_percentages = {}
 
-    with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-        user_words = json.load(word_proficiency_levels_file)
+    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
+    #     user_words = json.load(word_proficiency_levels_file)
+    user_words = load_json(word_proficiency_levels_path)
+    hsk_words = load_json(hsk_words_path)
 
     known_words = 0
     learning_words = 0
@@ -345,8 +364,9 @@ def get_random_list_words_learning():
     num_words = int(request.data.decode())
     word_list = []
 
-    with open(word_proficiency_levels_path, 'r') as words_file:
-        words = json.load(words_file)
+    # with open(word_proficiency_levels_path, 'r') as words_file:
+    #     words = json.load(words_file)
+    words = load_json(saved_words_path)
     
     for word in words:
         if 0 < words[word] < 3:
@@ -362,14 +382,11 @@ def get_random_list_words_saved():
     num_words = int(request.data.decode())
     word_list = []
 
-    with open(saved_words_path, 'r') as words_file:
-        words = json.load(words_file)
+    # with open(saved_words_path, 'r') as words_file:
+    #     word_list = json.load(words_file)
+    word_list = load_json(saved_words_path)
     
-    for word in words:
-        if 0 < words[word] < 3:
-            word_list.append(word)
-    
-    word_list = random.choices(word_list, k=num_words)
+    word_list = random.sample(word_list, k=num_words)
     
     return jsonify(word_list)
 
@@ -381,16 +398,18 @@ def update_practice_sentences():
 
     word, new_sentences = practice_data
 
-    with open(practice_sentences_file, 'r') as practice_sentences_file:
-        practice_sentences: dict[str, list] = json.load(practice_sentences_file)
+    # with open(practice_sentences_path, 'r') as practice_sentences_file:
+    #     practice_sentences: dict[str, list] = json.load(practice_sentences_file)
+    practice_sentences: dict[str, list] = load_json(practice_sentences_path)
     
     if word in practice_sentences.keys():
-        practice_sentences[word].extend(new_sentences)
+        practice_sentences[word].extend([new_sentences])
     else:
         practice_sentences[word] = new_sentences
 
-    with open(practice_sentences_path, 'w') as practice_sentences_file:
-        json.dump(practice_sentences, practice_sentences_file, indent=4, ensure_ascii=False)
+    # with open(practice_sentences_path, 'w') as practice_sentences_file:
+    #     json.dump(practice_sentences, practice_sentences_file, indent=4, ensure_ascii=False)
+    dump_json(practice_sentences_path, practice_sentences)
     
     return practice_data
 
@@ -398,14 +417,16 @@ def update_practice_sentences():
 @app.route('/create_cards', methods=['GET'])
 def create_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
-    with open(flashcards_data_path, 'r') as flashcards_data_file:
-        flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
+    # with open(flashcards_data_path, 'r') as flashcards_data_file:
+    #     flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
+    flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
     
     for word in flashcards_data:
         card = Card(*flashcards_data[word].values())
+        flashcards_by_word[word] = card
         print(card)
     
-    return None
+    return ''
 
 
 @app.route('/create_card', methods=['POST'])
@@ -413,23 +434,50 @@ def create_card():
     """Creates a card for the Free Spaced Repetition System algorithm"""
     word = request.data.decode()
 
-    scheduler = Scheduler()
-    card = Card()
-    rating = Rating.Easy
+    # with open(flashcards_data_path, 'r') as flashcards_data_file:
+    #     flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
+    flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
 
-    card, review_log = scheduler.review_card(card, rating, datetime.now(timezone.utc))
+    card = Card()
+
+    flashcards_data[word] = card.to_dict()
+
+    # with open(flashcards_data_path, 'w') as flashcards_data_file:
+    #     json.dump(flashcards_data, flashcards_data_file, indent=4, ensure_ascii=False)
+    dump_json(flashcards_data_path, flashcards_data)
+    
+    return ''
 
 
 @app.route('/update_card', methods=['POST'])
 def update_card():
     """Updates a card using the Free Spaced Repetition System algorithm"""
-    word = request.data.decode()
+    data = request.json
 
-    scheduler = Scheduler()
-    card = Card()
-    rating = Rating.Easy
+    word = data['word']
+    rating = data['rating']
+
+    card = flashcards_by_word[word]
 
     card, review_log = scheduler.review_card(card, rating)
+    return ''
+
+
+@app.route('/get_sentence', methods=['POST'])
+def get_sentence():
+    """Gets a sentence that includes the given word for the user to practice with"""
+    word = request.data.decode()
+    
+    # with open(practice_sentences_path, 'r') as practice_sentences_file:
+    #     practice_sentences = json.load(practice_sentences_file)
+    practice_sentences = load_json(practice_sentences_path)
+    
+    print(practice_sentences)
+    
+    sentence = practice_sentences[word][0]
+
+    
+    return sentence
 
 
 @app.route('/toggle_saved_word', methods=['POST'])
@@ -438,8 +486,9 @@ def toggle_saved_word():
     word = request.data.decode()
     saved = False
 
-    with open(saved_words_path, 'r') as saved_words_file:
-        saved_words: list = json.load(saved_words_file)
+    # with open(saved_words_path, 'r') as saved_words_file:
+    #     saved_words: list = json.load(saved_words_file)
+    saved_words: list = load_json(saved_words_path)
     
     if word not in saved_words:
         saved = True
@@ -448,8 +497,9 @@ def toggle_saved_word():
         saved = False
         saved_words.remove(word)
 
-    with open(saved_words_path, 'w') as saved_words_file:
-        json.dump(saved_words, saved_words_file, indent=4, ensure_ascii=False)
+    # with open(saved_words_path, 'w') as saved_words_file:
+    #     json.dump(saved_words, saved_words_file, indent=4, ensure_ascii=False)
+    dump_json(saved_words_path, saved_words)
     
     return 'Saved' if saved else 'Unsaved'
 
@@ -458,12 +508,24 @@ def toggle_saved_word():
 def check_saved():
     word = request.data.decode()
     
-    with open(saved_words_path, 'r') as saved_words_file:
-        saved_words: list = json.load(saved_words_file)
+    # with open(saved_words_path, 'r') as saved_words_file:
+    #     saved_words: list = json.load(saved_words_file)
+    saved_words = load_json(saved_words_path)
     
     return 'Saved' if word in saved_words else 'Unsaved'
 
 
+def load_json(file_path):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    
+    return data
+
+
+def dump_json(file_path, data):
+    with open(file_path, 'w') as file:
+        json.dump(data, file_path, indent=4, ensure_ascii=False)
+
+
 if __name__ == '__main__':
-    # app.run(debug=True, port=5000)
-    create_cards()
+    app.run(debug=True, port=5000)

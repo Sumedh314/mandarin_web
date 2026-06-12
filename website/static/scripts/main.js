@@ -25,8 +25,10 @@ import {
 } from './fetchData.js';
 
 import {
+    createCard,
     createCards,
-    generatePracticeSentence
+    generatePracticeSentence,
+    reviewCards
 } from "./practiceWords.js";
 
 import {
@@ -207,6 +209,7 @@ async function onKeyPressed(event) {
         }
         await fetchToggleSavedWord(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
+        createCard(state.clickedWord);
     }
 }
 
@@ -256,10 +259,17 @@ async function generateStory() {
  * Runs when the Practice Words button is clicked
  */
 async function practiceWords() {
-    let wordList = await fetchRandomListWordsSaved(10);
-    console.log(wordList);
+    // let wordList = await fetchRandomListWordsSaved(10);
+    // console.log(wordList);
 
-    const sentenceList = await generatePracticeSentence(wordList);
+    // const sentencesByWord = await generatePracticeSentence(wordList);
+    // console.log(sentencesByWord);
+
+    // for (const word of Object.keys(sentencesByWord)) {
+    //     await updatePracticeSentences(word, sentencesByWord[word]);
+    // }
+
+    reviewCards();
 }
 
 // Show HSK levels as soon as page loads

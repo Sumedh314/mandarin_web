@@ -357,7 +357,7 @@ export async function fetchCheckSaved(word) {
         headers: {
             'Content-Type': 'text/plain',
         },
-        body: word,
+        body: word
     });
     const savedWord = await checkSaved.text();
 
@@ -374,4 +374,61 @@ export async function fetchCreateCards() {
     const createCards = await createCardsResponse.text();
 
     return createCards;
+}
+
+/**
+ * Creates one card for a word that user has saved
+ * 
+ * @param {string} word Word to create flashcard for
+ */
+export async function fetchCreateCard(word) {
+    const createCardResponse = await fetch('/create_card', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: word
+    });
+    const createCard = await createCardResponse.text();
+
+    return createCard;
+}
+
+/**
+ * Updates a card 
+ * 
+ * @param {string} word Word that card tested user for
+ * @param {number} rating Rating of 0, 1, 2, or 3 that user gave word
+ */
+export async function fetchUpdateCard(word, rating) {
+    const data = { word: word, rating: rating };
+
+    const updateCardResponse = await fetch('/update_card', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
+    const updateCard = await updateCardResponse.text();
+
+    return updateCard;
+}
+
+/**
+ * Give a sentence that includes the given word for the user to practice with
+ * 
+ * @param {string} word Word to fetch sentence for
+ */
+export async function fetchSentence(word) {
+    const sentenceResponse = await fetch('/get_sentence', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: word
+    });
+    const sentence = await sentenceResponse.text();
+
+    return sentence;
 }
