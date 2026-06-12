@@ -417,14 +417,14 @@ def update_practice_sentences():
 @app.route('/create_cards', methods=['GET'])
 def create_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
-    # with open(flashcards_data_path, 'r') as flashcards_data_file:
-    #     flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
     flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
     
     for word in flashcards_data:
-        card = Card(*flashcards_data[word].values())
+        card = Card.from_dict(flashcards_data[word])
         flashcards_by_word[word] = card
         print(card)
+    
+    print(flashcards_by_word)
     
     return ''
 
@@ -434,16 +434,12 @@ def create_card():
     """Creates a card for the Free Spaced Repetition System algorithm"""
     word = request.data.decode()
 
-    # with open(flashcards_data_path, 'r') as flashcards_data_file:
-    #     flashcards_data: dict[str, dict] = json.load(flashcards_data_file)
     flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
 
     card = Card()
 
     flashcards_data[word] = card.to_dict()
 
-    # with open(flashcards_data_path, 'w') as flashcards_data_file:
-    #     json.dump(flashcards_data, flashcards_data_file, indent=4, ensure_ascii=False)
     dump_json(flashcards_data_path, flashcards_data)
     
     return ''
@@ -457,9 +453,21 @@ def update_card():
     word = data['word']
     rating = data['rating']
 
+    
+
     card = flashcards_by_word[word]
+    # card = Card()
+    # print(card.to_dict())
 
     card, review_log = scheduler.review_card(card, rating)
+    print(review_log)
+
+    card_data = card.to_dict()
+    flashcards_data = load_json(flashcards_data_path)
+    flashcards_data[word] = card_data
+    dump_json(flashcards_data_path, flashcards_data)
+
+    flashcards_by_word[word] = card
     return ''
 
 
@@ -467,9 +475,7 @@ def update_card():
 def get_sentence():
     """Gets a sentence that includes the given word for the user to practice with"""
     word = request.data.decode()
-    
-    # with open(practice_sentences_path, 'r') as practice_sentences_file:
-    #     practice_sentences = json.load(practice_sentences_file)
+
     practice_sentences = load_json(practice_sentences_path)
     
     print(practice_sentences)
@@ -486,8 +492,6 @@ def toggle_saved_word():
     word = request.data.decode()
     saved = False
 
-    # with open(saved_words_path, 'r') as saved_words_file:
-    #     saved_words: list = json.load(saved_words_file)
     saved_words: list = load_json(saved_words_path)
     
     if word not in saved_words:
@@ -497,8 +501,6 @@ def toggle_saved_word():
         saved = False
         saved_words.remove(word)
 
-    # with open(saved_words_path, 'w') as saved_words_file:
-    #     json.dump(saved_words, saved_words_file, indent=4, ensure_ascii=False)
     dump_json(saved_words_path, saved_words)
     
     return 'Saved' if saved else 'Unsaved'
@@ -507,9 +509,7 @@ def toggle_saved_word():
 @app.route('/check_saved', methods=['POST'])
 def check_saved():
     word = request.data.decode()
-    
-    # with open(saved_words_path, 'r') as saved_words_file:
-    #     saved_words: list = json.load(saved_words_file)
+
     saved_words = load_json(saved_words_path)
     
     return 'Saved' if word in saved_words else 'Unsaved'
@@ -524,8 +524,12 @@ def load_json(file_path):
 
 def dump_json(file_path, data):
     with open(file_path, 'w') as file:
-        json.dump(data, file_path, indent=4, ensure_ascii=False)
+        json.dump(data, file, indent=4, ensure_ascii=False)
 
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+    # card = Card()
+    # card2 = Card(*card.to_dict().values())
+    # print(card)
+    # print(card2)

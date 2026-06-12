@@ -49,7 +49,7 @@ export async function generatePracticeSentence(words) {
 export async function reviewCards() {
     // const sentence = await fetchSentence('炒蛋');
     // printText(sentence);
-    await fetchUpdateCard('hi', 3);
+    await fetchUpdateCard('用户', 1);
     console.log('asdf');
 }
 
