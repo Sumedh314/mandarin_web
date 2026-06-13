@@ -1,10 +1,17 @@
 import {
+    ratingSelectionArea,
+    state
+} from "./documentAreas.js";
+
+import {
     fetchCreateCard,
     fetchCreateCards,
     fetchGeminiPrompt,
+    fetchNextWordAndCard,
     fetchSentence,
     fetchUpdateCard
 } from "./fetchData.js";
+
 import { printText } from "./renderText.js";
 
 /**
@@ -44,13 +51,61 @@ export async function generatePracticeSentence(words) {
 }
 
 /**
- * Allows user to review flashcards
+ * Allows user to review the next flashcard
+ * 
+ * @param {number} [wordIndex=0] Index of due words to be used
  */
-export async function reviewCards() {
-    // const sentence = await fetchSentence('炒蛋');
-    // printText(sentence);
-    await fetchUpdateCard('用户', 1);
+export async function showNextCard(wordIndex = 0) {
+    ratingSelectionArea.style.display = 'flex';
+
+    // const dueWords = await fetchDueWords();
+    // for (const word of dueWords) {
+    //     let sentence = await fetchSentence(word);
+    //     if (sentence == 'None') {
+    //         continue;
+    //     }
+    //     await printText(sentence);
+    // }
+    const wordAndCard = await fetchNextWordAndCard(wordIndex);
+    const word = wordAndCard.word;
+    const card = wordAndCard.card;
+
+    state.flashcardWord = word;
+    
+    const sentence = await fetchSentence(word);
+    if (sentence == 'None') {
+        showNextCard(wordIndex + 1);
+        return;
+    }
+    printText(sentence);
+
+    // await fetchUpdateCard(word, 1);
     console.log('asdf');
+}
+
+/**
+ * Updates a card after user chooses rating
+ * 
+ * @param {MouseEvent} event One of four buttons user clicked to give flashcard rating
+ */
+export async function reviewCard(event) {
+    switch (event.target.id) {
+        case 'rating-again-button':
+            fetchUpdateCard(state.flashcardWord, 1);
+            break;
+        case 'rating-hard-button':
+            fetchUpdateCard(state.flashcardWord, 2);
+            break;
+        case 'rating-good-button':
+            fetchUpdateCard(state.flashcardWord, 3);
+            break;
+        case 'rating-easy-button':
+            fetchUpdateCard(state.flashcardWord, 4);
+            break;
+    
+        default:
+            break;
+    }
 }
 
 /**

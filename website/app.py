@@ -51,7 +51,7 @@ transcripts_path = base_path / 'user_progress' / 'transcripts.json'
 hsk_words_path = base_path / 'mandarin_words' / 'words_by_hsk.json'
 words_list_path = base_path / 'mandarin_words' / 'words.json'
 
-flashcards_by_word = {}
+flashcards_by_word: dict[str, Card] = {}
 
 # with open(words_list_path, 'r') as words_list:
 #     all_words = json.load(words_list)
@@ -115,9 +115,9 @@ def segment_text():
     """Segments Mandarin text into individual words using the jieba library"""
     text = request.data.decode()
     segmented_text = [word for word in jieba.cut_for_search(text)]
-    print(segment_text)
+    print(segmented_text)
     segmented_text = [word for word in jieba.cut(text)]
-    print(segment_text)
+    print(segmented_text)
 
     return segmented_text
 
@@ -140,8 +140,6 @@ def get_proficiency_levels():
     text = request.json
     text_proficiency_levels = {}
 
-    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-    #     word_proficiency_levels = json.load(word_proficiency_levels_file)
     word_proficiency_levels = load_json(word_proficiency_levels_path)
 
     for word in text:
@@ -161,8 +159,6 @@ def get_proficiency_levels():
             proficiency = 0
         text_proficiency_levels[word] = proficiency
 
-    # with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
-    #     json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
     dump_json(word_proficiency_levels_path, word_proficiency_levels)
 
     return jsonify(text_proficiency_levels)
@@ -414,6 +410,37 @@ def update_practice_sentences():
     return practice_data
 
 
+@app.route('/get_next_word_and_card', methods=['POST'])
+def get_next_word_and_card():
+    """Gets the next word and card that's due for the user to review"""
+    index = int(request.data.decode())
+
+    due_words = get_due_words()
+
+    if len(due_words) <= index:
+        return 'None'
+    
+    next_word = due_words[index]
+    next_card = flashcards_by_word[next_word]
+
+    return { 'word': next_word, 'card': next_card }
+
+
+@app.route('/get_due_words', methods=['GET'])
+def get_due_words():
+    """Gets a list of words that the user is due to review the flashcards for"""
+    due_pairs: list[tuple[str, Card]] = []
+
+    for word, card in flashcards_by_word.items():
+        if card.due <= datetime.now(timezone.utc):
+            due_pairs.append((word, card))
+
+    due_pairs.sort(key=lambda pair: pair[1].due)
+    due_words = [pair[0] for pair in due_pairs]
+    
+    return due_words
+
+
 @app.route('/create_cards', methods=['GET'])
 def create_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
@@ -422,9 +449,6 @@ def create_cards():
     for word in flashcards_data:
         card = Card.from_dict(flashcards_data[word])
         flashcards_by_word[word] = card
-        print(card)
-    
-    print(flashcards_by_word)
     
     return ''
 
@@ -453,11 +477,7 @@ def update_card():
     word = data['word']
     rating = data['rating']
 
-    
-
     card = flashcards_by_word[word]
-    # card = Card()
-    # print(card.to_dict())
 
     card, review_log = scheduler.review_card(card, rating)
     print(review_log)
@@ -477,11 +497,11 @@ def get_sentence():
     word = request.data.decode()
 
     practice_sentences = load_json(practice_sentences_path)
-    
-    print(practice_sentences)
-    
-    sentence = practice_sentences[word][0]
 
+    if word in practice_sentences:
+        sentence = practice_sentences[word][0]
+    else:
+        sentence = 'None'
     
     return sentence
 
@@ -529,7 +549,3 @@ def dump_json(file_path, data):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-    # card = Card()
-    # card2 = Card(*card.to_dict().values())
-    # print(card)
-    # print(card2)

@@ -124,6 +124,7 @@ button:hover {
 }
 
 #location-marker {
+    visibility: hidden;
     position: absolute;
     font-size: larger;
     color: red;
@@ -145,7 +146,7 @@ button:hover {
 }
 
 #card-rating-selection {
-    display: flex;
+    display: none;
     gap: 10px;
 }
 

@@ -9,7 +9,8 @@ import {
     practiceWordsButton,
     wordMenu,
     textEntry,
-    linkEntry
+    linkEntry,
+    ratingSelectionArea
 } from "./documentAreas.js";
 
 import {
@@ -28,7 +29,8 @@ import {
     createCard,
     createCards,
     generatePracticeSentence,
-    reviewCards
+    reviewCard,
+    showNextCard
 } from "./practiceWords.js";
 
 import {
@@ -269,7 +271,7 @@ async function practiceWords() {
     //     await updatePracticeSentences(word, sentencesByWord[word]);
     // }
 
-    reviewCards();
+    showNextCard();
 }
 
 // Show HSK levels as soon as page loads
@@ -296,4 +298,7 @@ generateStoryButton.addEventListener('click', generateStory);
 practiceWordsButton.addEventListener('click', practiceWords);
 
 wordsArea.addEventListener('click', onWordClick);
+
+ratingSelectionArea.addEventListener('click', reviewCard);
+
 window.addEventListener('keydown', onKeyPressed);

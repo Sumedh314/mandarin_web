@@ -365,6 +365,36 @@ export async function fetchCheckSaved(word) {
 }
 
 /**
+ * Gets the next word and card for the user to review
+ * 
+ * @param {number} [wordIndex=0] Index of list of due words to use
+ */
+export async function fetchNextWordAndCard(wordIndex = 0) {
+    const nextWordAndCardResponse = await fetch('/get_next_word_and_card', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: wordIndex
+    });
+    const nextWordAndCard = await nextWordAndCardResponse.json();
+
+    return nextWordAndCard;
+}
+
+/**
+ * Gets a list of flashcard words that are due for the user to review
+ */
+export async function fetchDueWords() {
+    const dueWordsResponse = await fetch('/get_due_words', {
+        method: 'GET'
+    });
+    const dueWords = await dueWordsResponse.json();
+
+    return dueWords;
+}
+
+/**
  * Creates all flashcards based on words that the user saved using flaskcards_data.json
  */
 export async function fetchCreateCards() {
