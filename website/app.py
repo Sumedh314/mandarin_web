@@ -388,15 +388,12 @@ def get_random_list_words_saved():
     return jsonify(word_list)
 
 
-@app.route('/force_generate_practice_sentences', methods=['POST'])
+@app.route('/force_generate_practice_sentences', methods=['GET'])
 def force_generate_practice_sentences():
-    """Generates practice senetences using Gemini and a list of words to generate sentences with"""
-    data = request.json
+    """Generates practice senetences using Gemini for words that are running low on practice sentences"""
+    low_words = get_low_words()
 
-    words = data['words']
-    num_sentences = data['num_sentences']
-
-    generate_practice_sentences(words, num_sentences)
+    generate_practice_sentences(low_words, 5)
 
 
 @app.route('/get_review_times', methods=['POST'])
@@ -507,21 +504,16 @@ def get_sentence():
     practice_sentences: list[list] = load_json(practice_sentences_path)
 
     if word in practice_sentences:
+        if len(practice_sentences[word]) == 0:
+            force_generate_practice_sentences()
+            practice_sentences: list[list] = load_json(practice_sentences_path)
         sentence = practice_sentences[word][0]
         practice_sentences[word].pop(0)
     else:
         sentence = 'None'
     
     dump_json(practice_sentences_path, practice_sentences)
-    
-    low_words = []
-    for practice_word in practice_sentences:
-        if len(practice_sentences[practice_word]) < 5:
-            low_words.append(practice_word)
 
-    if len(low_words) >= 5:
-        generate_practice_sentences(low_words, 5)
-    
     return sentence
 
 
@@ -532,15 +524,19 @@ def toggle_saved_word():
     saved = False
 
     saved_words: list = load_json(saved_words_path)
+    practice_sentences = load_json(practice_sentences_path)
     
     if word not in saved_words:
         saved = True
         saved_words.append(word)
+
+        practice_sentences[word] = []
     else:
         saved = False
         saved_words.remove(word)
 
     dump_json(saved_words_path, saved_words)
+    dump_json(practice_sentences_path, practice_sentences)
     
     return 'Saved' if saved else 'Unsaved'
 
@@ -591,6 +587,18 @@ def generate_practice_sentences(words, num_sentences):
     sentences_by_word = json.loads(response.text)
     for word in sentences_by_word:
         update_practice_sentences(word, sentences_by_word[word])
+
+
+def get_low_words(num_sentences=5):
+    """Gets the words that have fewer than the desired amount of practice sentences"""
+    practice_sentences = load_json(practice_sentences_path)
+    
+    low_words = []
+    for practice_word in practice_sentences:
+        if len(practice_sentences[practice_word]) < num_sentences:
+            low_words.append(practice_word)
+    
+    return low_words
 
 
 def load_json(file_path):

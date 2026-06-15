@@ -416,6 +416,18 @@ export async function fetchDueWords() {
 }
 
 /**
+ * Force the program to generate new sentences for words that are running low on sentences
+ */
+export async function fetchForceGeneratePracticeSentences() {
+    const forceGeneratePracticeSentencesResponse = await fetch('/force_generate_practice_sentences', {
+        method: 'GET'
+    });
+    const forceGeneratePracticeSentences = await forceGeneratePracticeSentencesResponse.text();
+
+    return forceGeneratePracticeSentences;
+}
+
+/**
  * Creates all flashcards based on words that the user saved using flaskcards_data.json
  */
 export async function fetchCreateCards() {

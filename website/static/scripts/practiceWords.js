@@ -12,6 +12,7 @@ import {
     fetchCreateCard,
     fetchCreateCards,
     fetchDueWords,
+    fetchForceGeneratePracticeSentences,
     fetchGeminiPrompt,
     fetchNextWord as fetchNextWord,
     fetchReviewTimes,
@@ -78,7 +79,7 @@ export async function showNextCard(wordIndex = 0) {
     
     const sentence = await fetchSentence(word);
     if (sentence == 'None') {
-        showNextCard(wordIndex + 1);
+        await fetchForceGeneratePracticeSentences();
         return;
     }
     printText(sentence);
@@ -124,6 +125,7 @@ export async function reviewCard(event) {
  */
 export async function showNumDueCards() {
     const dueWords = await fetchDueWords();
+    console.log(dueWords);
     const numDueCards = dueWords.length
 
     numDueWordsCounter.textContent = numDueCards;
