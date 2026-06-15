@@ -13,6 +13,7 @@ from flask_cors import CORS
 
 from deep_translator import GoogleTranslator
 from google import genai
+from google.genai import types
 
 from fsrs import Scheduler, Card, Rating, ReviewLog
 
@@ -36,7 +37,6 @@ translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
 
 client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
-chat = client.chats.create(model='gemini-2.0-flash')
 
 mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
@@ -52,12 +52,6 @@ hsk_words_path = base_path / 'mandarin_words' / 'words_by_hsk.json'
 words_list_path = base_path / 'mandarin_words' / 'words.json'
 
 flashcards_by_word: dict[str, Card] = {}
-
-# with open(words_list_path, 'r') as words_list:
-#     all_words = json.load(words_list)
-
-# with open(hsk_words_path, 'r') as hsk_words_file:
-#     hsk_words = json.load(hsk_words_file)
 
 
 @app.route('/')
@@ -300,11 +294,23 @@ def set_last_index():
 @app.route('/prompt_gemini', methods=['POST'])
 def prompt_gemini():
     """Prompts Google Gemini using its API"""
-    prompt = request.data.decode()
+    data = request.json
 
-    chat = client.chats.create(model='gemini-2.5-flash')
-    response = chat.send_message(prompt).text
+    prompt = data['prompt']
+    schema = data['schema']
 
+    if schema == {}:
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt).text
+    else:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type='application/json',
+                response_schema=schema
+            )
+        ).text
+        
     print(response)
 
     return response
@@ -410,8 +416,61 @@ def update_practice_sentences():
     return practice_data
 
 
-@app.route('/get_next_word_and_card', methods=['POST'])
-def get_next_word_and_card():
+@app.route('/generate_practice_sentences', methods=['POST'])
+def generate_practice_sentences(words, num_sentences):
+    """Generates practice senetences using Gemini and a list of words to generate sentences with"""
+    # data = request.json
+
+    # words = data['words']
+    # num_sentences = data['num_sentences']
+    
+    prompt = f'Using this list of Chinese words, generate {num_sentences} sentences for each word: {', '.join(words)}'
+
+    schema_items = []
+    for word in words:
+        schema_items.append('"' + word + '"' + ': {"type": "array", "items": {"type": "string"}}')
+    
+    schema = ', '.join(schema_items)
+    schema = '{' + schema
+    schema += '}'
+    schema = json.loads(schema)
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type='application/json',
+            response_schema={
+                "type": "object",
+                "description": "A dictionary in which keys are a single Mandarin Chinese word whose values are Mandarin Chinese sentences that contain their corresponding key word.",
+                "properties": schema
+            }
+        )
+    )
+    
+    print(response.text)
+
+
+@app.route('/get_review_times', methods=['POST'])
+def get_review_times():
+    """Gets the amount of time before the next review of a flashcard depending on which button user clicks"""
+    word = request.data.decode()
+    card = flashcards_by_word[word]
+
+    review_times = []
+
+    ratings = [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]
+    for rating in ratings:
+        new_card = Card.from_dict(card.to_dict())
+        new_card, _ = scheduler.review_card(new_card, rating)
+        review_times.append((new_card.due - datetime.now(timezone.utc)).total_seconds())
+    
+    print(review_times)
+    return review_times
+
+
+@app.route('/get_next_word', methods=['POST'])
+def get_next_word():
     """Gets the next word and card that's due for the user to review"""
     index = int(request.data.decode())
 
@@ -421,9 +480,8 @@ def get_next_word_and_card():
         return 'None'
     
     next_word = due_words[index]
-    next_card = flashcards_by_word[next_word]
 
-    return { 'word': next_word, 'card': next_card }
+    return next_word
 
 
 @app.route('/get_due_words', methods=['GET'])
@@ -472,6 +530,7 @@ def create_card():
 @app.route('/update_card', methods=['POST'])
 def update_card():
     """Updates a card using the Free Spaced Repetition System algorithm"""
+    print('updating')
     data = request.json
 
     word = data['word']
@@ -479,7 +538,7 @@ def update_card():
 
     card = flashcards_by_word[word]
 
-    card, review_log = scheduler.review_card(card, rating)
+    card, review_log = scheduler.review_card(card, rating, datetime.now(timezone.utc))
     print(review_log)
 
     card_data = card.to_dict()
@@ -488,6 +547,7 @@ def update_card():
     dump_json(flashcards_data_path, flashcards_data)
 
     flashcards_by_word[word] = card
+    print(card.due)
     return ''
 
 
@@ -548,4 +608,5 @@ def dump_json(file_path, data):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # app.run(debug=True, port=5000)
+    generate_practice_sentences(['好困', '癌症', '炒蛋', '早餐', '原本'], 5)

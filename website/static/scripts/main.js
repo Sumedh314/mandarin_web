@@ -30,7 +30,8 @@ import {
     createCards,
     generatePracticeSentence,
     reviewCard,
-    showNextCard
+    showNextCard,
+    showNumDueCards
 } from "./practiceWords.js";
 
 import {
@@ -44,6 +45,7 @@ import {
     updateWordUnderlines,
     showWordMenu
 } from "./renderText.js";
+import { formatSeconds } from "./utils.js";
 
 import {
     embedVideo,
@@ -271,14 +273,15 @@ async function practiceWords() {
     //     await updatePracticeSentences(word, sentencesByWord[word]);
     // }
 
-    showNextCard();
+    await showNextCard();
 }
 
 // Show HSK levels as soon as page loads
 updateHskLevels();
 
-// Immediately create flashcards for later use
+// Immediately create flashcards for later use and show number of currently due cards
 createCards();
+showNumDueCards();
 
 // YouTube Iframe stuff
 var tag = document.createElement('script');

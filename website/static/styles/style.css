@@ -49,10 +49,9 @@ button:hover {
 
 #words-area-container {
     position: relative;
-    border-style: solid;
-    border-width: 1px;
-    border-color: lightgray;
-    min-height: 150px;
+    border: solid 1px lightgray;
+    padding: 3px;
+    min-height: 144px;
     max-height: 250px;
     height: auto;
     overflow-y: auto;
@@ -151,24 +150,46 @@ button:hover {
 }
 
 .card-rating {
+    display: block;
     width: 60px;
     height: 60px;
     border: 2px solid;
     border-radius: 5px;
+
+    p {
+        margin-top: 0px;
+        margin-bottom: 8px;
+    }
 }
 
 #rating-again-button {
     border-color: red;
+
+    * {
+        pointer-events: none;
+    }
 }
 
 #rating-hard-button {
     border-color: black;
+
+    * {
+        pointer-events: none;
+    }
 }
 
 #rating-good-button {
     border-color: green;
+
+    * {
+        pointer-events: none;
+    }
 }
 
 #rating-easy-button {
     border-color: blue;
+
+    * {
+        pointer-events: none;
+    }
 }

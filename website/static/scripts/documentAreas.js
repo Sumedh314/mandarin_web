@@ -21,6 +21,8 @@ export const generateStoryButton = document.getElementById('generate-story-butto
 export const practiceWordsButton = document.getElementById('practice-words-button');
 export const translateTranscriptButton = document.getElementById('translate-transcript-button');
 
+export const numDueWordsCounter = document.getElementById('num-due-cards');
+
 // TRANSLATION INFORMAMTION (MIDDLE SECTION)
 export const translationArea = document.getElementById('translation-area');
 export const wordMenu = document.getElementById('word-menu');

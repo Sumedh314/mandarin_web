@@ -4,14 +4,17 @@ import {wordsArea} from "./documentAreas.js";
  * Sends a prompt to Google Gemini
  * 
  * @param {string} prompt The prompt to send to gemini
+ * @param {object} [schema={}] schema Schema for Gemini to return content in
  */
-export async function fetchGeminiPrompt(prompt) {
+export async function fetchGeminiPrompt(prompt, schema = {}) {
+    const data = { prompt: prompt, schema: schema };
+
     const geminiResponse = await fetch('/prompt_gemini', {
         method: 'POST',
         headers: {
-            'Content-Type': 'text/plain',
+            'Content-Type': 'application/json',
         },
-        body: prompt,
+        body: JSON.stringify(data),
     });
     const message = await geminiResponse.text();
 
@@ -365,21 +368,39 @@ export async function fetchCheckSaved(word) {
 }
 
 /**
+ * Gets the review times for the different ratings a user can give to a word
+ * 
+ * @param {string} word Word to get next review times for
+ */
+export async function fetchReviewTimes(word) {
+    const reviewTimesResponse = await fetch('/get_review_times', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: word
+    });
+    const reviewTimes = await reviewTimesResponse.json();
+
+    return reviewTimes;
+}
+
+/**
  * Gets the next word and card for the user to review
  * 
  * @param {number} [wordIndex=0] Index of list of due words to use
  */
-export async function fetchNextWordAndCard(wordIndex = 0) {
-    const nextWordAndCardResponse = await fetch('/get_next_word_and_card', {
+export async function fetchNextWord(wordIndex = 0) {
+    const nextWordResponse = await fetch('/get_next_word', {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
         },
         body: wordIndex
     });
-    const nextWordAndCard = await nextWordAndCardResponse.json();
+    const nextWord = await nextWordResponse.text();
 
-    return nextWordAndCard;
+    return nextWord;
 }
 
 /**

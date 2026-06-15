@@ -1,4 +1,9 @@
 import {
+    numDueWordsCounter,
+    ratingAgainTime,
+    ratingEasyTime,
+    ratingGoodTime,
+    ratingHardTime,
     ratingSelectionArea,
     state
 } from "./documentAreas.js";
@@ -6,13 +11,16 @@ import {
 import {
     fetchCreateCard,
     fetchCreateCards,
+    fetchDueWords,
     fetchGeminiPrompt,
-    fetchNextWordAndCard,
+    fetchNextWord as fetchNextWord,
+    fetchReviewTimes,
     fetchSentence,
     fetchUpdateCard
 } from "./fetchData.js";
 
 import { printText } from "./renderText.js";
+import { formatSeconds } from "./utils.js";
 
 /**
  * Prompts Gemini to generate a sentence using a given word
@@ -58,17 +66,13 @@ export async function generatePracticeSentence(words) {
 export async function showNextCard(wordIndex = 0) {
     ratingSelectionArea.style.display = 'flex';
 
-    // const dueWords = await fetchDueWords();
-    // for (const word of dueWords) {
-    //     let sentence = await fetchSentence(word);
-    //     if (sentence == 'None') {
-    //         continue;
-    //     }
-    //     await printText(sentence);
-    // }
-    const wordAndCard = await fetchNextWordAndCard(wordIndex);
-    const word = wordAndCard.word;
-    const card = wordAndCard.card;
+    const word = await fetchNextWord(wordIndex);
+
+    if (word == 'None') {
+        printText('No new flashcards');
+        ratingSelectionArea.style.display = 'none';
+        return;
+    }
 
     state.flashcardWord = word;
     
@@ -79,8 +83,12 @@ export async function showNextCard(wordIndex = 0) {
     }
     printText(sentence);
 
-    // await fetchUpdateCard(word, 1);
-    console.log('asdf');
+    const reviewTimes = await fetchReviewTimes(word);
+    const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
+    
+    for (let index = 0; index < ratingTimeAreas.length; index++) {
+        ratingTimeAreas[index].textContent = formatSeconds(reviewTimes[index]);
+    }
 }
 
 /**
@@ -91,21 +99,40 @@ export async function showNextCard(wordIndex = 0) {
 export async function reviewCard(event) {
     switch (event.target.id) {
         case 'rating-again-button':
-            fetchUpdateCard(state.flashcardWord, 1);
+            await fetchUpdateCard(state.flashcardWord, 1);
             break;
         case 'rating-hard-button':
-            fetchUpdateCard(state.flashcardWord, 2);
+            await fetchUpdateCard(state.flashcardWord, 2);
             break;
         case 'rating-good-button':
-            fetchUpdateCard(state.flashcardWord, 3);
+            await fetchUpdateCard(state.flashcardWord, 3);
             break;
         case 'rating-easy-button':
-            fetchUpdateCard(state.flashcardWord, 4);
+            await fetchUpdateCard(state.flashcardWord, 4);
             break;
     
         default:
             break;
     }
+
+    await showNextCard();
+}
+
+/**
+ * Show the number of cards the user can practice that are due currently
+ */
+export async function showNumDueCards() {
+    const dueWords = await fetchDueWords();
+    let numDueCards = 0;
+    
+    for (const word of dueWords) {
+        const sentence = await fetchSentence(word);
+        if (sentence != 'None') {
+            numDueCards++;
+        }
+    }
+
+    numDueWordsCounter.textContent = numDueCards;
 }
 
 /**

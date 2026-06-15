@@ -24,3 +24,28 @@ export function formatTimestamp(timestamp) {
 
     return parts.join(':')
 }
+
+/**
+ * Rounds a number of seconds to minutes, hours, days, months, or years
+ */
+export function formatSeconds(seconds) {
+    const timeFrames = ['y', 'mo', 'd', 'h', 'm'];
+    const divisionFactors = [31536000, 2592000, 86400, 3600, 60];
+
+    let index = 0;
+    for (const factor of divisionFactors) {
+        if (seconds / factor >= 1) {
+            let time = Math.round(seconds / factor * 10) / 10;
+            let timeFrame = timeFrames[index];
+
+            if (time == divisionFactors[index - 1] / factor) {
+                time = 1;
+                timeFrame = timeFrames[index - 1];
+            }
+            
+            return `${time}${timeFrame}`;
+        }
+        index++;
+    }
+    return '<1m';
+}
