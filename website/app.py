@@ -293,7 +293,7 @@ def set_last_index():
 
 @app.route('/prompt_gemini', methods=['POST'])
 def prompt_gemini():
-    """Prompts Google Gemini using its API"""
+    """Prompts Google Gemini using its API with an optional response schema"""
     data = request.json
 
     prompt = data['prompt']
@@ -382,73 +382,21 @@ def get_random_list_words_learning():
 @app.route('/get_random_list_words_saved', methods=['POST'])
 def get_random_list_words_saved():
     num_words = int(request.data.decode())
-    word_list = []
-
-    # with open(saved_words_path, 'r') as words_file:
-    #     word_list = json.load(words_file)
     word_list = load_json(saved_words_path)
-    
     word_list = random.sample(word_list, k=num_words)
     
     return jsonify(word_list)
 
 
-@app.route('/update_practice_sentences', methods=['POST'])
-def update_practice_sentences():
-    """Adds to practice_sentences JSON file"""
-    practice_data = request.json
-
-    word, new_sentences = practice_data
-
-    # with open(practice_sentences_path, 'r') as practice_sentences_file:
-    #     practice_sentences: dict[str, list] = json.load(practice_sentences_file)
-    practice_sentences: dict[str, list] = load_json(practice_sentences_path)
-    
-    if word in practice_sentences.keys():
-        practice_sentences[word].extend([new_sentences])
-    else:
-        practice_sentences[word] = new_sentences
-
-    # with open(practice_sentences_path, 'w') as practice_sentences_file:
-    #     json.dump(practice_sentences, practice_sentences_file, indent=4, ensure_ascii=False)
-    dump_json(practice_sentences_path, practice_sentences)
-    
-    return practice_data
-
-
-@app.route('/generate_practice_sentences', methods=['POST'])
-def generate_practice_sentences(words, num_sentences):
+@app.route('/force_generate_practice_sentences', methods=['POST'])
+def force_generate_practice_sentences():
     """Generates practice senetences using Gemini and a list of words to generate sentences with"""
-    # data = request.json
+    data = request.json
 
-    # words = data['words']
-    # num_sentences = data['num_sentences']
-    
-    prompt = f'Using this list of Chinese words, generate {num_sentences} sentences for each word: {', '.join(words)}'
+    words = data['words']
+    num_sentences = data['num_sentences']
 
-    schema_items = []
-    for word in words:
-        schema_items.append('"' + word + '"' + ': {"type": "array", "items": {"type": "string"}}')
-    
-    schema = ', '.join(schema_items)
-    schema = '{' + schema
-    schema += '}'
-    schema = json.loads(schema)
-
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type='application/json',
-            response_schema={
-                "type": "object",
-                "description": "A dictionary in which keys are a single Mandarin Chinese word whose values are Mandarin Chinese sentences that contain their corresponding key word.",
-                "properties": schema
-            }
-        )
-    )
-    
-    print(response.text)
+    generate_practice_sentences(words, num_sentences)
 
 
 @app.route('/get_review_times', methods=['POST'])
@@ -556,12 +504,23 @@ def get_sentence():
     """Gets a sentence that includes the given word for the user to practice with"""
     word = request.data.decode()
 
-    practice_sentences = load_json(practice_sentences_path)
+    practice_sentences: list[list] = load_json(practice_sentences_path)
 
     if word in practice_sentences:
         sentence = practice_sentences[word][0]
+        practice_sentences[word].pop(0)
     else:
         sentence = 'None'
+    
+    dump_json(practice_sentences_path, practice_sentences)
+    
+    low_words = []
+    for practice_word in practice_sentences:
+        if len(practice_sentences[practice_word]) < 5:
+            low_words.append(practice_word)
+
+    if len(low_words) >= 5:
+        generate_practice_sentences(low_words, 5)
     
     return sentence
 
@@ -595,6 +554,45 @@ def check_saved():
     return 'Saved' if word in saved_words else 'Unsaved'
 
 
+def update_practice_sentences(word, new_sentences):
+    """Adds to practice_sentences JSON file"""
+    practice_sentences: dict[str, list] = load_json(practice_sentences_path)
+    
+    if word in practice_sentences.keys():
+        practice_sentences[word].extend(new_sentences)
+    else:
+        practice_sentences[word] = new_sentences
+
+    dump_json(practice_sentences_path, practice_sentences)
+
+
+def generate_practice_sentences(words, num_sentences):
+    """Generates practice senetences using Gemini and a list of words to generate sentences with"""
+    
+    prompt = f'Using this list of Mandarin Chinese words, generate {num_sentences} sentences for each word using simplified Mandarin Chinese: {', '.join(words)}'
+
+    schema = {}
+    for word in words:
+        schema[word] = {'type': 'array', 'items': {'type': 'string'}}
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type='application/json',
+            response_schema={
+                "type": "object",
+                "description": "A dictionary in which keys are a single Mandarin Chinese word whose values are Mandarin Chinese sentences that contain their corresponding key word.",
+                "properties": schema
+            }
+        )
+    )
+    
+    sentences_by_word = json.loads(response.text)
+    for word in sentences_by_word:
+        update_practice_sentences(word, sentences_by_word[word])
+
+
 def load_json(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
@@ -608,5 +606,4 @@ def dump_json(file_path, data):
 
 
 if __name__ == '__main__':
-    # app.run(debug=True, port=5000)
-    generate_practice_sentences(['好困', '癌症', '炒蛋', '早餐', '原本'], 5)
+    app.run(debug=True, port=5000)

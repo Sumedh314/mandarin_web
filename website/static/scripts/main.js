@@ -280,7 +280,7 @@ async function practiceWords() {
 updateHskLevels();
 
 // Immediately create flashcards for later use and show number of currently due cards
-createCards();
+await createCards();
 showNumDueCards();
 
 // YouTube Iframe stuff

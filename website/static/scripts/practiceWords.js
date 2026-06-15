@@ -115,6 +115,7 @@ export async function reviewCard(event) {
             break;
     }
 
+    await showNumDueCards();
     await showNextCard();
 }
 
@@ -123,14 +124,7 @@ export async function reviewCard(event) {
  */
 export async function showNumDueCards() {
     const dueWords = await fetchDueWords();
-    let numDueCards = 0;
-    
-    for (const word of dueWords) {
-        const sentence = await fetchSentence(word);
-        if (sentence != 'None') {
-            numDueCards++;
-        }
-    }
+    const numDueCards = dueWords.length
 
     numDueWordsCounter.textContent = numDueCards;
 }
