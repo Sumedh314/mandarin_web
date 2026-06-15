@@ -6,7 +6,7 @@ import {
     wordsArea,
     state,
     locationMarker,
-    practiceWordsButton,
+    reviewWordsButton,
     wordMenu,
     textEntry,
     linkEntry,
@@ -168,7 +168,7 @@ async function onKeyPressed(event) {
             let newTime = 0;
             switch (event.key) {
 
-                // Toggle video is spacebar is pressed
+                // Toggle video if spacebar is pressed
                 case ' ':
                     toggleVideo();
                     break;
@@ -298,7 +298,7 @@ linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVid
 translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
 generateStoryButton.addEventListener('click', generateStory);
 
-practiceWordsButton.addEventListener('click', practiceWords);
+reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
 
 wordsArea.addEventListener('click', onWordClick);
 

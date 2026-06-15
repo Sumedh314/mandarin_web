@@ -56,7 +56,6 @@ export async function embedVideo(link) {
 export function scrollTranscript() {
     const wordsAreaTop = wordsAreaContainer.getBoundingClientRect()['top'];
     const wordsAreaBottom = wordsAreaContainer.getBoundingClientRect()['bottom'];
-    console.log(wordsAreaTop, wordsAreaBottom);
 
     const currentTime = state.videoPlayer.getCurrentTime();
     const currentTimestamp = findTimestamp(currentTime);

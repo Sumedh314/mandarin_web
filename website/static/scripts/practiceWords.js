@@ -111,6 +111,10 @@ export async function reviewCard(event) {
         case 'rating-easy-button':
             await fetchUpdateCard(state.flashcardWord, 4);
             break;
+        case 'exit-review-button':
+            ratingSelectionArea.style.display = 'none';
+            printText();
+            return;
     
         default:
             break;

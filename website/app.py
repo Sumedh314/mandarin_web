@@ -17,6 +17,9 @@ from google.genai import types
 
 from fsrs import Scheduler, Card, Rating, ReviewLog
 
+import yt_dlp
+import cv2
+
 import requests
 
 from dotenv import load_dotenv
@@ -72,7 +75,7 @@ def translate_text():
 
     for word in all_words:
         if word['s'] == text:
-            translation = ', '.join(word['f'][0]['m'])
+            translation = ', '.join([', '.join(form['m']) for form in word['f']])
             translation_found = True
     
     if not translation_found:
@@ -395,6 +398,8 @@ def force_generate_practice_sentences():
 
     generate_practice_sentences(low_words, 5)
 
+    return ''
+
 
 @app.route('/get_review_times', methods=['POST'])
 def get_review_times():
@@ -565,7 +570,7 @@ def update_practice_sentences(word, new_sentences):
 def generate_practice_sentences(words, num_sentences):
     """Generates practice senetences using Gemini and a list of words to generate sentences with"""
     
-    prompt = f'Using this list of Mandarin Chinese words, generate {num_sentences} sentences for each word using simplified Mandarin Chinese: {', '.join(words)}'
+    prompt = f'Using this list of Mandarin Chinese words, generate {num_sentences} sentences for each word using simplified Mandarin Chinese: {', '.join(words)}. Other than the words in the list, use relatively common vocabulary for the sentences.'
 
     schema = {}
     for word in words:

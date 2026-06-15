@@ -18,7 +18,7 @@ export const linkEntry = document.getElementById('link-entry');
 export const videoButton = document.getElementById('video-button');
 
 export const generateStoryButton = document.getElementById('generate-story-button');
-export const practiceWordsButton = document.getElementById('practice-words-button');
+export const reviewWordsButton = document.getElementById('review-words-button');
 export const translateTranscriptButton = document.getElementById('translate-transcript-button');
 
 export const numDueWordsCounter = document.getElementById('num-due-cards');
