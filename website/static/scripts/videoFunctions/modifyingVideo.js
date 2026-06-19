@@ -127,7 +127,6 @@ export async function onPlayerStateChange() {
     if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
         if (state.scrollToTimestamp === null) {
             state.scrollToTimestamp = requestAnimationFrame(scrollTranscript);
-            console.log('asdfla;ksdfj;alskjdf;alskdjfal;dsk');
         }
         if (videoTitle.textContent == '') {
             videoTitle.textContent = state.videoPlayer.videoTitle;

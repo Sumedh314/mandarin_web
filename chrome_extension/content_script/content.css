@@ -2,6 +2,7 @@
     position: absolute;
     min-width: 100px;
     max-width: 300px;
+    color: black;
     background-color: white;
     border: solid 1px black;
     border-radius: 10px;

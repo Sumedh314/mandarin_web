@@ -11,14 +11,15 @@ from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, Tran
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
+from fsrs import Scheduler, Card, Rating, ReviewLog
+
 from deep_translator import GoogleTranslator
 from google import genai
 from google.genai import types
 
-from fsrs import Scheduler, Card, Rating, ReviewLog
-
 import yt_dlp
 import cv2
+import numpy
 
 import requests
 
@@ -369,9 +370,7 @@ def get_random_list_words_learning():
     num_words = int(request.data.decode())
     word_list = []
 
-    # with open(word_proficiency_levels_path, 'r') as words_file:
-    #     words = json.load(words_file)
-    words = load_json(saved_words_path)
+    words = load_json(word_proficiency_levels_path)
     
     for word in words:
         if 0 < words[word] < 3:
@@ -440,7 +439,7 @@ def get_due_words():
     due_pairs: list[tuple[str, Card]] = []
 
     for word, card in flashcards_by_word.items():
-        if card.due <= datetime.now(timezone.utc):
+        if card.due <= datetime.now(timezone.utc) or card.state == 1:
             due_pairs.append((word, card))
 
     due_pairs.sort(key=lambda pair: pair[1].due)
@@ -569,7 +568,6 @@ def update_practice_sentences(word, new_sentences):
 
 def generate_practice_sentences(words, num_sentences):
     """Generates practice senetences using Gemini and a list of words to generate sentences with"""
-    
     prompt = f'Using this list of Mandarin Chinese words, generate {num_sentences} sentences for each word using simplified Mandarin Chinese: {', '.join(words)}. Other than the words in the list, use relatively common vocabulary for the sentences.'
 
     schema = {}
@@ -620,3 +618,14 @@ def dump_json(file_path, data):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+    # with yt_dlp.YoutubeDL({'format': 'bestvideo', 'quiet': True}) as ydl:
+    #     info = ydl.extract_info('https://www.youtube.com/watch?v=NxITmnGIl7E', download=False)
+    
+    # url = info['url']
+    # fps = info['fps']
+    # duration = info['duration']
+    
+    # capture = cv2.VideoCapture(url)
+
+    # while capture.isOpened():
+    #     ret, frame = capture.read()

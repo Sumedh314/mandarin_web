@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename='styles/style.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/globals.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/upper_elements.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/practice_area.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/word_menu.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles/rating_selection.css')}}">
     <link rel="shortcut icon" href="{{url_for('static', filename='favicon.ico')}}">
     {% block head %}{% endblock %}
 </head>

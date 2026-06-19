@@ -1,0 +1,8 @@
+#word-menu {
+    position: absolute;
+    background-color: white;
+    border: solid 1px;
+    border-radius: 13px;
+    padding: 5px;
+    z-index: 10;
+}
