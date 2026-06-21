@@ -11,19 +11,17 @@ import {
     textEntry,
     linkEntry,
     ratingSelectionArea
-} from "./documentAreas.js";
+} from "./document-areas.js";
 
 import {
     fetchGeminiPrompt,
     fetchVideoTranscript,
     fetchTranscriptTranslation,
-    fetchUpdatedProficiencyLevels,
+    updateProficiencyLevels,
     fetchRandomListWordsLearning,
-    fetchLastIndex,
-    updatePracticeSentences,
-    fetchToggleSavedWord,
-    fetchRandomListWordsSaved
-} from './fetchData.js';
+    fetchTranscriptLastIndex,
+    updateSavedWord
+} from './api/fetch-data.js';
 
 import {
     createCard,
@@ -32,28 +30,29 @@ import {
     reviewCard,
     showNextCard,
     showNumDueCards
-} from "./practiceWords.js";
+} from "./practice-words.js";
 
-import {
-    printText,
-    printTranscript,
-    printDefinitions,
-    updateWordColors,
-    updateHskLevels,
-    updateLocationMarker,
-    setLastIndex,
-    updateWordUnderlines,
-    showWordMenu
-} from "./renderText.js";
-import { formatSeconds } from "./utils.js";
+// import {
+//     printText,
+//     printTranscript,
+//     printDefinitions,
+//     updateWordColors,
+//     updateHskLevels,
+//     updateLocationMarker,
+//     setLastIndex,
+//     updateWordUnderlines,
+//     showWordMenu
+// } from "./render-text/render-text.js";
 
 import {
     embedVideo,
     findTimestamp,
     toggleVideo
-} from "./videoFunctions/modifyingVideo.js";
+} from "./video-functions/modifying-video.js";
 
-import {videoReady} from "./videoFunctions/videoStates.js";
+import { videoReady } from "./video-functions/video-states.js";
+import { request } from "./api/client.js";
+import { formatWordsToUpdate } from "./utils.js";
 
 const loadingSign = 'Loading...';
 
@@ -99,8 +98,14 @@ async function onWordClick(event) {
         printDefinitions(event.target.dataset.word);
         // showWordMenu(event.target);
         let currentIndex = parseInt(event.target.dataset.index, 10);
-        const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex);
-        updateWordColors(proficiencyLevels);
+
+        if (state.lastIndex != currentIndex) {
+            const wordElements = wordsArea.getElementsByTagName('span');
+            const wordsToUpdate = formatWordsToUpdate(wordElements, state.lastIndex, currentIndex);
+            const proficiencyLevels = await updateProficiencyLevels(wordsToUpdate);
+            updateWordColors(proficiencyLevels);
+        }
+        
         updateHskLevels();
         
         if (state.lastIndex < currentIndex) {
@@ -116,7 +121,7 @@ async function onWordClick(event) {
     else if (event.target.hasAttribute('data-action')) {
         if (event.target.dataset.action == 'final-word') {
             let currentIndex = parseInt(event.target.dataset.index, 10);
-            const proficiencyLevels = await fetchUpdatedProficiencyLevels(state.lastIndex, currentIndex, true);
+            const proficiencyLevels = await updateProficiencyLevels(state.lastIndex, currentIndex, true);
             updateWordColors(proficiencyLevels);
             updateHskLevels();
 
@@ -211,7 +216,7 @@ async function onKeyPressed(event) {
         if (state.clickedWord == '') {
             return
         }
-        await fetchToggleSavedWord(state.clickedWord);
+        await updateSavedWord(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
         createCard(state.clickedWord);
     }
@@ -228,7 +233,7 @@ async function loadVideoAndTranscript() {
     state.videoLink = link;
     embedVideo(link);
 
-    const lastIndex = await fetchLastIndex(link);
+    const lastIndex = await fetchTranscriptLastIndex(link);
     state.lastIndex = lastIndex;
     
     const transcript = await fetchVideoTranscript(link);
@@ -277,31 +282,31 @@ async function practiceWords() {
 }
 
 // Show HSK levels as soon as page loads
-updateHskLevels();
+// updateHskLevels();
 
-// Immediately create flashcards for later use and show number of currently due cards
-await createCards();
-showNumDueCards();
+// // Immediately create flashcards for later use and show number of currently due cards
+// await createCards();
+// showNumDueCards();
 
-// YouTube Iframe stuff
-var tag = document.createElement('script');
-tag.src = 'https://youtube.com/iframe_api';
-var firstTagScript = document.getElementsByTagName('script')[0]
-firstTagScript.parentNode.insertBefore(tag, firstTagScript);
+// // YouTube Iframe stuff
+// var tag = document.createElement('script');
+// tag.src = 'https://youtube.com/iframe_api';
+// var firstTagScript = document.getElementsByTagName('script')[0]
+// firstTagScript.parentNode.insertBefore(tag, firstTagScript);
 
-textButton.addEventListener('click', printUserText);
-textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUserText(event));
+// textButton.addEventListener('click', printUserText);
+// textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUserText(event));
 
-videoButton.addEventListener('click', loadVideoAndTranscript);
-linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
+// videoButton.addEventListener('click', loadVideoAndTranscript);
+// linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
 
-translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
-generateStoryButton.addEventListener('click', generateStory);
+// translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
+// generateStoryButton.addEventListener('click', generateStory);
 
-reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
+// reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
 
-wordsArea.addEventListener('click', onWordClick);
+// wordsArea.addEventListener('click', onWordClick);
 
-ratingSelectionArea.addEventListener('click', reviewCard);
+// ratingSelectionArea.addEventListener('click', reviewCard);
 
-window.addEventListener('keydown', onKeyPressed);
+// window.addEventListener('keydown', onKeyPressed);

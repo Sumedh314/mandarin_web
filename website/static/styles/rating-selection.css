@@ -1,6 +1,7 @@
 #card-rating-selection {
     display: none;
     gap: 10px;
+    justify-self: center;
 }
 
 .card-rating {
@@ -18,7 +19,6 @@
 
 #rating-again-button {
     border-color: red;
-
     * {
         pointer-events: none;
     }
@@ -26,7 +26,6 @@
 
 #rating-hard-button {
     border-color: black;
-
     * {
         pointer-events: none;
     }
@@ -34,7 +33,6 @@
 
 #rating-good-button {
     border-color: green;
-
     * {
         pointer-events: none;
     }
@@ -42,8 +40,11 @@
 
 #rating-easy-button {
     border-color: blue;
-
     * {
         pointer-events: none;
     }
+}
+
+#exit-review-buttonn {
+    margin-top: 100%;
 }

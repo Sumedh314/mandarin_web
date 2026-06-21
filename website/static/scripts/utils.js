@@ -49,3 +49,37 @@ export function formatSeconds(seconds) {
     }
     return '<1m';
 }
+
+/**
+ * Formats words to update proficiency levels of given HTML elements of words.
+ * 
+ * @param {HTMLElement} wordElements Element containing words to update
+ * @param {number} lastIndex Index at which user last clicked a word
+ * @param {number} currentIndex Index of the current word user clicked
+ */
+export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
+    const wordsToUpdate = { previous: [], current: '' };
+
+    for (const word of wordElements) {
+        if (word.hasAttribute('data-index')) {
+            let wordIndex = parseInt(word.dataset.index);
+
+            if (wordIndex < currentIndex) {
+                if (wordIndex > lastIndex) {
+                    wordsToUpdate.previous.push(word.dataset.word);
+                }
+            }
+            else if (wordIndex == currentIndex) {
+                wordsToUpdate.current = word.dataset.word;
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            continue;
+        }
+    }
+
+    return wordsToUpdate;
+}

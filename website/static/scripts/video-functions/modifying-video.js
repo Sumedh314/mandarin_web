@@ -2,7 +2,7 @@ import {
     videoReady,
     iframeApiReady,
     onPlayerReady
-} from "./videoStates.js";
+} from "./video-states.js";
 
 import {
     wordsArea,
@@ -10,7 +10,7 @@ import {
     locationMarker,
     videoTitle,
     wordsAreaContainer
-} from "../documentAreas.js";
+} from "../document-areas.js";
 
 /**
  * Loads a YouTube video based on the link pasted by the user, as well as its transcript.

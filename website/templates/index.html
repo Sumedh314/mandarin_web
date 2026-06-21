@@ -8,26 +8,6 @@
 <h1 id="program">Mandarin</h1>
 
 <div id="upper-elements">
-    <div id="inputs">
-        <div id="text">
-            <p>Text: </p>
-            <input id="text-entry" type="text">
-            <button id="text-button" type="button">Enter</button>
-        </div>
-        
-        <div id="link">
-            <p>YouTube link:</p>
-            <input id="link-entry" type="text">
-            <button id="video-button" type="button">Enter</button>
-        </div>
-        
-        <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
-        <br>
-        <button id="generate-story-button" type="button">Generate Story</button>
-        <br>
-        <button id="review-words-button" type="button">Review words (<span id="num-due-cards"></span>)</button>
-    </div>
-
     <div id="hsk-progress">
         <table id="hsk-table">
             <tr>
@@ -71,6 +51,30 @@
                 <td id="new-hsk-7-percent"></td>
             </tr>
         </table>
+    </div>
+
+    <div id="inputs">
+        <div id="text-input-container" class="input-container">
+            <p>Text: </p>
+            <div id="text" class="input-form">
+                <input id="text-entry" type="text">
+                <button id="text-button" type="button">→</button>
+            </div>
+        </div>
+        
+        <div id="link-input-container" class="input-container">
+            <p>YouTube link:</p>
+            <div id="link" class="input-form">
+                <input id="link-entry" type="text">
+                <button id="video-button" type="button">→</button>
+            </div>
+        </div>
+        
+        <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
+        <br>
+        <button id="generate-story-button" type="button">Generate Story</button>
+        <br>
+        <button id="review-words-button" type="button">Review words (<span id="num-due-cards"></span>)</button>
     </div>
 </div>
 

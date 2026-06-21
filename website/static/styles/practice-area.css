@@ -45,37 +45,37 @@
 
 .word {
     border-radius: 3px;
-}
-.word:hover {
-    cursor: pointer;
+    &:hover {
+        cursor: pointer;
+    }
 }
 
 [data-proficiency='0'] {
     background-color: lightblue;
-}
-[data-proficiency='0']:hover {
-    background-color: #add8e670;
+    &:hover {
+        background-color: #add8e670;
+    }
 }
 
 [data-proficiency='1'] {
     background-color: #ffdd00;
-}
-[data-proficiency='1']:hover {
-    background-color: #ffdd0070;
+    &:hover {
+        background-color: #ffdd0070;
+    }
 }
 
 [data-proficiency='2'] {
     background-color: #ffdd0080;
-}
-[data-proficiency='2']:hover {
-    background-color: #ffdd0030;
+    &:hover {
+        background-color: #ffdd0030;
+    }
 }
 
 [data-proficiency='3'] {
     background-color: white;
-}
-[data-proficiency='3']:hover {
-    background-color: lightgray;
+    &:hover {
+        background-color: lightgray;
+    }
 }
 
 #location-marker {

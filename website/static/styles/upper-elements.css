@@ -1,0 +1,39 @@
+#upper-elements {
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+
+    p {
+        margin: 0px;
+        flex-grow: 1;
+    }
+
+    .input-form {
+        border: 1px solid black;
+        border-radius: 999px;
+    }
+
+    input {
+        border: none;
+        border-radius: 999px;
+        margin-left: 5px;
+        
+        &:focus {
+            outline: none;
+        }
+    }
+
+    button {
+        align-items: center;
+    }
+}
+
+#link-input-container {
+    margin-top: 5px;
+}

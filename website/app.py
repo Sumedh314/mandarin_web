@@ -34,26 +34,26 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-scheduler = Scheduler()
+SCHEDULER = Scheduler()
 
-translator = GoogleTranslator()
+TRANSLATOR = GoogleTranslator()
 
-transcript_generator = YouTubeTranscriptApi()
+TRANSCRIPT_GENERATOR = YouTubeTranscriptApi()
 
-client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+GEMINI_CLIENT = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
-mandarin_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
-mandarin_and_english_language_codes = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant', 'en']
+MANDARIN_LANGAUGE_CODES = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
+MANDARIN_AND_ENGLISH_LANGUAGE_CODES = MANDARIN_LANGAUGE_CODES.extend(['en'])
 
-base_path = Path(__file__).parent
+BASE_PATH = Path(__file__).parent
 
-word_proficiency_levels_path = base_path / 'user_progress' / 'word_proficiency_levels.json'
-practice_sentences_path = base_path / 'user_progress' / 'practice_sentences.json'
-flashcards_data_path = base_path / 'user_progress' / 'flashcards_data.json'
-saved_words_path = base_path / 'user_progress' / 'saved_words.json'
-transcripts_path = base_path / 'user_progress' / 'transcripts.json'
-hsk_words_path = base_path / 'mandarin_words' / 'words_by_hsk.json'
-words_list_path = base_path / 'mandarin_words' / 'words.json'
+WORD_PROFICIENCY_LEVELS_PATH = BASE_PATH / 'user_progress' / 'word_proficiency_levels.json'
+PRACTICE_SENTENCES_PATH = BASE_PATH / 'user_progress' / 'practice_sentences.json'
+FLASHCARDS_DATA_PATH = BASE_PATH / 'user_progress' / 'flashcards_data.json'
+SAVED_WORDS_PATH = BASE_PATH / 'user_progress' / 'saved_words.json'
+TRANSCRIPTS_PATH = BASE_PATH / 'user_progress' / 'transcripts.json'
+HSK_WORDS_PATH = BASE_PATH / 'mandarin_words' / 'words_by_hsk.json'
+WORDS_LIST_PATH = BASE_PATH / 'mandarin_words' / 'words.json'
 
 flashcards_by_word: dict[str, Card] = {}
 
@@ -69,7 +69,7 @@ def translate_text():
     """Translates a given word or phrase and returns it to JavaScript"""
     text = request.data.decode()
 
-    all_words = load_json(words_list_path)
+    all_words = load_json(WORDS_LIST_PATH)
 
     translation = ''
     translation_found = False
@@ -80,7 +80,7 @@ def translate_text():
             translation_found = True
     
     if not translation_found:
-        translation = (translator.translate(text))
+        translation = (TRANSLATOR.translate(text))
 
     return translation
 
@@ -90,7 +90,7 @@ def get_pinyin():
     """Returns the pinyin representation of a Mandarin word"""
     text = request.data.decode()
 
-    all_words = load_json(words_list_path)
+    all_words = load_json(WORDS_LIST_PATH)
 
     pinyin_text = []
     pinyin_found = False
@@ -132,13 +132,13 @@ def segment_transcript():
     return jsonify(segmented_transcript)
 
 
-@app.route('/get_proficiency_levels', methods=['POST'])
-def get_proficiency_levels():
+@app.route('/fetch_proficiency_levels', methods=['POST'])
+def fetch_proficiency_levels():
     """Returns the proficiency levels of each word of the given text"""
     text = request.json
     text_proficiency_levels = {}
 
-    word_proficiency_levels = load_json(word_proficiency_levels_path)
+    word_proficiency_levels = load_json(WORD_PROFICIENCY_LEVELS_PATH)
 
     for word in text:
         word_is_mandarin = True
@@ -157,7 +157,7 @@ def get_proficiency_levels():
             proficiency = 0
         text_proficiency_levels[word] = proficiency
 
-    dump_json(word_proficiency_levels_path, word_proficiency_levels)
+    dump_json(WORD_PROFICIENCY_LEVELS_PATH, word_proficiency_levels)
 
     return jsonify(text_proficiency_levels)
 
@@ -168,9 +168,7 @@ def update_proficiency_levels():
     proficiency_levels_to_update = request.json
     updated_proficiency_levels = {}
 
-    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-    #     word_proficiency_levels = json.load(word_proficiency_levels_file)
-    word_proficiency_levels = load_json(word_proficiency_levels_path)
+    word_proficiency_levels = load_json(WORD_PROFICIENCY_LEVELS_PATH)
     
     current_word = proficiency_levels_to_update['current']
     if current_word != '':
@@ -193,10 +191,8 @@ def update_proficiency_levels():
         
         word_proficiency_levels[word] = proficiency
         updated_proficiency_levels[word] = proficiency
-        
-    # with open(word_proficiency_levels_path, 'w') as word_proficiency_levels_file:
-    #     json.dump(word_proficiency_levels, word_proficiency_levels_file, ensure_ascii=False, indent=4)
-    dump_json(word_proficiency_levels_path, word_proficiency_levels)
+
+    dump_json(WORD_PROFICIENCY_LEVELS_PATH, word_proficiency_levels)
     
     return jsonify(updated_proficiency_levels)
 
@@ -212,9 +208,7 @@ def generate_transcript():
     transcript_found = True
     transcript_is_new = False
 
-    # with open(transcripts_path, 'r') as transcript_file:
-    #     transcripts: dict = json.load(transcript_file)
-    transcripts: dict = load_json(transcripts_path)
+    transcripts: dict = load_json(TRANSCRIPTS_PATH)
 
     if video_id in transcripts:
         transcript = transcripts[video_id]['transcript']
@@ -222,7 +216,7 @@ def generate_transcript():
         transcript_is_new = True
 
         try:
-            transcript = transcript_generator.list(video_id=video_id).find_transcript(mandarin_and_english_language_codes)
+            transcript = TRANSCRIPT_GENERATOR.list(video_id=video_id).find_transcript(MANDARIN_AND_ENGLISH_LANGUAGE_CODES)
         except NoTranscriptFound:
             transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
             transcript_found = False
@@ -232,9 +226,7 @@ def generate_transcript():
 
     if transcript_is_new:
         transcripts[video_id] = {'transcript': transcript, 'last_index': -1}
-        # with open(transcripts_path, 'w') as transcript_file:
-        #     json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
-        dump_json(transcripts_path, transcripts)
+        dump_json(TRANSCRIPTS_PATH, transcripts)
 
     return jsonify(transcript)
 
@@ -244,10 +236,10 @@ def translate_transcript():
     """Translates a transcript from English to Mandarin if available"""
     video_id = request.data.decode()
 
-    transcript = transcript_generator.list(video_id=video_id).find_transcript(['en'])
+    transcript = TRANSCRIPT_GENERATOR.list(video_id=video_id).find_transcript(['en'])
 
     if transcript.is_translatable:
-        for code in mandarin_language_codes:
+        for code in MANDARIN_LANGAUGE_CODES:
             try:
                 transcript = transcript.translate(code).fetch().to_raw_data()
                 break
@@ -261,14 +253,14 @@ def translate_transcript():
     return transcript
 
 
-@app.route('/get_last_index', methods=['POST'])
-def get_last_index():
+@app.route('/fetch_last_index', methods=['POST'])
+def fetch_last_index():
     """Gets the location of the place the user left off of a transcript"""
     video_id = request.data.decode()
 
     # with open(transcripts_path, 'r') as transcript_file:
     #     transcripts = json.load(transcript_file)
-    transcripts = load_json(transcripts_path)
+    transcripts = load_json(TRANSCRIPTS_PATH)
     
     if video_id in transcripts:
         return str(transcripts[video_id]['last_index'])
@@ -276,21 +268,17 @@ def get_last_index():
         return '0'
 
 
-@app.route('/set_last_index', methods=['POST'])
-def set_last_index():
+@app.route('/update_last_index', methods=['POST'])
+def update_last_index():
     """Sets the index of the place the user left off of a transcript"""
     data = request.json
     print(data)
 
-    # with open(transcripts_path, 'r') as transcript_file:
-    #     transcripts = json.load(transcript_file)
-    transcripts = load_json(transcripts_path)
+    transcripts = load_json(TRANSCRIPTS_PATH)
 
     transcripts[data['videoId']]['last_index'] = data['lastIndex']
 
-    # with open(transcripts_path, 'w') as transcript_file:
-    #     json.dump(transcripts, transcript_file, ensure_ascii=False, indent=4)
-    dump_json(transcripts_path, transcripts)
+    dump_json(TRANSCRIPTS_PATH, transcripts)
     
     return ''
 
@@ -304,9 +292,9 @@ def prompt_gemini():
     schema = data['schema']
 
     if schema == {}:
-        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt).text
+        response = GEMINI_CLIENT.models.generate_content(model='gemini-2.5-flash', contents=prompt).text
     else:
-        response = client.models.generate_content(
+        response = GEMINI_CLIENT.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
@@ -320,15 +308,13 @@ def prompt_gemini():
     return response
 
 
-@app.route('/get_hsk_percentages', methods=['GET'])
-def get_hsk_percentages():
+@app.route('/fetch_hsk_percentages', methods=['GET'])
+def fetch_hsk_percentages():
     """Returns the percentages of HSK words user knows and is learning for each level and HSK standard"""
     hsk_percentages = {}
 
-    # with open(word_proficiency_levels_path, 'r') as word_proficiency_levels_file:
-    #     user_words = json.load(word_proficiency_levels_file)
-    user_words = load_json(word_proficiency_levels_path)
-    hsk_words = load_json(hsk_words_path)
+    user_words = load_json(WORD_PROFICIENCY_LEVELS_PATH)
+    hsk_words = load_json(HSK_WORDS_PATH)
 
     known_words = 0
     learning_words = 0
@@ -365,12 +351,12 @@ def get_hsk_percentages():
     return jsonify(hsk_percentages)
 
 
-@app.route('/get_random_list_words_learning', methods=['POST'])
-def get_random_list_words_learning():
+@app.route('/fetch_random_list_words_learning', methods=['POST'])
+def fetch_random_list_words_learning():
     num_words = int(request.data.decode())
     word_list = []
 
-    words = load_json(word_proficiency_levels_path)
+    words = load_json(WORD_PROFICIENCY_LEVELS_PATH)
     
     for word in words:
         if 0 < words[word] < 3:
@@ -381,10 +367,10 @@ def get_random_list_words_learning():
     return jsonify(word_list)
 
 
-@app.route('/get_random_list_words_saved', methods=['POST'])
-def get_random_list_words_saved():
+@app.route('/fetch_random_list_words_saved', methods=['POST'])
+def fetch_random_list_words_saved():
     num_words = int(request.data.decode())
-    word_list = load_json(saved_words_path)
+    word_list = load_json(SAVED_WORDS_PATH)
     word_list = random.sample(word_list, k=num_words)
     
     return jsonify(word_list)
@@ -400,8 +386,8 @@ def force_generate_practice_sentences():
     return ''
 
 
-@app.route('/get_review_times', methods=['POST'])
-def get_review_times():
+@app.route('/fetch_review_times', methods=['POST'])
+def fetch_review_times():
     """Gets the amount of time before the next review of a flashcard depending on which button user clicks"""
     word = request.data.decode()
     card = flashcards_by_word[word]
@@ -411,15 +397,15 @@ def get_review_times():
     ratings = [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]
     for rating in ratings:
         new_card = Card.from_dict(card.to_dict())
-        new_card, _ = scheduler.review_card(new_card, rating)
+        new_card, _ = SCHEDULER.review_card(new_card, rating)
         review_times.append((new_card.due - datetime.now(timezone.utc)).total_seconds())
     
     print(review_times)
     return review_times
 
 
-@app.route('/get_next_word', methods=['POST'])
-def get_next_word():
+@app.route('/fetch_next_word', methods=['POST'])
+def fetch_next_word():
     """Gets the next word and card that's due for the user to review"""
     index = int(request.data.decode())
 
@@ -433,8 +419,8 @@ def get_next_word():
     return next_word
 
 
-@app.route('/get_due_words', methods=['GET'])
-def get_due_words():
+@app.route('/fetch_due_words', methods=['GET'])
+def fetch_due_words():
     """Gets a list of words that the user is due to review the flashcards for"""
     due_pairs: list[tuple[str, Card]] = []
 
@@ -448,10 +434,10 @@ def get_due_words():
     return due_words
 
 
-@app.route('/create_cards', methods=['GET'])
-def create_cards():
+@app.route('/create_initial_cards', methods=['GET'])
+def create_initial_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
-    flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
+    flashcards_data: dict[str, dict] = load_json(FLASHCARDS_DATA_PATH)
     
     for word in flashcards_data:
         card = Card.from_dict(flashcards_data[word])
@@ -465,13 +451,13 @@ def create_card():
     """Creates a card for the Free Spaced Repetition System algorithm"""
     word = request.data.decode()
 
-    flashcards_data: dict[str, dict] = load_json(flashcards_data_path)
+    flashcards_data: dict[str, dict] = load_json(FLASHCARDS_DATA_PATH)
 
     card = Card()
 
     flashcards_data[word] = card.to_dict()
 
-    dump_json(flashcards_data_path, flashcards_data)
+    dump_json(FLASHCARDS_DATA_PATH, flashcards_data)
     
     return ''
 
@@ -487,36 +473,36 @@ def update_card():
 
     card = flashcards_by_word[word]
 
-    card, review_log = scheduler.review_card(card, rating, datetime.now(timezone.utc))
+    card, review_log = SCHEDULER.review_card(card, rating, datetime.now(timezone.utc))
     print(review_log)
 
     card_data = card.to_dict()
-    flashcards_data = load_json(flashcards_data_path)
+    flashcards_data = load_json(FLASHCARDS_DATA_PATH)
     flashcards_data[word] = card_data
-    dump_json(flashcards_data_path, flashcards_data)
+    dump_json(FLASHCARDS_DATA_PATH, flashcards_data)
 
     flashcards_by_word[word] = card
     print(card.due)
     return ''
 
 
-@app.route('/get_sentence', methods=['POST'])
-def get_sentence():
+@app.route('/fetch_sentence', methods=['POST'])
+def fetch_sentence():
     """Gets a sentence that includes the given word for the user to practice with"""
     word = request.data.decode()
 
-    practice_sentences: list[list] = load_json(practice_sentences_path)
+    practice_sentences: list[list] = load_json(PRACTICE_SENTENCES_PATH)
 
     if word in practice_sentences:
         if len(practice_sentences[word]) == 0:
             force_generate_practice_sentences()
-            practice_sentences: list[list] = load_json(practice_sentences_path)
+            practice_sentences: list[list] = load_json(PRACTICE_SENTENCES_PATH)
         sentence = practice_sentences[word][0]
         practice_sentences[word].pop(0)
     else:
         sentence = 'None'
     
-    dump_json(practice_sentences_path, practice_sentences)
+    dump_json(PRACTICE_SENTENCES_PATH, practice_sentences)
 
     return sentence
 
@@ -527,8 +513,8 @@ def toggle_saved_word():
     word = request.data.decode()
     saved = False
 
-    saved_words: list = load_json(saved_words_path)
-    practice_sentences = load_json(practice_sentences_path)
+    saved_words: list = load_json(SAVED_WORDS_PATH)
+    practice_sentences = load_json(PRACTICE_SENTENCES_PATH)
     
     if word not in saved_words:
         saved = True
@@ -539,8 +525,8 @@ def toggle_saved_word():
         saved = False
         saved_words.remove(word)
 
-    dump_json(saved_words_path, saved_words)
-    dump_json(practice_sentences_path, practice_sentences)
+    dump_json(SAVED_WORDS_PATH, saved_words)
+    dump_json(PRACTICE_SENTENCES_PATH, practice_sentences)
     
     return 'Saved' if saved else 'Unsaved'
 
@@ -549,21 +535,21 @@ def toggle_saved_word():
 def check_saved():
     word = request.data.decode()
 
-    saved_words = load_json(saved_words_path)
+    saved_words = load_json(SAVED_WORDS_PATH)
     
     return 'Saved' if word in saved_words else 'Unsaved'
 
 
 def update_practice_sentences(word, new_sentences):
     """Adds to practice_sentences JSON file"""
-    practice_sentences: dict[str, list] = load_json(practice_sentences_path)
+    practice_sentences: dict[str, list] = load_json(PRACTICE_SENTENCES_PATH)
     
     if word in practice_sentences.keys():
         practice_sentences[word].extend(new_sentences)
     else:
         practice_sentences[word] = new_sentences
 
-    dump_json(practice_sentences_path, practice_sentences)
+    dump_json(PRACTICE_SENTENCES_PATH, practice_sentences)
 
 
 def generate_practice_sentences(words, num_sentences):
@@ -574,7 +560,7 @@ def generate_practice_sentences(words, num_sentences):
     for word in words:
         schema[word] = {'type': 'array', 'items': {'type': 'string'}}
 
-    response = client.models.generate_content(
+    response = GEMINI_CLIENT.models.generate_content(
         model='gemini-2.5-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
@@ -594,7 +580,7 @@ def generate_practice_sentences(words, num_sentences):
 
 def get_low_words(num_sentences=5):
     """Gets the words that have fewer than the desired amount of practice sentences"""
-    practice_sentences = load_json(practice_sentences_path)
+    practice_sentences = load_json(PRACTICE_SENTENCES_PATH)
     
     low_words = []
     for practice_word in practice_sentences:

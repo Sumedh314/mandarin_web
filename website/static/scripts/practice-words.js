@@ -5,22 +5,24 @@ import {
     ratingGoodTime,
     ratingHardTime,
     ratingSelectionArea,
-    state
-} from "./documentAreas.js";
+    state,
+    wordsArea,
+    wordsAreaContainer
+} from "./document-areas.js";
 
 import {
-    fetchCreateCard,
-    fetchCreateCards,
+    createCard,
+    createCards,
     fetchDueWords,
-    fetchForceGeneratePracticeSentences,
+    createPracticeSentences,
     fetchGeminiPrompt,
-    fetchNextWord as fetchNextWord,
+    fetchNextWord,
     fetchReviewTimes,
     fetchSentence,
-    fetchUpdateCard
-} from "./fetchData.js";
+    fetchUpdateCard,
+} from "./api/fetch-data.js";
 
-import { printText } from "./renderText.js";
+import { printText } from "./render-text/practice-area.js";
 import { formatSeconds } from "./utils.js";
 
 /**
@@ -66,23 +68,24 @@ export async function generatePracticeSentence(words) {
  */
 export async function showNextCard(wordIndex = 0) {
     ratingSelectionArea.style.display = 'flex';
-
+    
     const word = await fetchNextWord(wordIndex);
-
+    
     if (word == 'None') {
         printText('No new flashcards');
         ratingSelectionArea.style.display = 'none';
         return;
     }
-
+    
     state.flashcardWord = word;
     
     const sentence = await fetchSentence(word);
     if (sentence == 'None') {
-        await fetchForceGeneratePracticeSentences();
+        await createPracticeSentences();
         return;
     }
-    printText(sentence);
+    await printText(sentence);
+    wordsAreaContainer.style.textAlign = 'center';
 
     const reviewTimes = await fetchReviewTimes(word);
     const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
@@ -139,7 +142,7 @@ export async function showNumDueCards() {
  * Creates flashcards at the beginning of a session
  */
 export async function createCards() {
-    await fetchCreateCards();
+    await createCards();
 }
 
 /**
@@ -148,5 +151,5 @@ export async function createCards() {
  * @param {string} word Word to create card for
  */
 export async function createCard(word) {
-    await fetchCreateCard(word);
+    await createCard(word);
 }
