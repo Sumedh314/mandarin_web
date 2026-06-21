@@ -1,4 +1,4 @@
-import { request } from "./client";
+import { request } from "../client.js";
 
 /**
  * Segments Mandarin text into individual words using Python
@@ -6,7 +6,7 @@ import { request } from "./client";
  * @param {string} text Text to segment into words
  */
 export async function fetchWordSegments(text) {
-    return await request('/segment_text', 'GET', text);
+    return await request('/segment_text', 'POST', text);
 }
 
 /**
@@ -15,5 +15,5 @@ export async function fetchWordSegments(text) {
  * @param {Object} transcript Transcript to segment into words
  */
 export async function fetchTranscriptWordSegments(transcript) {
-    return await request('/segment_transcript', 'GET', transcript);
+    return await request('/segment_transcript', 'POST', transcript);
 }

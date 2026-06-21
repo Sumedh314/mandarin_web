@@ -1,48 +1,36 @@
 import {
-    videoButton,
-    textButton,
-    translateTranscriptButton,
-    generateStoryButton,
-    wordsArea,
-    state,
-    locationMarker,
-    reviewWordsButton,
-    wordMenu,
-    textEntry,
-    linkEntry,
-    ratingSelectionArea
-} from "./document-areas.js";
-
-import {
-    fetchGeminiPrompt,
-    fetchVideoTranscript,
-    fetchTranscriptTranslation,
-    updateProficiencyLevels,
-    fetchRandomListWordsLearning,
-    fetchTranscriptLastIndex,
-    updateSavedWord
-} from './api/fetch-data.js';
-
-import {
     createCard,
-    createCards,
-    generatePracticeSentence,
+    createInitialCards
+} from "./api/user-data/flashcards.js";
+
+import {
+    fetchRandomListWordsLearning,
+    updateSavedWord
+} from "./api/user-data/practice.js";
+
+import {
+    fetchTranscriptLastIndex,
+    fetchVideoTranscript
+} from "./api/user-data/transcripts.js";
+
+import {
     reviewCard,
     showNextCard,
     showNumDueCards
 } from "./practice-words.js";
 
-// import {
-//     printText,
-//     printTranscript,
-//     printDefinitions,
-//     updateWordColors,
-//     updateHskLevels,
-//     updateLocationMarker,
-//     setLastIndex,
-//     updateWordUnderlines,
-//     showWordMenu
-// } from "./render-text/render-text.js";
+import {
+    printText,
+    printTranscript
+} from "./render-text/practice-area.js";
+
+import {
+    setLastIndex,
+    updateHskLevels,
+    updateLocationMarker,
+    updateWordColors,
+    updateWordUnderlines
+} from "./render-text/update-progress.js";
 
 import {
     embedVideo,
@@ -50,11 +38,25 @@ import {
     toggleVideo
 } from "./video-functions/modifying-video.js";
 
-import { videoReady } from "./video-functions/video-states.js";
-import { request } from "./api/client.js";
-import { formatWordsToUpdate } from "./utils.js";
+import {
+    generateStoryButton,
+    linkEntry,
+    ratingSelectionArea,
+    reviewWordsButton,
+    state,
+    textButton,
+    textEntry,
+    videoButton,
+    wordsArea
+} from "./document-areas.js";
 
-const loadingSign = 'Loading...';
+import { fetchGeminiPrompt } from "./api/language-processing/gemini.js";
+import { updateProficiencyLevels } from "./api/user-data/proficiency.js";
+import { printDefinitions } from "./render-text/translations.js";
+import { formatWordsToUpdate } from "./utils.js";
+import { videoReady } from "./video-functions/video-states.js";
+
+const LOADING_SIGN = 'Loading...';
 
 /**
  * Runs when the words area is clicked. Prints word definition and movese transcript if word clicked and toggles video.
@@ -216,6 +218,7 @@ async function onKeyPressed(event) {
         if (state.clickedWord == '') {
             return
         }
+        
         await updateSavedWord(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
         createCard(state.clickedWord);
@@ -226,7 +229,7 @@ async function onKeyPressed(event) {
  * Embeds video, loads transcript, and prints the transcript with clickable words. Scrolls video to place user left off.
  */
 async function loadVideoAndTranscript() {
-    wordsArea.textContent = loadingSign;
+    wordsArea.textContent = LOADING_SIGN;
     
     // Embed video
     const link = document.getElementById('link-entry').value;
@@ -282,31 +285,31 @@ async function practiceWords() {
 }
 
 // Show HSK levels as soon as page loads
-// updateHskLevels();
+updateHskLevels();
 
-// // Immediately create flashcards for later use and show number of currently due cards
-// await createCards();
-// showNumDueCards();
+// Immediately create flashcards for later use and show number of currently due cards
+await createInitialCards();
+showNumDueCards();
 
-// // YouTube Iframe stuff
-// var tag = document.createElement('script');
-// tag.src = 'https://youtube.com/iframe_api';
-// var firstTagScript = document.getElementsByTagName('script')[0]
-// firstTagScript.parentNode.insertBefore(tag, firstTagScript);
+// YouTube Iframe stuff
+var tag = document.createElement('script');
+tag.src = 'https://youtube.com/iframe_api';
+var firstTagScript = document.getElementsByTagName('script')[0]
+firstTagScript.parentNode.insertBefore(tag, firstTagScript);
 
-// textButton.addEventListener('click', printUserText);
-// textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUserText(event));
+textButton.addEventListener('click', printUserText);
+textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUserText(event));
 
-// videoButton.addEventListener('click', loadVideoAndTranscript);
-// linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
+videoButton.addEventListener('click', loadVideoAndTranscript);
+linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
 
 // translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
-// generateStoryButton.addEventListener('click', generateStory);
+generateStoryButton.addEventListener('click', generateStory);
 
-// reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
+reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
 
-// wordsArea.addEventListener('click', onWordClick);
+wordsArea.addEventListener('click', onWordClick);
 
-// ratingSelectionArea.addEventListener('click', reviewCard);
+ratingSelectionArea.addEventListener('click', reviewCard);
 
-// window.addEventListener('keydown', onKeyPressed);
+window.addEventListener('keydown', onKeyPressed);

@@ -1,4 +1,4 @@
-import { request } from "../client";
+import { request } from "../client.js";
 
 /**
  * Gets the English translation of a word from Python.
@@ -6,7 +6,7 @@ import { request } from "../client";
  * @param {string} text text user wants to translate
  */
 export async function fetchTranslation(text) {
-    return await request('/translate_text', 'GET', text);
+    return await request('/translate_text', 'POST', text);
 }
 
 /**
@@ -15,5 +15,5 @@ export async function fetchTranslation(text) {
  * @param {string} text text user wants to get pinyin of
  */
 export async function fetchPinyin(text) {
-    return await request('/get_pinyin', 'GET', text);
+    return await request('/get_pinyin', 'POST', text);
 }

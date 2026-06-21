@@ -1,4 +1,4 @@
-export let state = {
+export const state = {
     timestampElements: [],
     /** @type {YT.Player} */
     videoPlayer: null,

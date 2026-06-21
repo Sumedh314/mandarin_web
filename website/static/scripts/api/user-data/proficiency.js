@@ -1,4 +1,4 @@
-import { request } from "./client";
+import { request } from "../client.js";
 
 export async function updateProficiencyLevels(wordsToUpdate) {
     return await request('/update_proficiency_levels', 'POST', wordsToUpdate);
@@ -10,7 +10,7 @@ export async function updateProficiencyLevels(wordsToUpdate) {
  * @param {Array} segmentedText Text segmented into individual words
  */
 export async function fetchProficiencyLevels(segmentedText) {
-    return await request('fetch_proficiency_levels', 'GET', segmentedText);
+    return await request('fetch_proficiency_levels', 'POST', segmentedText);
 }
 
 /**

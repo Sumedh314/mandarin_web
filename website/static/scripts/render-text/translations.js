@@ -1,24 +1,11 @@
 import {
-    fetchPinyin,
-    fetchTranslation
-} from "../fetch-data";
+    fetchTranslation,
+    fetchPinyin
+} from "../api/language-processing/translation.js";
 
-/**
- * Adds a "Done" button to the end of a transcript or text
- * 
- * @param {Number} wordIndex Index of the final word of the transcript or text
- */
-export function addDoneButton(wordIndex) {
-    const doneButton = document.createElement('span');
-    doneButton.classList.add('word');
-    doneButton.dataset.proficiency = 3;
-    doneButton.dataset.action = 'final-word';
-    doneButton.dataset.index = wordIndex + 1;
-    doneButton.textContent = 'Done';
+import { translationArea } from "../document-areas.js";
 
-    wordsArea.appendChild(document.createElement('br'));
-    wordsArea.appendChild(doneButton);
-}
+const LOADING_SIGN = 'Loading...';
 
 /**
  * Prints the selected characters, pinyin, and English definitions into the dedicated area.
@@ -26,7 +13,7 @@ export function addDoneButton(wordIndex) {
  * @param {string} text Text to translate
  */
 export async function printDefinitions(text) {
-    translationArea.innerHTML = loadingSign;
+    translationArea.innerHTML = LOADING_SIGN;
     const translation = await fetchTranslation(text);
     const pinyin = await fetchPinyin(text);
 

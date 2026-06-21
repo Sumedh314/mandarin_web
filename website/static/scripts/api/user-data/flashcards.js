@@ -1,4 +1,4 @@
-import { request } from "./client";
+import { request } from "../client.js";
 
 /**
  * Gets the review times for the different ratings a user can give to a word
@@ -6,7 +6,7 @@ import { request } from "./client";
  * @param {string} word Word to get next review times for
  */
 export async function fetchReviewTimes(word) {
-    return await request('/fetch_review_times', 'GET', word);
+    return await request('/fetch_review_times', 'POST', word);
 }
 
 /**
@@ -15,7 +15,7 @@ export async function fetchReviewTimes(word) {
  * @param {number} [wordIndex=0] Index of list of due words to use
  */
 export async function fetchNextWord(wordIndex = 0) {
-    return await request('/fetch_next_word', 'GET', wordIndex);
+    return await request('/fetch_next_word', 'POST', wordIndex);
 }
 
 /**
@@ -29,7 +29,7 @@ export async function fetchDueWords() {
  * Creates all flashcards based on words that the user saved using flaskcards_data.json
  */
 export async function createInitialCards() {
-    return await request('/create_cards', 'POST');
+    return await request('/create_initial_cards', 'POST');
 }
 
 /**
@@ -50,5 +50,5 @@ export async function createCard(word) {
 export async function fetchUpdateCard(word, rating) {
     const data = { word: word, rating: rating };
     
-    return await request('update_card', 'PUT', data);
+    return await request('update_card', 'POST', data);
 }

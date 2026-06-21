@@ -1,7 +1,11 @@
 import {
-    fetchHskPercentages,
-    updateTranscriptLastIndex
-} from "../api/fetch-data.js";
+    state,
+    wordsArea,
+    locationMarker
+} from "../document-areas.js";
+
+import { updateTranscriptLastIndex } from "../api/user-data/transcripts.js";
+import { fetchHskPercentages } from "../api/user-data/proficiency.js";
 
 /**
  * Moves the location marker to show the user's farthest point in the text

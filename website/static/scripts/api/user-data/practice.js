@@ -1,4 +1,4 @@
-import { request } from "../client";
+import { request } from "../client.js";
 
 /**
  * Fetches a list of words the user is currently learning.
@@ -6,7 +6,7 @@ import { request } from "../client";
  * @param {number} numWords Number of words to return in list
  */
 export async function fetchRandomListWordsLearning(numWords) {
-    return await request('/fetch_random_list_words_learning', 'GET', numWords);
+    return await request('/fetch_random_list_words_learning', 'POST', numWords);
 }
 
 /**
@@ -15,7 +15,7 @@ export async function fetchRandomListWordsLearning(numWords) {
  * @param {number} numWords Number of words to return in list
  */
 export async function fetchRandomListWordsSaved(numWords) {
-    return await request('/fetch_random_list_words_saved', numWords);
+    return await request('/fetch_random_list_words_saved', 'POST', numWords);
 }
 
 /**
@@ -33,7 +33,7 @@ export async function updateSavedWord(word) {
  * @param {string} word Word to check
  */
 export async function fetchCheckSaved(word) {
-    return await request('/check_saved', 'GET', word);
+    return await request('/check_saved', 'POST', word);
 }
 
 /**
@@ -49,5 +49,5 @@ export async function createPracticeSentences() {
  * @param {string} word Word to fetch sentence for
  */
 export async function fetchSentence(word) {
-    return await request('/fetch_sentence', 'GET', word);
+    return await request('/fetch_sentence', 'POST', word);
 }

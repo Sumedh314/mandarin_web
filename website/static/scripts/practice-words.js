@@ -1,27 +1,27 @@
 import {
-    numDueWordsCounter,
-    ratingAgainTime,
-    ratingEasyTime,
-    ratingGoodTime,
-    ratingHardTime,
-    ratingSelectionArea,
-    state,
-    wordsArea,
-    wordsAreaContainer
-} from "./document-areas.js";
-
-import {
-    createCard,
-    createCards,
     fetchDueWords,
-    createPracticeSentences,
-    fetchGeminiPrompt,
     fetchNextWord,
     fetchReviewTimes,
-    fetchSentence,
-    fetchUpdateCard,
-} from "./api/fetch-data.js";
+    fetchUpdateCard
+} from "./api/user-data/flashcards.js";
 
+import {
+    createPracticeSentences,
+    fetchSentence
+} from "./api/user-data/practice.js";
+
+import {
+    state,
+    numDueWordsCounter,
+    ratingSelectionArea,
+    wordsAreaContainer,
+    ratingAgainTime,
+    ratingHardTime,
+    ratingGoodTime,
+    ratingEasyTime
+} from "./document-areas.js";
+
+import { fetchGeminiPrompt } from "./api/language-processing/gemini.js";
 import { printText } from "./render-text/practice-area.js";
 import { formatSeconds } from "./utils.js";
 
@@ -136,20 +136,4 @@ export async function showNumDueCards() {
     const numDueCards = dueWords.length
 
     numDueWordsCounter.textContent = numDueCards;
-}
-
-/**
- * Creates flashcards at the beginning of a session
- */
-export async function createCards() {
-    await createCards();
-}
-
-/**
- * Create a card for a word
- * 
- * @param {string} word Word to create card for
- */
-export async function createCard(word) {
-    await createCard(word);
 }

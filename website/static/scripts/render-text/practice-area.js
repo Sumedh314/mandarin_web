@@ -1,70 +1,22 @@
 import {
-    fetchWordSegments,
-    fetchProficiencyLevels,
-    fetchTranscriptWordSegments,
-    fetchTranscriptProficiencyLevels,
-    fetchCheckSaved
-} from "../api/fetch-data.js";
-
-import {
-    translationArea,
+    state,
     videoTitle,
     wordsArea,
-    state,
-    locationMarker,
     wordsAreaContainer
 } from "../document-areas.js";
 
-import {formatTimestamp} from "../utils.js"
+import {
+    fetchTranscriptWordSegments,
+    fetchWordSegments
+} from "../api/language-processing/segmentation.js";
 
-const loadingSign = 'Loading...';
+import {
+    fetchProficiencyLevels,
+    fetchTranscriptProficiencyLevels
+} from "../api/user-data/proficiency.js";
 
-/**
- * Prints the text into the dedicated area with clickable words.
- * 
- * @param {string} text Original text to be printed
- */
-export async function printText(text) {
-    state.lastIndex = -1;
-
-    let wordIndex = 0;
-    wordsArea.textContent = '';
-
-    const segmentedText = await fetchWordSegments(text);
-    const proficiencyLevels = await fetchProficiencyLevels(segmentedText);
-
-    for (const word of segmentedText) {
-        if (word == '\n') {
-            wordsArea.appendChild(document.createElement('br'));
-            continue;
-        }
-        if (word in proficiencyLevels) {
-            let wordElement = document.createElement('span');
-            wordElement.classList.add('word');
-            wordElement.dataset.word = word;
-            wordElement.dataset.index = wordIndex;
-            wordElement.dataset.proficiency = proficiencyLevels[word];
-            wordElement.textContent = word;
-
-            const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
-            if (wordIsSaved) {
-                wordElement.classList.add('saved-word');
-            }
-
-            wordsArea.appendChild(wordElement);
-            wordIndex++;
-        }
-        else {
-            let wordElement = document.createElement('span');
-            wordElement.textContent = word;
-            wordsArea.appendChild(wordElement);
-        }
-    }
-
-    wordsAreaContainer.style.textAlign = 'left';
-    wordsArea.appendChild(document.createElement('br'));
-    addDoneButton(wordIndex);
-}
+import { fetchCheckSaved } from "../api/user-data/practice.js";
+import { formatTimestamp } from "../utils.js";
 
 /**
  * Prints a transcript to the screen while preserving timestamps
@@ -157,4 +109,68 @@ export async function printTranscript(transcript) {
 
     state.transcriptShowing = true;
     // scrollToLocationMarker();
+}
+
+/**
+ * Prints the text into the dedicated area with clickable words.
+ * 
+ * @param {string} text Original text to be printed
+ */
+export async function printText(text) {
+    state.lastIndex = -1;
+
+    let wordIndex = 0;
+    wordsArea.textContent = '';
+
+    const segmentedText = await fetchWordSegments(text);
+    const proficiencyLevels = await fetchProficiencyLevels(segmentedText);
+
+    for (const word of segmentedText) {
+        if (word == '\n') {
+            wordsArea.appendChild(document.createElement('br'));
+            continue;
+        }
+        if (word in proficiencyLevels) {
+            let wordElement = document.createElement('span');
+            wordElement.classList.add('word');
+            wordElement.dataset.word = word;
+            wordElement.dataset.index = wordIndex;
+            wordElement.dataset.proficiency = proficiencyLevels[word];
+            wordElement.textContent = word;
+
+            const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
+            if (wordIsSaved) {
+                wordElement.classList.add('saved-word');
+            }
+
+            wordsArea.appendChild(wordElement);
+            wordIndex++;
+        }
+        else {
+            let wordElement = document.createElement('span');
+            wordElement.textContent = word;
+            wordsArea.appendChild(wordElement);
+        }
+    }
+
+    wordsAreaContainer.style.textAlign = 'left';
+    wordsArea.appendChild(document.createElement('br'));
+    addDoneButton(wordIndex);
+}
+
+/**
+ * Adds a "Done" button to the end of a transcript or text
+ * 
+ * @param {Number} wordIndex Index of the final word of the transcript or text
+ */
+function addDoneButton(wordIndex) {
+    const doneButton = document.createElement('span');
+    doneButton.classList.add('word');
+    doneButton.dataset.proficiency = 3;
+    doneButton.dataset.action = 'final-word';
+    doneButton.dataset.index = wordIndex + 1;
+    doneButton.textContent = 'Done';
+
+    wordsArea.appendChild(document.createElement('br'));
+    wordsArea.appendChild(doneButton);
 }

@@ -197,8 +197,8 @@ def update_proficiency_levels():
     return jsonify(updated_proficiency_levels)
 
 
-@app.route('/generate_transcript', methods=['POST'])
-def generate_transcript():
+@app.route('/fetch_transcript', methods=['POST'])
+def fetch_transcript():
     """Generates the transcript of a YouTube video"""
     link = request.data.decode()
 
@@ -268,8 +268,8 @@ def fetch_last_index():
         return '0'
 
 
-@app.route('/update_last_index', methods=['POST'])
-def update_last_index():
+@app.route('/update_transcript_last_index', methods=['POST'])
+def update_transcript_last_index():
     """Sets the index of the place the user left off of a transcript"""
     data = request.json
     print(data)
@@ -409,7 +409,7 @@ def fetch_next_word():
     """Gets the next word and card that's due for the user to review"""
     index = int(request.data.decode())
 
-    due_words = get_due_words()
+    due_words = fetch_due_words()
 
     if len(due_words) <= index:
         return 'None'
@@ -434,7 +434,7 @@ def fetch_due_words():
     return due_words
 
 
-@app.route('/create_initial_cards', methods=['GET'])
+@app.route('/create_initial_cards', methods=['POST'])
 def create_initial_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
     flashcards_data: dict[str, dict] = load_json(FLASHCARDS_DATA_PATH)

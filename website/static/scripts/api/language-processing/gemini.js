@@ -1,4 +1,4 @@
-import { request } from "../client";
+import { request } from "../client.js";
 
 /**
  * Sends a prompt to Google Gemini
