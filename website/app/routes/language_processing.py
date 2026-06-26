@@ -2,7 +2,7 @@ import jieba
 import pinyin
 from google.genai import types
 from app.services.storage import load_json
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from config import TRANSLATOR, GEMINI_CLIENT, WORDS_LIST_PATH
 
 
@@ -100,3 +100,9 @@ def prompt_gemini():
     print(response)
 
     return response
+
+
+@language_bp.route('/')
+def home():
+    """Home page for site"""
+    return render_template('index.html')

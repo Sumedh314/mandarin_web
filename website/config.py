@@ -7,6 +7,11 @@ from google import genai
 from dotenv import load_dotenv
 
 
+class DatabaseConfig:
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
 load_dotenv()
 
 SCHEDULER = Scheduler()
@@ -15,10 +20,9 @@ TRANSCRIPT_GENERATOR = YouTubeTranscriptApi()
 GEMINI_CLIENT = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
 MANDARIN_LANGAUGE_CODES = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
-MANDARIN_AND_ENGLISH_LANGUAGE_CODES = MANDARIN_LANGAUGE_CODES.extend(['en'])
+MANDARIN_AND_ENGLISH_LANGUAGE_CODES = MANDARIN_LANGAUGE_CODES + ['en']
 
 BASE_PATH = Path(__file__).parent / 'app'
-print(BASE_PATH)
 
 WORD_PROFICIENCY_LEVELS_PATH = BASE_PATH / 'user_progress' / 'word_proficiency_levels.json'
 PRACTICE_SENTENCES_PATH = BASE_PATH / 'user_progress' / 'practice_sentences.json'

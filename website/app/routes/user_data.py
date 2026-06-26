@@ -65,7 +65,7 @@ def fetch_due_words():
 @user_data_bp.route('/create_initial_cards', methods=['POST'])
 def create_initial_cards():
     """Creates cards for the Free Spaced Repetition System algorithm from flashcards_data.json"""
-    flashcards_data: dict[str, dict] = load_json(FLASHCARDS_DATA_PATH)
+    flashcards_data = load_json(FLASHCARDS_DATA_PATH)
     
     for word in flashcards_data:
         card = Card.from_dict(flashcards_data[word])
@@ -79,7 +79,7 @@ def create_card():
     """Creates a card for the Free Spaced Repetition System algorithm"""
     word = request.data.decode()
 
-    flashcards_data: dict[str, dict] = load_json(FLASHCARDS_DATA_PATH)
+    flashcards_data = load_json(FLASHCARDS_DATA_PATH)
 
     card = Card()
 

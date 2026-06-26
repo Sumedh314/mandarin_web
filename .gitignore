@@ -4,3 +4,6 @@ env/
 /node_modules
 
 website/user_progress/
+website/instance
+
+__pycache__/
