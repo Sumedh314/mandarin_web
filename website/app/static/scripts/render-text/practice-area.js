@@ -8,14 +8,14 @@ import {
 import {
     fetchTranscriptWordSegments,
     fetchWordSegments
-} from "../api/language-processing/segmentation.js";
+} from "../old_api/language-processing/segmentation.js";
 
 import {
     fetchProficiencyLevels,
     fetchTranscriptProficiencyLevels
-} from "../api/user-data/proficiency.js";
+} from "../old_api/user-data/proficiency.js";
 
-import { fetchCheckSaved } from "../api/user-data/practice.js";
+import { fetchCheckSaved } from "../old_api/user-data/practice.js";
 import { formatTimestamp } from "../utils.js";
 
 /**

@@ -10,14 +10,15 @@ from dotenv import load_dotenv
 class DatabaseConfig:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = True
 
 
 load_dotenv()
 
-SCHEDULER = Scheduler()
-TRANSLATOR = GoogleTranslator()
-TRANSCRIPT_GENERATOR = YouTubeTranscriptApi()
-GEMINI_CLIENT = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+scheduler = Scheduler()
+translator = GoogleTranslator()
+transcript_generator = YouTubeTranscriptApi()
+gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
 MANDARIN_LANGAUGE_CODES = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 MANDARIN_AND_ENGLISH_LANGUAGE_CODES = MANDARIN_LANGAUGE_CODES + ['en']

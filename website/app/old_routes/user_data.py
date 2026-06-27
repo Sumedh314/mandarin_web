@@ -6,9 +6,9 @@ from youtube_transcript_api import NoTranscriptFound, TranslationLanguageNotAvai
 from flask import Blueprint, request, jsonify
 from fsrs import Card, Rating
 
-from app.services.storage import load_json, dump_json
-from app.services.user_practice import generate_practice_sentences, get_low_words
-from config import SCHEDULER, TRANSCRIPT_GENERATOR, MANDARIN_LANGAUGE_CODES, MANDARIN_AND_ENGLISH_LANGUAGE_CODES, WORD_PROFICIENCY_LEVELS_PATH, PRACTICE_SENTENCES_PATH, FLASHCARDS_DATA_PATH, SAVED_WORDS_PATH, TRANSCRIPTS_PATH, HSK_WORDS_PATH, flashcards_by_word
+from app.old_services.storage import load_json, dump_json
+from app.old_services.user_practice import generate_practice_sentences, get_low_words
+from config import scheduler, transcript_generator, MANDARIN_LANGAUGE_CODES, MANDARIN_AND_ENGLISH_LANGUAGE_CODES, WORD_PROFICIENCY_LEVELS_PATH, PRACTICE_SENTENCES_PATH, FLASHCARDS_DATA_PATH, SAVED_WORDS_PATH, TRANSCRIPTS_PATH, HSK_WORDS_PATH, flashcards_by_word
 
 
 user_data_bp = Blueprint('user_data', __name__)
@@ -25,7 +25,7 @@ def fetch_review_times():
     ratings = [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]
     for rating in ratings:
         new_card = Card.from_dict(card.to_dict())
-        new_card, _ = SCHEDULER.review_card(new_card, rating)
+        new_card, _ = scheduler.review_card(new_card, rating)
         review_times.append((new_card.due - datetime.now(timezone.utc)).total_seconds())
     
     print(review_times)
@@ -101,7 +101,7 @@ def update_card():
 
     card = flashcards_by_word[word]
 
-    card, review_log = SCHEDULER.review_card(card, rating, datetime.now(timezone.utc))
+    card, review_log = scheduler.review_card(card, rating, datetime.now(timezone.utc))
     print(review_log)
 
     card_data = card.to_dict()
@@ -330,7 +330,7 @@ def fetch_transcript():
         transcript_is_new = True
 
         try:
-            transcript = TRANSCRIPT_GENERATOR.list(video_id=video_id).find_transcript(MANDARIN_AND_ENGLISH_LANGUAGE_CODES)
+            transcript = transcript_generator.list(video_id=video_id).find_transcript(MANDARIN_AND_ENGLISH_LANGUAGE_CODES)
         except NoTranscriptFound:
             transcript = [{'text': 'Transcript not available', 'start': 0, 'duration': 0}]
             transcript_found = False
@@ -350,7 +350,7 @@ def translate_transcript():
     """Translates a transcript from English to Mandarin if available"""
     video_id = request.data.decode()
 
-    transcript = TRANSCRIPT_GENERATOR.list(video_id=video_id).find_transcript(['en'])
+    transcript = transcript_generator.list(video_id=video_id).find_transcript(['en'])
 
     if transcript.is_translatable:
         for code in MANDARIN_LANGAUGE_CODES:

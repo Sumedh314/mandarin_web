@@ -1,9 +1,9 @@
 import jieba
 import pinyin
 from google.genai import types
-from app.services.storage import load_json
+from app.old_services.storage import load_json
 from flask import Blueprint, request, jsonify, render_template
-from config import TRANSLATOR, GEMINI_CLIENT, WORDS_LIST_PATH
+from config import translator, gemini_client, WORDS_LIST_PATH
 
 
 language_bp = Blueprint('language', __name__)
@@ -25,7 +25,7 @@ def translate_text():
             translation_found = True
     
     if not translation_found:
-        translation = (TRANSLATOR.translate(text))
+        translation = (translator.translate(text))
 
     return translation
 
@@ -86,9 +86,9 @@ def prompt_gemini():
     schema = data['schema']
 
     if schema == {}:
-        response = GEMINI_CLIENT.models.generate_content(model='gemini-2.5-flash', contents=prompt).text
+        response = gemini_client.models.generate_content(model='gemini-2.5-flash', contents=prompt).text
     else:
-        response = GEMINI_CLIENT.models.generate_content(
+        response = gemini_client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(

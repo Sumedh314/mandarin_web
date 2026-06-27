@@ -3,12 +3,12 @@ import {
     fetchNextWord,
     fetchReviewTimes,
     fetchUpdateCard
-} from "./api/user-data/flashcards.js";
+} from "./old_api/user-data/flashcards.js";
 
 import {
     createPracticeSentences,
     fetchSentence
-} from "./api/user-data/practice.js";
+} from "./old_api/user-data/practice.js";
 
 import {
     state,
@@ -21,7 +21,7 @@ import {
     ratingEasyTime
 } from "./document-areas.js";
 
-import { fetchGeminiPrompt } from "./api/language-processing/gemini.js";
+import { fetchGeminiPrompt } from "./old_api/language-processing/gemini.js";
 import { printText } from "./render-text/practice-area.js";
 import { formatSeconds } from "./utils.js";
 

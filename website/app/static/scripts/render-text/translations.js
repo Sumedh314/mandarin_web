@@ -1,7 +1,7 @@
 import {
     fetchTranslation,
     fetchPinyin
-} from "../api/language-processing/translation.js";
+} from "../old_api/language-processing/translation.js";
 
 import { translationArea } from "../document-areas.js";
 

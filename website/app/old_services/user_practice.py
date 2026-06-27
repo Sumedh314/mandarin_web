@@ -1,8 +1,8 @@
 import json
 
 from google.genai import types
-from app.services.storage import load_json, dump_json
-from config import GEMINI_CLIENT, PRACTICE_SENTENCES_PATH
+from app.old_services.storage import load_json, dump_json
+from config import gemini_client, PRACTICE_SENTENCES_PATH
 
 
 def update_practice_sentences(word, new_sentences):
@@ -25,7 +25,7 @@ def generate_practice_sentences(words, num_sentences):
     for word in words:
         schema[word] = {'type': 'array', 'items': {'type': 'string'}}
 
-    response = GEMINI_CLIENT.models.generate_content(
+    response = gemini_client.models.generate_content(
         model='gemini-2.5-flash',
         contents=prompt,
         config=types.GenerateContentConfig(

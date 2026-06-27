@@ -1,17 +1,17 @@
 import {
     createCard,
     createInitialCards
-} from "./api/user-data/flashcards.js";
+} from "./old_api/user-data/flashcards.js";
 
 import {
     fetchRandomListWordsLearning,
     updateSavedWord
-} from "./api/user-data/practice.js";
+} from "./old_api/user-data/practice.js";
 
 import {
     fetchTranscriptLastIndex,
     fetchVideoTranscript
-} from "./api/user-data/transcripts.js";
+} from "./old_api/user-data/transcripts.js";
 
 import {
     reviewCard,
@@ -50,8 +50,8 @@ import {
     wordsArea
 } from "./document-areas.js";
 
-import { fetchGeminiPrompt } from "./api/language-processing/gemini.js";
-import { updateProficiencyLevels } from "./api/user-data/proficiency.js";
+import { fetchGeminiPrompt } from "./old_api/language-processing/gemini.js";
+import { updateProficiencyLevels } from "./old_api/user-data/proficiency.js";
 import { printDefinitions } from "./render-text/translations.js";
 import { formatWordsToUpdate } from "./utils.js";
 import { videoReady } from "./video-functions/video-states.js";

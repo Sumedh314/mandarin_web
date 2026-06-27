@@ -4,10 +4,8 @@
  * @param {string} endpoint The endpoint which the function will call
  * @param {string} method HTTP method for function to use
  * @param {string | object} body Information to pass to backend
- * @param {string} [urlPrefix='/api/v1'] Prefix for the URL
- * @returns {Promise<object | string>} What the API request returns
  */
-export default async function request(endpoint, method, body, urlPrefix = '/api/v1') {
+export async function request(endpoint, method, body) {
     const options = { method: method };
     
     if (body !== undefined) {
@@ -17,7 +15,7 @@ export default async function request(endpoint, method, body, urlPrefix = '/api/
         options.body = bodyIsString ? body : JSON.stringify(body);
     }
 
-    const requestResponse = await fetch(`${urlPrefix}${endpoint}`, options);
+    const requestResponse = await fetch(endpoint, options);
     
     if (requestResponse.headers.get('content-type') == 'application/json') {
         return await requestResponse.json();

@@ -4,8 +4,8 @@ import {
     locationMarker
 } from "../document-areas.js";
 
-import { updateTranscriptLastIndex } from "../api/user-data/transcripts.js";
-import { fetchHskPercentages } from "../api/user-data/proficiency.js";
+import { updateTranscriptLastIndex } from "../old_api/user-data/transcripts.js";
+import { fetchHskPercentages } from "../old_api/user-data/proficiency.js";
 
 /**
  * Moves the location marker to show the user's farthest point in the text
