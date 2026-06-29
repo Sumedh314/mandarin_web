@@ -6,7 +6,7 @@ export const state = {
     lastIndex: -1,
     clickedWord: '',
     transcriptShowing: false,
-    videoLink: '',
+    videoId: '',
     flashcardWord: ''
 };
 

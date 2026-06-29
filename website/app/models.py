@@ -11,7 +11,7 @@ class Word(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     text: Mapped[str] = mapped_column(String(32), unique=True)
-    proficiency: Mapped[int] = mapped_column(Integer)
+    proficiency: Mapped[int] = mapped_column(Integer, default=0)
     hsk_old_level: Mapped[Optional[int]] = mapped_column(Integer)
     hsk_new_level: Mapped[Optional[int]] = mapped_column(Integer)
     pinyin: Mapped[Optional[str]] = mapped_column(String(64))
@@ -38,7 +38,7 @@ class Video(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     video_id: Mapped[str] = mapped_column(String(64), index=True)
-    title: Mapped[str] = mapped_column(String(255))
+    title: Mapped[Optional[str]] = mapped_column(String(255))
     last_index: Mapped[int] = mapped_column(Integer, default=-1)
 
     def __repr__(self):

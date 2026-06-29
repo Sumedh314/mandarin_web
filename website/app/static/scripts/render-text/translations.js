@@ -1,9 +1,5 @@
-import {
-    fetchTranslation,
-    fetchPinyin
-} from "../old_api/language-processing/translation.js";
-
 import { translationArea } from "../document-areas.js";
+import { getPinyin, segmentText, translateText } from "../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
 
@@ -14,8 +10,9 @@ const LOADING_SIGN = 'Loading...';
  */
 export async function printDefinitions(text) {
     translationArea.innerHTML = LOADING_SIGN;
-    const translation = await fetchTranslation(text);
-    const pinyin = await fetchPinyin(text);
+    const translation = await translateText(text);
+    const segmentedText = await segmentText(text);
+    const pinyin = await getPinyin(segmentedText.join(' '));
 
     translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }
@@ -33,8 +30,9 @@ export async function showWordMenu(element) {
 
     console.log('al;sdkfja;sldkfjas;ldkj');
 
-    const translation = await fetchTranslation(element.dataset.word);
-    const pinyin = await fetchPinyin(element.dataset.word);
+    const translation = await translateText(element.dataset.word);
+    const segmentedText = await segmentText(element.dataset.word);
+    const pinyin = await getPinyin(segmentedText.join(' '));
     console.log(pinyin);
 
     tooltipTranslation.innerHTML = `${element.dataset.word}<br>${pinyin}<br>${translation}`;

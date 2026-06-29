@@ -28,15 +28,16 @@ export function updateLocationMarker() {
  * @param {number} index Index to set lastIndex to
  */
 export async function setLastIndex(index) {
-    await updateTranscriptLastIndex(state.videoLink, index);
+    await updateTranscriptLastIndex(state.videoId, index);
 }
 
 /**
  * Updates the colors of the words on the screen based on the proficiency levels of each word.
  * 
- * @param {Object} proficiencyLevels Proficiency levels of each word
+ * @param {object} proficiencyLevels Proficiency levels of each word
  */
 export function updateWordColors(proficiencyLevels) {
+    console.log(proficiencyLevels)
     const segmentedWords = wordsArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {

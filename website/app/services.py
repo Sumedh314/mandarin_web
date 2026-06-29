@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import copy
 
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, insert, true, update, delete
 from sqlalchemy.orm import Session
 
 import jieba
@@ -17,9 +17,18 @@ from config import transcript_generator, translator, scheduler, gemini_client, M
 
 def add_words(session: Session, words_data: list[dict[str, int | str]]):
     """Adds a list of words to the database"""
-    new_words = [Word(**data) for data in words_data]
+    words = [Word(**data) for data in words_data]
+    new_words = get_new_words(session, words)
     session.add_all(new_words)
     session.flush()
+
+
+def get_new_words(session: Session, words: list[Word]):
+    """Gets a list of words from the given list that don't exist in the database"""
+    statement = select(Word.text).where(Word.text.in_([word.text for word in words]))
+    existing_words = session.scalars(statement).all()
+    new_words = [word for word in words if word.text not in existing_words]
+    return new_words
 
 
 def get_word_proficiency_levels(session: Session, words: list[str]):
@@ -52,7 +61,7 @@ def calculate_new_proficiency_levels(session: Session, previous_words: list[str]
     current_proficiency_level = get_word_proficiency_levels(session, [current_word])[current_word]
     if current_proficiency_level == 0:
         current_proficiency_level = 1
-    elif 1 < current_proficiency_level < 3:
+    elif 1 < current_proficiency_level <= 3:
         current_proficiency_level -= 1
     new_proficiency_levels[current_word] = current_proficiency_level
     
@@ -80,8 +89,15 @@ def translate_text(text: str):
             if word['s'] == text:
                 translation = ', '.join([', '.join(form['m']) for form in word['f']])
                 return translation
-    
+
     return translator.translate(text)
+
+
+def get_saved_words(session: Session):
+    """Gets all the words that the user has saved"""
+    statement = select(Word.text).where(Word.saved == True)
+    saved_words = session.scalars(statement).all()
+    return saved_words
 
 
 def get_word_saved_status(session: Session, word: str):
@@ -123,10 +139,23 @@ def delete_sentence(session: Session, sentence: str, word: str):
     session.execute(statement)
 
 
-def add_video(session: Session, video_id: str, title: str):
+def add_video(session: Session, video_id: str):
     """Adds a YouTube video to the database"""
-    video = Video(video_id=video_id, title=title)
+    video = Video(video_id=video_id)
     session.add(video)
+
+
+def get_video_title(session: Session, video_id: str):
+    """Fetches the title of a YouTube video from the database"""
+    statement = select(Video.title).where(Video.video_id == video_id)
+    title = session.scalar(statement)
+    return title
+
+
+def update_video_title(session: Session, video_id: str, title: str):
+    """Updates the title of a YouTube video in the database"""
+    statement = update(Video).where(Video.video_id == video_id).values(title=title)
+    session.execute(statement)
 
 
 def check_video_exists(session: Session, video_id: str):
@@ -134,6 +163,13 @@ def check_video_exists(session: Session, video_id: str):
     statement = select(Video).where(Video.video_id == video_id)
     video = session.scalar(statement)
     return video is not None
+
+
+def get_video_last_index(session: Session, video_id: str):
+    """Gets the last index for the place where user left off in a video"""
+    statement = select(Video.last_index).where(Video.video_id == video_id)
+    last_index = session.scalar(statement)
+    return last_index
 
 
 def update_video_last_index(session: Session, video_id: str, new_last_index: int):
@@ -145,13 +181,22 @@ def update_video_last_index(session: Session, video_id: str, new_last_index: int
 def add_transcript(session: Session, video_id: str, transcript: list[dict]):
     """Adds a YouTube video's transcript lines to the database"""
     transcript_lines = [TranscriptLine(video_id=video_id, **line) for line in transcript]
-    session.add_all(transcript_lines)
+    print(transcript_lines)
+    statement = insert(TranscriptLine).values([{'video_id': video_id, **line} for line in transcript])
+    session.execute(statement)
 
 
 def get_transcript_from_database(session: Session, video_id: str):
     """Fetches the transcript of a YouTube video from the database"""
     statement = select(TranscriptLine.text, TranscriptLine.start, TranscriptLine.duration).where(TranscriptLine.video_id == video_id)
     transcript = session.execute(statement).mappings().all()
+    transcript = [dict(row) for row in transcript]
+    return transcript
+
+
+def get_transcript_from_youtube(video_id: str):
+    """Uses YouTubeTranscriptAPI to fetch the transcript of a YouTube video that has captions"""
+    transcript = transcript_generator.fetch(video_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
     return transcript
 
 
@@ -206,12 +251,6 @@ def calculate_flashcard_review_intervals(card: Card, current_time: datetime):
         new_card = review_flashcard(new_card, rating, current_time)
         review_intervals.append((new_card.due - current_time).total_seconds())
     return review_intervals
-
-
-def get_transcript_from_youtube(video_id: str):
-    """Uses YouTubeTranscriptAPI to fetch the transcript of a YouTube video that has captions"""
-    transcript = transcript_generator.fetch(video_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
-    return transcript
 
 
 def generate_practice_sentences(words, num_sentences):

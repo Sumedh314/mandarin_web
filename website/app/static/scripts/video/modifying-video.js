@@ -1,3 +1,4 @@
+import { updateVideoTitle } from "../api/routes.js";
 import {
     state,
     videoTitle,
@@ -13,13 +14,9 @@ import {
 /**
  * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
  * 
- * @param {string} link Link to YouTube video
+ * @param {string} videoId ID of YouTube video
  */
-export async function embedVideo(link) {
-
-    // Extract the video ID from the link the user gave
-    const originalLink = new URL(link);
-    const videoId = originalLink.searchParams.get('v');
+export async function embedVideo(videoId) {
 
     // Stop if Iframe API is not ready
     if (!iframeApiReady()) {
@@ -128,6 +125,7 @@ export async function onPlayerStateChange() {
         }
         if (videoTitle.textContent == '') {
             videoTitle.textContent = state.videoPlayer.videoTitle;
+            updateVideoTitle(state.videoId, state.videoPlayer.videoTitle);
         }
     }
     else {
@@ -137,15 +135,24 @@ export async function onPlayerStateChange() {
 }
 
 /**
+ * Pausese the video if the given condition is true, and plays the video if the condition is false
+ * 
+ * @param {boolean} condition Condition to pase pausing or playing video off of
+ */
+export function pauseIfPlayOtherwise(condition) {
+    if (condition) {
+        state.videoPlayer.pauseVideo();
+    }
+    else {
+        state.videoPlayer.playVideo();
+    }
+}
+
+/**
  * If the video is playing, the video pauses. If the video is paused, the video starts playing.
  */
 export function toggleVideo() {
     if (videoReady()) {
-        if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-            state.videoPlayer.pauseVideo();
-        }
-        else {
-            state.videoPlayer.playVideo()
-        }
+        pauseIfPlayOtherwise(state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING);
     }
 }

@@ -58,7 +58,7 @@ export function formatSeconds(seconds) {
  * @param {number} currentIndex Index of the current word user clicked
  */
 export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
-    const wordsToUpdate = { previous: [], current: '' };
+    const wordsToUpdate = { previousWords: [], currentWord: '' };
 
     for (const word of wordElements) {
         if (word.hasAttribute('data-index')) {
@@ -66,11 +66,11 @@ export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
 
             if (wordIndex < currentIndex) {
                 if (wordIndex > lastIndex) {
-                    wordsToUpdate.previous.push(word.dataset.word);
+                    wordsToUpdate.previousWords.push(word.dataset.word);
                 }
             }
             else if (wordIndex == currentIndex) {
-                wordsToUpdate.current = word.dataset.word;
+                wordsToUpdate.currentWord = word.dataset.word;
             }
             else {
                 break;
@@ -82,4 +82,35 @@ export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
     }
 
     return wordsToUpdate;
+}
+
+/**
+ * Gets whether or not each item in text is Mandarin
+ * 
+ * @param {Array<string>} segmentedText Text segmented into individual items
+ * @returns {Array<string>} Items that are only Mandarin
+ */
+export function filterText(segmentedText) {
+    const filteredText = [];
+    for (const item of segmentedText) {
+        if (textIsMandarin(item)) {
+            filteredText.push(item);
+        }
+    }
+    return filteredText;
+}
+
+/**
+ * Checks whether the given text is made entirely of Mandarin characters without punctuation
+ * 
+ * @param {string} text Text to check if is Mandarin
+ * @returns {boolean} Whether or not the text is Mandarin
+ */
+function textIsMandarin(text) {
+    for (const character of text) {
+        if (character.codePointAt(0) < 0x4e00 || character.codePointAt(0) > 0x9fff) {
+            return false;
+        }
+    }
+    return true;
 }

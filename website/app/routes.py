@@ -11,6 +11,7 @@ main_bp = Blueprint('main', __name__, url_prefix='/api/v1/')
 def add_words():
     """Adds a list of words to the database"""
     words_data = request.json
+    print(words_data)
     services.add_words(db.session, words_data)
     db.session.commit()
     return jsonify('success'), 201
@@ -42,11 +43,19 @@ def update_word_proficiency_levels():
 def calculate_new_proficiency_levels():
     """Calculates the new proficiency levels for a list of words"""
     data = request.json
+    print(data)
     previous_words = data['previous_words']
     current_word = data['current_word']
     
     new_proficiency_levels = services.calculate_new_proficiency_levels(db.session, previous_words, current_word)
     return new_proficiency_levels, 200
+
+
+@main_bp.get('/words/saved')
+def get_saved_words():
+    """Gets all words that are saved"""
+    saved_words = services.get_saved_words(db.session)
+    return jsonify(saved_words), 200
 
 
 @main_bp.get('/words/saved/<word>')
@@ -86,7 +95,7 @@ def translate_text():
     """Get the English translation of a piece of Mandarin text"""
     text = request.args.get('text', '')
     translation = services.translate_text(text)
-    return jsonify(translation), 200
+    return translation
 
 
 @main_bp.post('/sentences')
@@ -127,15 +136,38 @@ def add_video():
     return jsonify('success'), 201
 
 
+@main_bp.get('/videos/<video_id>/title')
+def get_video_title(video_id: str):
+    """Gets the title of a video from the database"""
+    title = services.get_video_title(db.session, video_id)
+    return jsonify(title), 200
+
+
+@main_bp.patch('/videos/<video_id>/title')
+def update_video_title(video_id: str):
+    """Updates the title of a video in the database"""
+    title = request.json['title']
+    services.update_video_title(db.session, video_id, title)
+    db.session.commit()
+    return jsonify('success'), 200
+
+
 @main_bp.get('/videos/check')
 def check_video_exists():
     """Checks if a video exists in the database"""
     video_id = request.args.get('video_id')
     video_exists = services.check_video_exists(db.session, video_id)
-    return jsonify({'exists': video_exists}), 200
+    return jsonify(video_exists), 200
 
 
-@main_bp.patch('/videos/last-index/<video_id>')
+@main_bp.get('/videos/<video_id>/last-index')
+def get_video_last_index(video_id: str):
+    """Gets the last index for the place where user left off in a video"""
+    last_index = services.get_video_last_index(db.session, video_id)
+    return jsonify(last_index), 200
+
+
+@main_bp.patch('/videos/<video_id>/last-index')
 def update_video_last_index(video_id: str):
     """Updates the last index of a video in the database"""
     last_index = request.json['last_index']
@@ -166,6 +198,7 @@ def get_transcript_from_database(video_id: str):
 def get_new_transcript():
     """Gets the transcript of a new YouTube video"""
     video_id = request.args.get('video_id')
+    print(video_id)
     transcript = services.get_transcript_from_youtube(video_id)
     return jsonify(transcript), 200
 

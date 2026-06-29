@@ -22,7 +22,7 @@ import {
 import {
     printText,
     printTranscript
-} from "./render-text/practice-area.js";
+} from "./render-text/new_practice_area.js";
 
 import {
     setLastIndex,
@@ -36,7 +36,7 @@ import {
     embedVideo,
     findTimestamp,
     toggleVideo
-} from "./video-functions/modifying-video.js";
+} from "./video/modifying-video.js";
 
 import {
     generateStoryButton,
@@ -54,7 +54,7 @@ import { fetchGeminiPrompt } from "./old_api/language-processing/gemini.js";
 import { updateProficiencyLevels } from "./old_api/user-data/proficiency.js";
 import { printDefinitions } from "./render-text/translations.js";
 import { formatWordsToUpdate } from "./utils.js";
-import { videoReady } from "./video-functions/video-states.js";
+import { videoReady } from "./video/video-states.js";
 
 const LOADING_SIGN = 'Loading...';
 
@@ -228,12 +228,11 @@ async function onKeyPressed(event) {
 /**
  * Embeds video, loads transcript, and prints the transcript with clickable words. Scrolls video to place user left off.
  */
-async function loadVideoAndTranscript() {
-    wordsArea.textContent = LOADING_SIGN;
+export async function loadVideoAndTranscript() {
     
     // Embed video
     const link = document.getElementById('link-entry').value;
-    state.videoLink = link;
+    state.videoId = link;
     embedVideo(link);
 
     const lastIndex = await fetchTranscriptLastIndex(link);
