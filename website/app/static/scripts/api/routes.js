@@ -247,11 +247,11 @@ export async function getNewTranscript(videoId) {
 /**
  * Adds a flashcard to the database
  * 
- * @param {object} flashcardData The data for the flashcard
+ * @param {string} word The word for which to create the flashcard
  * @returns {Promise<string>} The success or error message
  */
-export async function addFlashcard(flashcardData) {
-    return await request('/flashcards', 'POST', flashcardData);
+export async function addFlashcard(word) {
+    return await request('/flashcards', 'POST', { word: word, due: new Date().toISOString() });
 }
 
 /**
@@ -267,19 +267,21 @@ export async function getFlashcard(word) {
 /**
  * Gets the next flashcard that is due for review
  * 
+ * @param {string} currentTime The current time in ISO format
  * @returns {Promise<object>} The flashcard that is next due
  */
-export async function getNextDueFlashcard() {
-    return await request('/flashcards/next-due', 'GET')
+export async function getNextDueFlashcard(currentTime) {
+    return await request(`/flashcards/next-due?current_time=${currentTime}`, 'GET');
 }
 
 /**
  * Gets all flashcards that are currently due for review
  * 
+ * @param {string} currentTime The current time in ISO format
  * @returns {Promise<Array<object>>} The flashcards that are due
  */
-export async function getDueFlashcards() {
-    return await request('/flashcards/due', 'GET');
+export async function getDueFlashcards(currentTime) {
+    return await request(`/flashcards/due?current_time=${currentTime}`, 'GET');
 }
 
 /**
@@ -298,22 +300,22 @@ export async function updateFlashcard(word, flashcardData) {
  * 
  * @param {string} word The word that was reviewwed
  * @param {number} rating The rating from 1 to 4 that the user gave to the card
- * @param {Date} reviewTime The date and time user reviewed the card
+ * @param {string} reviewTime The date and time user reviewed the card as an ISO string
  * @returns {Promise<object>} The updated card
  */
 export async function reviewFlashcard(word, rating, reviewTime) {
-    return await request('/flashcards/review', 'POST', { word, rating, review_time: reviewTime.toISOString() });
+    return await request('/flashcards/review', 'POST', { word, rating, review_time: reviewTime });
 }
 
 /**
  * Gets the review intervals for a flashcard
  * 
  * @param {string} word The word for which to get the review intervals
- * @param {Date} reviewTime The time of the review
+ * @param {string} reviewTime The time of the review as an ISO string
  * @returns {Promise<Array<number>>} The review intervals
  */
 export async function getReviewIntervals(word, reviewTime) {
-    return await request(`/flashcards/review-intervals/${encodeURIComponent(word)}?review_time=${reviewTime.toISOString()}`, 'GET');
+    return await request(`/flashcards/review-intervals/${encodeURIComponent(word)}?review_time=${reviewTime}`, 'GET');
 }
 
 /**

@@ -1,95 +1,38 @@
-import {
-    fetchDueWords,
-    fetchNextWord,
-    fetchReviewTimes,
-    fetchUpdateCard
-} from "./old_api/user-data/flashcards.js";
-
-import {
-    createPracticeSentences,
-    fetchSentence
-} from "./old_api/user-data/practice.js";
-
-import {
-    state,
-    numDueWordsCounter,
-    ratingSelectionArea,
-    wordsAreaContainer,
-    ratingAgainTime,
-    ratingHardTime,
-    ratingGoodTime,
-    ratingEasyTime
-} from "./document-areas.js";
-
-import { fetchGeminiPrompt } from "./old_api/language-processing/gemini.js";
-import { printText } from "./render-text/practice-area.js";
-import { formatSeconds } from "./utils.js";
-
-/**
- * Prompts Gemini to generate a sentence using a given word
- * 
- * @param {Array} words Words for Gemini to use in sentence
- */
-export async function generatePracticeSentence(words) {
-    const prompt = `Using the following list of Mandarin words, generate one sentence for each word: ${words}. Please format your response as "'Mandarin word': 'sentence'", with one sentence in each line. Please simply list the sentences without any surrounding text in English.`;
-    let sentences = await fetchGeminiPrompt(prompt);
-
-    const sentencesByWord = {};
-    
-    while (true) {
-        let finalSentence = false;
-        let sentenceStartIndex = sentences.indexOf(':') + 2;
-        let sentenceEndIndex = sentences.indexOf('\n');
-
-        if (sentenceEndIndex == -1) {
-            sentenceEndIndex = sentences.length;
-            finalSentence = true;
-        }
-
-        let sentenceWord = sentences.substring(0, sentenceStartIndex - 2);
-        let sentence = sentences.substring(sentenceStartIndex, sentenceEndIndex);
-
-        sentencesByWord[sentenceWord] = sentence;
-        sentences = sentences.substring(sentenceEndIndex + 1, sentences.length);
-
-        if (finalSentence) {
-            break;
-        }
-    }
-
-    console.log(sentencesByWord);
-    return sentencesByWord;
-}
+import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewIntervals, getSentence, reviewFlashcard, updateFlashcard } from "./api/routes.js";
+import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer } from "./document-areas.js";
+import { clearPracticeAreaContainer, printText } from "./render-text/practice-area.js";
+import { currentISOTime, formatSeconds } from "./utils.js";
 
 /**
  * Allows user to review the next flashcard
  * 
  * @param {number} [wordIndex=0] Index of due words to be used
  */
-export async function showNextCard(wordIndex = 0) {
-    ratingSelectionArea.style.display = 'flex';
+export async function showNextCard() {
+    practiceAreaContainer.style.textAlign = 'center';
+    state.lastIndex = -1;
+
+    const card = await getNextDueFlashcard(new Date().toISOString());
     
-    const word = await fetchNextWord(wordIndex);
-    
-    if (word == 'None') {
-        printText('No new flashcards');
+    if (card == 'None') {
+        printText('No new flashcards', true);
         ratingSelectionArea.style.display = 'none';
         return;
     }
-    
-    state.flashcardWord = word;
-    
-    const sentence = await fetchSentence(word);
-    if (sentence == 'None') {
-        await createPracticeSentences();
-        return;
-    }
-    await printText(sentence);
-    wordsAreaContainer.style.textAlign = 'center';
 
-    const reviewTimes = await fetchReviewTimes(word);
-    const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
+    ratingSelectionArea.style.display = 'flex';
+
+    const word = card.word;
+    state.flashcardWord = word;
+
+    await printText('Generating sentence...');
+    const sentence = await getSentence(word);
+    await printText(sentence);
+    state.flashcardSentence = sentence;
     
+    const reviewTimes = await getReviewIntervals(word, currentISOTime());
+    const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
+
     for (let index = 0; index < ratingTimeAreas.length; index++) {
         ratingTimeAreas[index].textContent = formatSeconds(reviewTimes[index]);
     }
@@ -100,40 +43,48 @@ export async function showNextCard(wordIndex = 0) {
  * 
  * @param {MouseEvent} event One of four buttons user clicked to give flashcard rating
  */
-export async function reviewCard(event) {
+export async function selectRating(event) {
+    console.log('as;ldkfjas;l');
+    const reviewTime = currentISOTime();
+    let newCard = null;
     switch (event.target.id) {
         case 'rating-again-button':
-            await fetchUpdateCard(state.flashcardWord, 1);
+            newCard = await reviewFlashcard(state.flashcardWord, 1, reviewTime);
             break;
         case 'rating-hard-button':
-            await fetchUpdateCard(state.flashcardWord, 2);
+            newCard = await reviewFlashcard(state.flashcardWord, 2, reviewTime);
             break;
         case 'rating-good-button':
-            await fetchUpdateCard(state.flashcardWord, 3);
+            newCard = await reviewFlashcard(state.flashcardWord, 3, reviewTime);
             break;
         case 'rating-easy-button':
-            await fetchUpdateCard(state.flashcardWord, 4);
+            newCard = await reviewFlashcard(state.flashcardWord, 4, reviewTime);
             break;
         case 'exit-review-button':
             ratingSelectionArea.style.display = 'none';
-            printText();
+            clearPracticeAreaContainer();
             return;
-    
+        
         default:
             break;
     }
+    console.log(newCard);
+    
 
+    await deleteSentence(state.flashcardSentence, state.flashcardWord);
+    await updateFlashcard(state.flashcardWord, newCard);
     await showNumDueCards();
-    await showNextCard();
+    showNextCard();
 }
 
 /**
  * Show the number of cards the user can practice that are due currently
  */
 export async function showNumDueCards() {
-    const dueWords = await fetchDueWords();
+    const currentTime = new Date().toISOString();
+    const dueWords = await getDueFlashcards(currentTime);
     console.log(dueWords);
-    const numDueCards = dueWords.length
+    const numDueCards = dueWords.length;
 
     numDueWordsCounter.textContent = numDueCards;
 }

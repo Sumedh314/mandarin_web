@@ -2,7 +2,7 @@ import { updateVideoTitle } from "../api/routes.js";
 import {
     state,
     videoTitle,
-    wordsAreaContainer
+    practiceAreaContainer
 } from "../document-areas.js";
 
 import {
@@ -49,8 +49,8 @@ export async function embedVideo(videoId) {
  * Automatically scrolls the transcript to the location of the video
  */
 export function scrollTranscript() {
-    const wordsAreaTop = wordsAreaContainer.getBoundingClientRect()['top'];
-    const wordsAreaBottom = wordsAreaContainer.getBoundingClientRect()['bottom'];
+    const wordsAreaTop = practiceAreaContainer.getBoundingClientRect()['top'];
+    const wordsAreaBottom = practiceAreaContainer.getBoundingClientRect()['bottom'];
 
     const currentTime = state.videoPlayer.getCurrentTime();
     const currentTimestamp = findTimestamp(currentTime);

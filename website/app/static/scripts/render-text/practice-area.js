@@ -1,49 +1,23 @@
-import {
-    state,
-    videoTitle,
-    wordsArea,
-    wordsAreaContainer
-} from "../document-areas.js";
-
-import {
-    fetchTranscriptWordSegments,
-    fetchWordSegments
-} from "../old_api/language-processing/segmentation.js";
-
-import {
-    fetchProficiencyLevels,
-    fetchTranscriptProficiencyLevels
-} from "../old_api/user-data/proficiency.js";
-
-import { fetchCheckSaved } from "../old_api/user-data/practice.js";
-import { formatTimestamp } from "../utils.js";
+import { addWords, checkIfWordSaved, getSavedWords, getWordProficiencyLevels, segmentText } from "../api/routes.js";
+import { state, practiceArea, practiceAreaContainer } from "../document-areas.js";
+import { filterText, formatTimestamp } from "../utils.js";
 
 /**
- * Prints a transcript to the screen while preserving timestamps
+ * Prints a transcript into the practice area with clickable words and timestamps
  * 
- * @param {Object} transcript Original transcript with snippets at each timestamp
+ * @param {object} transcript Transcript to print
+ * @param {boolean} [newWords=false] Whether the transcript contains new words
  */
-export async function printTranscript(transcript) {
-    const segmentedTranscript = await fetchTranscriptWordSegments(transcript);
-    const proficiencyLevels = await fetchTranscriptProficiencyLevels(segmentedTranscript);
+export async function printTranscript(transcript, newWords = false) {
+    let wordIndex = -1;
+    clearPracticeAreaContainer();
 
-    state.timestampElements = [];
-    let timestamps = [];
+    for (const line of transcript) {
+        const timestamp = line.start;
 
-    for (const timestamp of Object.keys(segmentedTranscript)) {
-        timestamps.push(timestamp)
-    }
-    timestamps = timestamps.sort((a, b) => a - b);
-
-    let wordIndex = 0;
-
-    videoTitle.textContent = state.videoPlayer.videoTitle;
-    wordsArea.textContent = '';
-
-    for (const timestamp of timestamps) {
-        const transcriptLine = document.createElement('span');
-        transcriptLine.className = 'normal';
-        transcriptLine.dataset.timestamp = timestamp;
+        const transcriptLineElement = document.createElement('span');
+        transcriptLineElement.className = 'normal';
+        transcriptLineElement.dataset.timestamp = timestamp;
 
         const timestampElement = document.createElement('span');
         timestampElement.className = 'timestamp';
@@ -52,110 +26,76 @@ export async function printTranscript(transcript) {
         const space = document.createElement('span');
         space.textContent = ' ';
 
-        transcriptLine.appendChild(timestampElement);
-        transcriptLine.appendChild(space);
-        
-        for (const word of segmentedTranscript[timestamp]) {
-            if (word == '\n') {
-                wordsArea.appendChild(document.createElement('br'));
-                continue;
-            }
-            if (word in proficiencyLevels) {
-                const wordElement = document.createElement('span');
-                wordElement.classList.add('word');
-                wordElement.dataset.word = word;
-                wordElement.dataset.index = wordIndex;
-                wordElement.dataset.proficiency = proficiencyLevels[word];
-                wordElement.textContent = word;
+        transcriptLineElement.appendChild(timestampElement);
+        transcriptLineElement.appendChild(space);
 
-                const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
-                if (wordIsSaved) {
-                    wordElement.classList.add('saved-word');
-                }
+        practiceArea.appendChild(transcriptLineElement);
 
-                transcriptLine.appendChild(wordElement);
-
-                wordIndex++;
-            }
-            else {
-                const wordElement = document.createElement('span');
-                wordElement.textContent = word;
-
-                transcriptLine.appendChild(wordElement);
-            }
-
-            if (wordIndex == state.lastIndex + 1) {
-                transcriptLine.appendChild(locationMarker);
-                locationMarker.hidden = false;
-            }
-        }
-
-        wordsArea.appendChild(transcriptLine);
-        wordsArea.appendChild(document.createElement('br'));
+        const text = line.text;
+        wordIndex = await printText(text, false, wordIndex, newWords, transcriptLineElement);
+        practiceArea.appendChild(document.createElement('br'));
     }
-    addDoneButton(wordIndex);
 
+    addDoneButton(wordIndex);
+    
     // Push timestamps to timestampElements for other functions to use
-    for (const timestamp of wordsArea.children) {
+    for (const timestamp of practiceArea.children) {
         if (timestamp.tagName == 'SPAN') {
             state.timestampElements.push(timestamp);
         }
     }
 
     // Automatically scroll to line in the transcript that the video is currently paying in
-    wordsArea.scrollIntoView({
+    practiceArea.scrollIntoView({
         behavior: 'smooth'
     });
-
-    state.transcriptShowing = true;
-    // scrollToLocationMarker();
 }
 
 /**
- * Prints the text into the dedicated area with clickable words.
+ * Prints text into the practice area with clickable words
  * 
  * @param {string} text Original text to be printed
+ * @param {boolean} [clearArea=true] Whether or not to clear the practice area before printing text
+ * @param {number} [wordIndex=0] The index to start labeling words at
+ * @param {boolean} [addNewWords=true] Whether or not the text contains new words to add to the database
+ * @param {HTMLElement} [parentElement=wordsArea] The element to print the text into
+ * @returns {Promise<number>} The index of the last word printed
  */
-export async function printText(text) {
-    state.lastIndex = -1;
-
-    let wordIndex = 0;
-    wordsArea.textContent = '';
-
-    const segmentedText = await fetchWordSegments(text);
-    const proficiencyLevels = await fetchProficiencyLevels(segmentedText);
-
-    for (const word of segmentedText) {
-        if (word == '\n') {
-            wordsArea.appendChild(document.createElement('br'));
-            continue;
-        }
-        if (word in proficiencyLevels) {
-            let wordElement = document.createElement('span');
-            wordElement.classList.add('word');
-            wordElement.dataset.word = word;
-            wordElement.dataset.index = wordIndex;
-            wordElement.dataset.proficiency = proficiencyLevels[word];
-            wordElement.textContent = word;
-
-            const wordIsSaved = await fetchCheckSaved(word) == 'Saved' ? true : false;
-            if (wordIsSaved) {
-                wordElement.classList.add('saved-word');
-            }
-
-            wordsArea.appendChild(wordElement);
-            wordIndex++;
-        }
-        else {
-            let wordElement = document.createElement('span');
-            wordElement.textContent = word;
-            wordsArea.appendChild(wordElement);
-        }
+export async function printText(text, clearArea = true, wordIndex = 0, addNewWords = true, parentElement = practiceArea) {
+    if (clearArea) {
+        parentElement.textContent = '';
     }
 
-    wordsAreaContainer.style.textAlign = 'left';
-    wordsArea.appendChild(document.createElement('br'));
-    addDoneButton(wordIndex);
+    const segmentedText = await segmentText(text);
+    const filteredText = filterText(segmentedText);
+    if (addNewWords) {
+        await addWords(Array.from(new Set(filteredText)));
+    }
+    
+    const proficiencyLevels = await getWordProficiencyLevels(filteredText);
+    const savedWords = await getSavedWords();
+    
+    for (const text of segmentedText) {
+        let elementToAdd = null;
+
+        if (filteredText.includes(text)) {
+            wordIndex++;
+            const wordElement = await createWordElement(text, wordIndex, proficiencyLevels[text], savedWords.includes(text));
+            elementToAdd = wordElement;
+        }
+        else if (text == '\n') {
+            elementToAdd = document.createElement('br');
+        }
+        else {
+            let element = document.createElement('span');
+            element.textContent = text;
+            elementToAdd = element;
+        }
+
+        parentElement.appendChild(elementToAdd);
+    }
+
+    return wordIndex;
 }
 
 /**
@@ -163,7 +103,7 @@ export async function printText(text) {
  * 
  * @param {Number} wordIndex Index of the final word of the transcript or text
  */
-function addDoneButton(wordIndex) {
+export function addDoneButton(wordIndex) {
     const doneButton = document.createElement('span');
     doneButton.classList.add('word');
     doneButton.dataset.proficiency = 3;
@@ -171,6 +111,37 @@ function addDoneButton(wordIndex) {
     doneButton.dataset.index = wordIndex + 1;
     doneButton.textContent = 'Done';
 
-    wordsArea.appendChild(document.createElement('br'));
-    wordsArea.appendChild(doneButton);
+    practiceArea.appendChild(document.createElement('br'));
+    practiceArea.appendChild(document.createElement('br'));
+    practiceArea.appendChild(doneButton);
+}
+
+/**
+ * Creates an HTML span element for the practice area whose text is the given word
+ * 
+ * @param {string} word Text of word
+ * @param {number} proficiency Proficiency level of word
+ * @param {number} wordIndex Index of word
+ * @param {boolean} wordIsSaved Whether or now the word is saved
+ */
+async function createWordElement(word, wordIndex, proficiency, wordIsSaved) {
+    const wordElement = document.createElement('span');
+    wordElement.classList.add('word');
+    wordElement.dataset.word = word;
+    wordElement.dataset.index = wordIndex;
+    wordElement.dataset.proficiency = proficiency;
+    wordElement.textContent = word;
+
+    if (wordIsSaved) {
+        wordElement.classList.add('saved-word');
+    }
+
+    return wordElement;
+}
+
+/**
+ * Clears the practice area.
+ */
+export function clearPracticeAreaContainer() {
+    practiceAreaContainer.textContent = '';
 }

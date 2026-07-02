@@ -114,3 +114,14 @@ function textIsMandarin(text) {
     }
     return true;
 }
+
+/**
+ * Gets the current time in ISO format
+ * 
+ * @returns {string} Current time in ISO format
+ */
+export function currentISOTime() {
+    const currentTime = new Date();
+    const isoTime = currentTime.toISOString();
+    return isoTime;
+}

@@ -17,6 +17,7 @@ class Word(db.Model):
     pinyin: Mapped[Optional[str]] = mapped_column(String(64))
     translation: Mapped[Optional[str]] = mapped_column(String(64))
     saved: Mapped[bool] = mapped_column(Boolean, default=False)
+    num_sentences: Mapped[int] = mapped_column(Integer, default=0)
 
     def __repr__(self):
         return f'Word: {self.text}'
@@ -61,18 +62,19 @@ class TranscriptLine(db.Model):
 class Flashcard(db.Model):
     __tablename__ = 'flashcards'
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    card_id: Mapped[int] = mapped_column(primary_key=True)
     word: Mapped[str] = mapped_column(String(32), ForeignKey(Word.text), unique=True)
     state: Mapped[int] = mapped_column(Integer, default=1)
-    step: Mapped[int] = mapped_column(Integer, default=0)
+    step: Mapped[Optional[int]] = mapped_column(Integer)
     stability: Mapped[Optional[float]] = mapped_column(Float)
     difficulty: Mapped[Optional[float]] = mapped_column(Float)
-    due: Mapped[DateTime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    last_review: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True))
+    due: Mapped[str] = mapped_column(String(64))
+    last_review: Mapped[Optional[str]] = mapped_column(String(64))
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'card_id': self.card_id,
+            'word': self.word,
             'state': self.state,
             'step': self.step,
             'stability': self.stability,

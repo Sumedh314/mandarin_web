@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, request, jsonify, render_template
 
 from app.models import db
@@ -95,7 +97,7 @@ def translate_text():
     """Get the English translation of a piece of Mandarin text"""
     text = request.args.get('text', '')
     translation = services.translate_text(text)
-    return translation
+    return jsonify(translation), 200
 
 
 @main_bp.post('/sentences')
@@ -105,6 +107,7 @@ def add_sentences():
     sentences = sentence_data['sentences']
     word = sentence_data['word']
     services.add_sentences(db.session, sentences, word)
+    services.add_num_sentences(db.session, word, len(sentences))
     db.session.commit()
     return jsonify('success'), 201
 
@@ -113,7 +116,7 @@ def add_sentences():
 def get_sentence(word: str):
     """Gets the first sentence stored in the database for the desired word"""
     sentence = services.get_sentence(db.session, word)
-    return sentence, 200
+    return jsonify(sentence), 200
 
 
 @main_bp.delete('/sentences')
@@ -122,6 +125,7 @@ def delete_sentence():
     sentence = request.args.get('sentence')
     word = request.args.get('word')
     services.delete_sentence(db.session, sentence, word)
+    services.delete_num_sentences(db.session, word, 1)
     db.session.commit()
     return jsonify('success'), 200
 
@@ -215,22 +219,26 @@ def add_flashcard():
 @main_bp.get('/flashcards/<word>')
 def get_flashcard(word: str):
     """Gets a flashcard for the specified word"""
-    flashcard = services.get_flashcard(db.session, word)
-    return jsonify(flashcard), 200
+    flashcard = services.get_card_for_word(db.session, word)
+    return jsonify(flashcard.to_dict()), 200
 
 
 @main_bp.get('/flashcards/next-due')
 def get_next_due_flashcard():
     """Gets the next flashcard that is due for review"""
-    flashcard = services.get_next_due_flashcard(db.session)
-    return jsonify(flashcard), 200
+    current_time = request.args.get('current_time')
+    flashcard = services.get_next_due_flashcard(db.session, current_time)
+    if flashcard == 'None':
+        return jsonify('None'), 200
+    return jsonify(flashcard.to_dict()), 200
 
 
 @main_bp.get('/flashcards/due')
 def get_due_flashcards():
     """Gets all flashcards that are currently due for review"""
-    flashcards = services.get_due_flashcards(db.session)
-    return jsonify(flashcards), 200
+    current_time = request.args.get('current_time')
+    flashcards = services.get_due_flashcards(db.session, current_time)
+    return jsonify([flashcard.to_dict() for flashcard in flashcards]), 200
 
 
 @main_bp.patch('/flashcards/<word>')
@@ -248,20 +256,22 @@ def review_flashcard():
     review_data = request.json
     word = review_data['word']
     rating = review_data['rating']
-    review_time = review_data['review_time']
+    review_time = datetime.fromisoformat(review_data['review_time'])
     
-    card = services.get_flashcard(db.session, word)
-    card = services.review_flashcard(card, rating, review_time)
-    return card
+    card = services.get_card_for_word(db.session, word)
+    card = services.review_card(card, rating, review_time)
+    card_dict = card.to_dict()
+    return jsonify(card_dict), 200
 
 
 @main_bp.get('/flashcards/review-intervals/<word>')
 def get_review_intervals(word: str):
     """Gets the review intervals for a flashcard"""
-    review_time = request.args.get('review_time')
-    card = services.get_flashcard(db.session, word)
-    intervals = services.calculate_flashcard_review_intervals(card, review_time)
-    return intervals
+    review_time = datetime.fromisoformat(request.args.get('review_time'))
+    card = services.get_card_for_word(db.session, word)
+    print(word)
+    intervals = services.calculate_card_review_intervals(card, review_time)
+    return jsonify(intervals), 200
 
 
 @main_bp.delete('/flashcards/<word>')

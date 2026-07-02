@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 class DatabaseConfig:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
 
 
 load_dotenv()

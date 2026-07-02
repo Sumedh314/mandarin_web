@@ -1,17 +1,14 @@
 import {
     state,
-    wordsArea,
+    practiceArea,
     locationMarker
 } from "../document-areas.js";
-
-import { updateTranscriptLastIndex } from "../old_api/user-data/transcripts.js";
-import { fetchHskPercentages } from "../old_api/user-data/proficiency.js";
 
 /**
  * Moves the location marker to show the user's farthest point in the text
  */
 export function updateLocationMarker() {
-    for (const snippet of wordsArea.getElementsByTagName('span')) {
+    for (const snippet of practiceArea.getElementsByTagName('span')) {
         for (const word of snippet.children) {
             if (word.hasAttribute('data-index')) {
                 if (word.dataset.index == state.lastIndex) {
@@ -23,22 +20,13 @@ export function updateLocationMarker() {
 }
 
 /**
- * Sets the last index of where the user left off
- * 
- * @param {number} index Index to set lastIndex to
- */
-export async function setLastIndex(index) {
-    await updateTranscriptLastIndex(state.videoId, index);
-}
-
-/**
  * Updates the colors of the words on the screen based on the proficiency levels of each word.
  * 
  * @param {object} proficiencyLevels Proficiency levels of each word
  */
 export function updateWordColors(proficiencyLevels) {
     console.log(proficiencyLevels)
-    const segmentedWords = wordsArea.getElementsByTagName('span');
+    const segmentedWords = practiceArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {
         if (word.dataset.word in proficiencyLevels) {
@@ -53,7 +41,7 @@ export function updateWordColors(proficiencyLevels) {
  * @param {string} wordToUpdate Word to update underlines for
  */
 export function updateWordUnderlines(wordToUpdate) {
-    const segmentedWords = wordsArea.getElementsByTagName('span');
+    const segmentedWords = practiceArea.getElementsByTagName('span');
 
     for (const word of segmentedWords) {
         if (word.dataset.word == wordToUpdate) {

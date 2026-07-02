@@ -23,3 +23,12 @@ if __name__ == '__main__':
 
     # while capture.isOpened():
     #     ret, frame = capture.read()
+
+# from fsrs import Card, Scheduler
+
+# card = Card()
+# scheduler = Scheduler()
+
+# print(card.due)
+# card, _ = scheduler.review_card(card, 1)
+# print(card.due)

@@ -1,138 +1,54 @@
-import {
-    createCard,
-    createInitialCards
-} from "./old_api/user-data/flashcards.js";
-
-import {
-    fetchRandomListWordsLearning,
-    updateSavedWord
-} from "./old_api/user-data/practice.js";
-
-import {
-    fetchTranscriptLastIndex,
-    fetchVideoTranscript
-} from "./old_api/user-data/transcripts.js";
-
-import {
-    reviewCard,
-    showNextCard,
-    showNumDueCards
-} from "./practice-words.js";
-
-import {
-    printText,
-    printTranscript
-} from "./render-text/new_practice_area.js";
-
-import {
-    setLastIndex,
-    updateHskLevels,
-    updateLocationMarker,
-    updateWordColors,
-    updateWordUnderlines
-} from "./render-text/update-progress.js";
-
-import {
-    embedVideo,
-    findTimestamp,
-    toggleVideo
-} from "./video/modifying-video.js";
-
-import {
-    generateStoryButton,
-    linkEntry,
-    ratingSelectionArea,
-    reviewWordsButton,
-    state,
-    textButton,
-    textEntry,
-    videoButton,
-    wordsArea
-} from "./document-areas.js";
-
-import { fetchGeminiPrompt } from "./old_api/language-processing/gemini.js";
-import { updateProficiencyLevels } from "./old_api/user-data/proficiency.js";
+import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, checkIfVideoExists, checkIfWordSaved, deleteFlashcard, getNewTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "./api/routes.js";
+import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer } from "./document-areas.js";
+import { selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
+import { addDoneButton, printText, printTranscript } from "./render-text/practice-area.js";
 import { printDefinitions } from "./render-text/translations.js";
+import { updateLocationMarker, updateWordColors, updateWordUnderlines } from "./render-text/update-progress.js";
 import { formatWordsToUpdate } from "./utils.js";
+import { embedVideo, findTimestamp, pauseIfPlayOtherwise, toggleVideo } from "./video/modifying-video.js";
 import { videoReady } from "./video/video-states.js";
 
-const LOADING_SIGN = 'Loading...';
-
 /**
- * Runs when the words area is clicked. Prints word definition and movese transcript if word clicked and toggles video.
+ * Handles the click event on a word in the practice area.
  * 
- * @param {Event} event Space in the words area that was clicked.
-*/
-async function onWordClick(event) {
+ * @param {MouseEvent} event The place where the user clicked
+ */
+async function handleWordClick(event) {
 
     // If the user highlighted something, print its translation and pinyin
     if (window.getSelection().toString() != '') {
-        printDefinitions(window.getSelection().toString());
+        await printDefinitions(window.getSelection().toString());
     }
 
     // If the user clicked a word
-    if (event.target.hasAttribute('data-word')) {
-        state.clickedWord = event.target.dataset.word;
-
-        // Adjust video state if there is one
-        if (state.transcriptShowing) {
-
-            // Scroll to time in the video of the word
-            state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
-            
-            // Toggle video if the user clicked on the same word twice, or pause video if user clicked a new word
-            if (!(state.clickedWord == event.target.dataset.word) || state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
-                state.videoPlayer.pauseVideo();
-                state.clickedWord = event.target.dataset.word;
-            }
-            else {
-                state.videoPlayer.playVideo();
-            }
-
-            // Make sure correct transcript line is highlited
-            for (const element of event.target.parentNode.parentNode.children) {
-                element.classList.replace('current-time', 'normal');
-            }
-            event.target.parentNode.classList.replace('normal', 'current-time');
-        }
-
-        // Print word's definitions and update colors and HSK table
+    else if (event.target.hasAttribute('data-word')) {
         printDefinitions(event.target.dataset.word);
-        // showWordMenu(event.target);
         let currentIndex = parseInt(event.target.dataset.index, 10);
-
-        if (state.lastIndex != currentIndex) {
-            const wordElements = wordsArea.getElementsByTagName('span');
-            const wordsToUpdate = formatWordsToUpdate(wordElements, state.lastIndex, currentIndex);
-            const proficiencyLevels = await updateProficiencyLevels(wordsToUpdate);
-            updateWordColors(proficiencyLevels);
+        // updateHskLevels();
+        
+        if (state.transcriptShowing) {
+            state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
+            pauseIfPlayOtherwise(state.clickedWord != event.target.dataset.word || state.clickedWord == event.target.dataset.word && state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING);
+            // updateLocationMarker();
         }
         
-        updateHskLevels();
+        if (state.lastIndex != currentIndex && state.clickedWord != event.target.dataset.word) {
+            const wordElements = practiceArea.getElementsByTagName('span');
+            const wordsToUpdate = formatWordsToUpdate(wordElements, state.lastIndex, currentIndex);
+            const proficiencyLevels = await calculateNewProficiencyLevels(wordsToUpdate.previousWords, wordsToUpdate.currentWord);
+            updateWordProficiencyLevels(proficiencyLevels);
+            updateWordColors(proficiencyLevels);
+        }
         
         if (state.lastIndex < currentIndex) {
             state.lastIndex = currentIndex;
         }
+        
         if (state.transcriptShowing) {
-            await setLastIndex(state.lastIndex);
-            updateLocationMarker();
+            updateVideoLastIndex(state.videoId, state.lastIndex);
         }
-    }
 
-    // If the user clicked the "Done" button, update word colors, proficiency levels, and HSK levels
-    else if (event.target.hasAttribute('data-action')) {
-        if (event.target.dataset.action == 'final-word') {
-            let currentIndex = parseInt(event.target.dataset.index, 10);
-            const proficiencyLevels = await updateProficiencyLevels(state.lastIndex, currentIndex, true);
-            updateWordColors(proficiencyLevels);
-            updateHskLevels();
-
-            state.lastIndex = currentIndex;
-            if (state.transcriptShowing) {
-                await setLastIndex(state.lastIndex);
-                updateLocationMarker();
-            }
-        }
+        state.clickedWord = event.target.dataset.word;
     }
 
     // If the user clicked a timestamp, move the video to that timestamp
@@ -141,15 +57,8 @@ async function onWordClick(event) {
     }
 
     // Toggle video if the user clicked in the transcript area but not on a word
-    else {
-        if (state.transcriptShowing) {
-            if (state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '') {
-                state.videoPlayer.pauseVideo();
-            }
-            else {
-                state.videoPlayer.playVideo();
-            }
-        }
+    else if (state.transcriptShowing) {
+        pauseIfPlayOtherwise(state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING || window.getSelection().toString() != '');
     }
 }
 
@@ -158,7 +67,7 @@ async function onWordClick(event) {
  * 
  * @param {Event} event Key that was pressed
  */
-async function onKeyPressed(event) {
+async function handleKeyPress(event) {
 
     // Make sure video is ready and transcript is showing
     if (videoReady() && state.transcriptShowing) {
@@ -219,9 +128,16 @@ async function onKeyPressed(event) {
             return
         }
         
-        await updateSavedWord(state.clickedWord);
+        await toggleWordSaved(state.clickedWord);
         updateWordUnderlines(state.clickedWord);
-        createCard(state.clickedWord);
+
+        if (await checkIfWordSaved(state.clickedWord)) {
+            await addFlashcard(state.clickedWord);
+        }
+        else {
+            await deleteFlashcard(state.clickedWord);
+        }
+        await showNumDueCards();
     }
 }
 
@@ -229,65 +145,46 @@ async function onKeyPressed(event) {
  * Embeds video, loads transcript, and prints the transcript with clickable words. Scrolls video to place user left off.
  */
 export async function loadVideoAndTranscript() {
+    practiceAreaContainer.style.textAlign = 'left';
     
     // Embed video
     const link = document.getElementById('link-entry').value;
-    state.videoId = link;
-    embedVideo(link);
-
-    const lastIndex = await fetchTranscriptLastIndex(link);
-    state.lastIndex = lastIndex;
+    const originalLink = new URL(link);
+    const videoId = originalLink.searchParams.get('v');
+    embedVideo(videoId);
+    state.videoId = videoId;
     
-    const transcript = await fetchVideoTranscript(link);
-    printTranscript(transcript);
+    if (await checkIfVideoExists(videoId)) {
+        const transcript = await getTranscriptFromDatabase(videoId);
+        printTranscript(transcript, false);
+        state.lastIndex = await getVideoLastIndex(videoId);
+    }
+    else {
+        addVideo(videoId);
+        const transcript = await getNewTranscript(videoId);
+        addTranscript(videoId, transcript);
+        printTranscript(transcript, true);
+        state.lastIndex = -1;
+    }
+
+    state.transcriptShowing = true;
 }
 
 /**
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
+    practiceAreaContainer.style.textAlign = 'left';
+
     const text = document.getElementById('text-entry').value;
 
-    printText(text);
+    const wordIndex = await printText(text);
+    addDoneButton(wordIndex);
 
     state.transcriptShowing = false;
+    state.lastIndex = -1;
 }
 
-/**
- * Prompts Google Gemini to generate a story in Mandarin.
- */
-async function generateStory() {
-    const wordList = await fetchRandomListWordsLearning(10);
-    const prompt = `I'm trying to learn Mandarin, and I'm currently a beginner. Can you generate a short, beginner-friendly story in Mandarin for me? Here's a list of words I'm learning that I would like you to incorporate: ${wordList}`;
-    const response = await fetchGeminiPrompt(prompt);
-
-    printText(response);
-
-    state.transcriptShowing = false;
-}
-
-/**
- * Runs when the Practice Words button is clicked
- */
-async function practiceWords() {
-    // let wordList = await fetchRandomListWordsSaved(10);
-    // console.log(wordList);
-
-    // const sentencesByWord = await generatePracticeSentence(wordList);
-    // console.log(sentencesByWord);
-
-    // for (const word of Object.keys(sentencesByWord)) {
-    //     await updatePracticeSentences(word, sentencesByWord[word]);
-    // }
-
-    await showNextCard();
-}
-
-// Show HSK levels as soon as page loads
-updateHskLevels();
-
-// Immediately create flashcards for later use and show number of currently due cards
-await createInitialCards();
 showNumDueCards();
 
 // YouTube Iframe stuff
@@ -302,13 +199,10 @@ textEntry.addEventListener('keypress', event => event.key === 'Enter' && printUs
 videoButton.addEventListener('click', loadVideoAndTranscript);
 linkEntry.addEventListener('keypress', event => event.key === 'Enter' && loadVideoAndTranscript(event));
 
-// translateTranscriptButton.addEventListener('click', fetchTranscriptTranslation);
-generateStoryButton.addEventListener('click', generateStory);
+reviewWordsButton.addEventListener('click', showNextCard);
 
-reviewWordsButton.addEventListener('click', async () => { await practiceWords(); });
+practiceArea.addEventListener('click', handleWordClick);
 
-wordsArea.addEventListener('click', onWordClick);
+ratingSelectionArea.addEventListener('click', selectRating);
 
-ratingSelectionArea.addEventListener('click', reviewCard);
-
-window.addEventListener('keydown', onKeyPressed);
+window.addEventListener('keydown', handleKeyPress);

@@ -7,7 +7,8 @@ export const state = {
     clickedWord: '',
     transcriptShowing: false,
     videoId: '',
-    flashcardWord: ''
+    flashcardWord: '',
+    flashcardSentence: ''
 };
 
 // UPPER ELEMENTS
@@ -32,8 +33,8 @@ export const videoTitle = document.getElementById('video-title');
 export const videoLocation = document.getElementById('video-location');
 
 // PRACTICE AREA
-export const wordsAreaContainer = document.getElementById('words-area-container');
-export const wordsArea = document.getElementById('words-area');
+export const practiceAreaContainer = document.getElementById('practice-area-container');
+export const practiceArea = document.getElementById('practice-area');
 
 export const locationMarker = document.getElementById('location-marker');
 

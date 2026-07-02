@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import copy
 
-from sqlalchemy import select, insert, true, update, delete
+from sqlalchemy import select, insert, update, delete, func, cast, DateTime
 from sqlalchemy.orm import Session
 
 import jieba
@@ -113,23 +113,55 @@ def update_word_saved_status(session: Session, word: str, new_status: bool):
     session.execute(statement)
 
 
+def add_num_sentences(session: Session, word: str, num_addl_sentences: int):
+    """Adds to the number of practice sentences for the word"""
+    statement = select(Word.num_sentences).where(word == Word.text)
+    num_sentences = session.scalar(statement)
+    statement = update(Word).where(Word.text == word).values(num_sentences=num_sentences + num_addl_sentences)
+    session.execute(statement)
+
+
+def delete_num_sentences(session: Session, word: str, num_sentences_to_delete: int):
+    """Deletes the number of practice sentences for the word"""
+    statement = select(Word.num_sentences).where(word == Word.text)
+    num_sentences = session.scalar(statement)
+    statement = update(Word).where(Word.text == word).values(num_sentences=num_sentences - num_sentences_to_delete)
+    session.execute(statement)
+
+
 def add_sentences(session: Session, sentences: list[str], word: str):
     """Adds a list of sentences for a specific word"""
     sentence_list = [Sentence(text=sentence, word=word) for sentence in sentences]
     session.add_all(sentence_list)
 
-
 def get_sentence(session: Session, word: str):
     """Queries the database to fetch the first sentence for a word"""
     statement = select(Sentence.text).where(Sentence.word == word).limit(1)
     sentence = session.scalar(statement)
+    print(sentence)
+    if sentence is None:
+        generate_sentences_for_low_words(session)
+        return get_sentence(session, word)
     return sentence
 
 
-def fetch_low_words(session: Session, threshold: int = 5):
-    """Fetches all words with fewer practice sentences than the given threshold"""
-    statement = select(Word).where(select(Sentence).where(Sentence.word == Word.text).count() < threshold)
+def generate_sentences_for_low_words(session: Session, num_sentences: int = 5, threshold: int = 5):
+    """Generates sentences for words with fewer practice sentences than the given threshold if at least num_words words have fewer practice sentences than the threshold"""
+    low_words = get_low_words(session, threshold)
+    sentences = generate_practice_sentences(low_words, num_sentences)
+    print(sentences)
+    for word in low_words:
+        print(sentences[word], len(sentences[word]))
+        word_sentences = sentences[word]
+        add_sentences(session, word_sentences, word)
+        add_num_sentences(session, word, len(word_sentences))
+
+
+def get_low_words(session: Session, threshold: int = 5):
+    """Fetches all saved words with fewer practice sentences than the given threshold"""
+    statement = select(Word.text).where(Word.saved == True, Word.num_sentences < threshold)
     low_words = session.scalars(statement).all()
+    print(low_words)
     return low_words
 
 
@@ -202,39 +234,52 @@ def get_transcript_from_youtube(video_id: str):
 
 def add_flashcard(session: Session, flashcard_data: dict[str, str | int | float]):
     """Adds a new flashcard row to the database"""
-    session.add(Flashcard(**flashcard_data))
+    card = create_new_card_object(**flashcard_data)
+    session.add(Flashcard(word=flashcard_data['word'], **card.to_dict()))
+    generate_sentences_for_low_words(session)
 
 
-def get_flashcard(session: Session, word: str):
+def get_card_for_word(session: Session, word: str):
     """Gets a flashcard from the database"""
     statement = select(Flashcard).where(Flashcard.word == word)
-    card = session.scalar(statement)
+    flashcard = session.scalar(statement)
+    card = create_new_card_object(**flashcard.to_dict())
+    print(card.last_review, type(card.last_review))
     return card
 
 
-def get_next_due_flashcard(session: Session, current_time: datetime):
+def get_next_due_flashcard(session: Session, current_time_iso: str):
     """Fetches the next flashcard that is due for review"""
-    statement = select(Flashcard).where(Flashcard.due <= current_time).order_by(Flashcard.due.asc()).limit(1)
-    due_card = session.scalar(statement)
-    return due_card
+    due_cards = get_due_flashcards(session, current_time_iso)
+    if not due_cards:
+        return 'None'
+    return due_cards[0]
 
 
-def get_due_flashcards(session: Session, current_time: datetime):
+def get_due_flashcards(session: Session, current_time_iso: str):
     """Fetches all words that are currently due for review"""
-    statement = select(Flashcard).where(Flashcard.due <= current_time)
-    due_cards = session.scalars(statement).all()
-    return due_cards
+    current_time = datetime.fromisoformat(current_time_iso)
+    statement = select(Flashcard)
+    flashcards = session.scalars(statement).all()
+    due_flashcards = [flashcard for flashcard in flashcards if datetime.fromisoformat(flashcard.due) <= current_time or flashcard.state == 1]
+    print(current_time, due_flashcards)
+    if due_flashcards is None:
+        return []
+    return due_flashcards
 
 
 def update_flashcard(session: Session, word: str, flashcard_data: dict[str, str | int | float]):
     """Updates a flashcard with its new data"""
+    print(flashcard_data)
     statement = update(Flashcard).where(Flashcard.word == word).values(**flashcard_data)
     session.execute(statement)
 
 
-def review_flashcard(card: Card, rating: int, review_time: datetime):
+def review_card(card: Card, rating: int, review_time: datetime):
     """Reviews a card by its rating"""
+    print('before', card.to_dict())
     card, _ = scheduler.review_card(card, rating, review_time)
+    print('after ', card.to_dict())
     return card
 
 
@@ -243,14 +288,24 @@ def delete_flashcard(session: Session, word: str):
     session.execute(delete(Flashcard).where(Flashcard.word == word))
 
 
-def calculate_flashcard_review_intervals(card: Card, current_time: datetime):
+def calculate_card_review_intervals(card: Card, current_time: datetime):
     """Calculates the hypothetical amount of time user would have before reviewing the same flashcard again based on which rating they select"""
     review_intervals = []
     for rating in range(1, 5):
         new_card = copy.deepcopy(card)
-        new_card = review_flashcard(new_card, rating, current_time)
+        new_card = review_card(new_card, rating, current_time)
         review_intervals.append((new_card.due - current_time).total_seconds())
     return review_intervals
+
+
+def create_new_card_object(**kwargs):
+    """Createas a new card object with the given parameters"""
+    kwargs_dict = {key: value for key, value in kwargs.items() if key in ['card_id', 'state', 'step', 'stability', 'difficulty', 'due', 'last_review']}
+    card_dict = Card().to_dict()
+    for key, value in kwargs_dict.items():
+        card_dict[key] = value
+    card = Card.from_dict(card_dict)
+    return card
 
 
 def generate_practice_sentences(words, num_sentences):
@@ -263,7 +318,7 @@ def generate_practice_sentences(words, num_sentences):
         "properties": {word: {'type': 'array', 'items': {'type': 'string'}} for word in words}
     }
 
-    return prompt_gemini(prompt, schema=response_schema)
+    return json.loads(prompt_gemini(prompt, schema=response_schema))
 
 
 def prompt_gemini(prompt: str, model: str = 'gemini-2.5-flash', schema: dict = None):
@@ -278,6 +333,6 @@ def prompt_gemini(prompt: str, model: str = 'gemini-2.5-flash', schema: dict = N
                 response_mime_type='application/json',
                 response_schema=schema
             )
-        ).text
+        )
     
-    return response
+    return response.text if hasattr(response, 'text') else response
