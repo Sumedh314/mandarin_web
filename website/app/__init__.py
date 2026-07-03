@@ -11,7 +11,20 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app)
 
-    from .routes import main_bp
-    app.register_blueprint(main_bp)
+    from .routes.pages import pages_bp
+    app.register_blueprint(pages_bp)
+    
+    from .routes.api.words import words_bp
+    from .routes.api.sentences import sentences_bp
+    from .routes.api.videos import videos_bp
+    from .routes.api.transcripts import transcripts_bp
+    from .routes.api.flashcards import flashcards_bp
+    from .routes.api.language_processing import language_bp
+    app.register_blueprint(words_bp)
+    app.register_blueprint(sentences_bp)
+    app.register_blueprint(videos_bp)
+    app.register_blueprint(transcripts_bp)
+    app.register_blueprint(flashcards_bp)
+    app.register_blueprint(language_bp)
     
     return app

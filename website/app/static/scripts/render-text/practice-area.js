@@ -33,7 +33,7 @@ export async function printTranscript(transcript, newWords = false) {
 
         const text = line.text;
         wordIndex = await printText(text, false, wordIndex, newWords, transcriptLineElement);
-        practiceArea.appendChild(document.createElement('br'));
+        practiceArea.appendChild(document.createElement('br'));        
     }
 
     addDoneButton(wordIndex);
@@ -143,5 +143,5 @@ async function createWordElement(word, wordIndex, proficiency, wordIsSaved) {
  * Clears the practice area.
  */
 export function clearPracticeAreaContainer() {
-    practiceAreaContainer.textContent = '';
+    practiceArea.textContent = '';
 }

@@ -16,16 +16,6 @@ export async function addWords(words) {
 }
 
 /**
- * Filters segmented text to return items that are made entirely of Mandarin characters without punctuation
- * 
- * @param {Array<string>} text Text segmented into individual items
- * @returns {Promise<Array<string>>} List which only includes Mandarin
- */
-export async function filterText(text) {
-    return await request('/words/filter', 'POST', text)
-}
-
-/**
  * Gets the proficiency levels of each word of the given array
  * 
  * @param {Array} words List of words
@@ -81,13 +71,22 @@ export async function toggleWordSaved(word) {
 }
 
 /**
+ * Gets a list of every word that the user has saved
+ * 
+ * @returns {Promise<Array<str>>} Words that are saved
+ */
+export async function getSavedWords() {
+    return await request('/words/saved', 'GET');
+}
+
+/**
  * Segments a piece of Mandarin text into individual words
  * 
  * @param {string} text The text to segment
  * @returns {Promise<Array<string>>} The segmented text
  */
 export async function segmentText(text) {
-    return await request(`/words/segment?text=${encodeURIComponent(text)}`, 'GET');
+    return await request(`/language/segment?text=${encodeURIComponent(text)}`, 'GET');
 }
 
 /**
@@ -97,7 +96,7 @@ export async function segmentText(text) {
  * @returns {Promise<string>} The pinyin representation of the text
  */
 export async function getPinyin(text) {
-    return await request(`/words/pinyin?text=${encodeURIComponent(text)}`, 'GET');
+    return await request(`/language/pinyin?text=${encodeURIComponent(text)}`, 'GET');
 }
 
 /**
@@ -107,16 +106,7 @@ export async function getPinyin(text) {
  * @returns {Promise<string>} The translation of the text
  */
 export async function translateText(text) {
-    return await request(`/words/translate?text=${encodeURIComponent(text)}`, 'GET');
-}
-
-/**
- * Gets a list of every word that the user has saved
- * 
- * @returns {Promise<Array<str>>} Words that are saved
- */
-export async function getSavedWords() {
-    return await request('/words/saved', 'GET');
+    return await request(`/language/translate?text=${encodeURIComponent(text)}`, 'GET');
 }
 
 /**
@@ -241,7 +231,7 @@ export async function getTranscriptFromDatabase(videoId) {
  * @returns {Promise<object<string, string | number>>} The transcript of the video
  */
 export async function getNewTranscript(videoId) {
-    return await request(`/transcripts?video_id=${videoId}`, 'GET');
+    return await request(`/transcripts/new?video_id=${videoId}`, 'GET');
 }
 
 /**

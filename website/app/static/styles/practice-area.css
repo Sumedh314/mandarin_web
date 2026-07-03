@@ -3,7 +3,7 @@
     height: auto;
 }
 
-#words-area-container {
+#practice-area-container {
     position: relative;
     border: solid 1px lightgray;
     padding: 3px;
@@ -14,7 +14,7 @@
     font-size: large;
 }
 
-#words-area {
+#practice-area {
     margin-top: 0px;
 }
 
