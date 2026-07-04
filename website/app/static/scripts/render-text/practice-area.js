@@ -1,4 +1,4 @@
-import { addWords, checkIfWordSaved, getSavedWords, getWordProficiencyLevels, segmentText } from "../api/routes.js";
+import { addWords, checkIfWordSaved, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../api/routes.js";
 import { state, practiceArea, practiceAreaContainer } from "../document-areas.js";
 import { filterText, formatTimestamp } from "../utils.js";
 
@@ -72,7 +72,12 @@ export async function printText(text, clearArea = true, wordIndex = 0, addNewWor
         await addWords(Array.from(new Set(filteredText)));
     }
     
-    const proficiencyLevels = await getWordProficiencyLevels(filteredText);
+    const wordIds = await getWordIds(filteredText);
+    console.log(wordIds);
+    
+    const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIds));
+    console.log(proficiencyLevels);
+    
     const savedWords = await getSavedWords();
     
     for (const text of segmentedText) {
@@ -80,7 +85,8 @@ export async function printText(text, clearArea = true, wordIndex = 0, addNewWor
 
         if (filteredText.includes(text)) {
             wordIndex++;
-            const wordElement = await createWordElement(text, wordIndex, proficiencyLevels[text], savedWords.includes(text));
+            const wordId = wordIds[text];
+            const wordElement = await createWordElement(text, wordId, wordIndex, proficiencyLevels[wordId], savedWords.includes(text));
             elementToAdd = wordElement;
         }
         else if (text == '\n') {
@@ -120,17 +126,21 @@ export function addDoneButton(wordIndex) {
  * Creates an HTML span element for the practice area whose text is the given word
  * 
  * @param {string} word Text of word
+ * @param {number} wordId Id of word in database
  * @param {number} proficiency Proficiency level of word
  * @param {number} wordIndex Index of word
  * @param {boolean} wordIsSaved Whether or now the word is saved
  */
-async function createWordElement(word, wordIndex, proficiency, wordIsSaved) {
+async function createWordElement(word, wordId, wordIndex, proficiency, wordIsSaved) {
     const wordElement = document.createElement('span');
     wordElement.classList.add('word');
+    wordElement.dataset.id = wordId;
     wordElement.dataset.word = word;
     wordElement.dataset.index = wordIndex;
     wordElement.dataset.proficiency = proficiency;
     wordElement.textContent = word;
+    console.log(wordElement.dataset.proficiency);
+    
 
     if (wordIsSaved) {
         wordElement.classList.add('saved-word');

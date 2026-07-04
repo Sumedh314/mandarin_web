@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 
 from app.models import db
-import app.services.words as words
+import app.services.words as words_service
+import app.repositories.words as words_repository
 
 
 words_bp = Blueprint('words', __name__, url_prefix='/api/v1/words')
@@ -12,20 +13,27 @@ def add_words():
     """Adds a list of words to the database"""
     words_data = request.json
     print(words_data)
-    words.add_words(db.session, words_data)
-    db.session.commit()
+    words_service.add_new_words(db.session, words_data)
     return jsonify('success'), 201
 
 
+@words_bp.get('/ids')
+def get_word_ids():
+    """Gets the ids of words based on their text"""
+    words = request.args.getlist('word')
+    word_ids = {word: words_repository.get_word_by_text(db.session, word).id for word in words}
+    return jsonify(word_ids), 200
+
+
 @words_bp.get('/proficiency-levels')
-def get_word_proficiency_levels():
+def get_proficiency_levels():
     """Returns the proficiency levels"""
-    word_list = request.args.getlist('word')
+    id_list = request.args.getlist('id')
     
-    if not word_list:
+    if not id_list:
         return jsonify({}), 200
     
-    proficiency_levels = words.get_word_proficiency_levels(db.session, word_list)
+    proficiency_levels = words_service.get_proficiency_levels(db.session, id_list)
     return proficiency_levels, 200
 
 
@@ -34,8 +42,7 @@ def update_word_proficiency_levels():
     """Updates the proficiency levels for a list of words"""
     data = request.json
     new_proficiency_levels = data['proficiency_levels']
-    words.update_word_proficiency_levels(db.session, new_proficiency_levels)
-    db.session.commit()
+    words_service.update_word_proficiency_levels(db.session, new_proficiency_levels)
     return jsonify('success'), 200
 
 
@@ -47,28 +54,28 @@ def calculate_new_proficiency_levels():
     previous_words = data['previous_words']
     current_word = data['current_word']
     
-    new_proficiency_levels = words.calculate_new_proficiency_levels(db.session, previous_words, current_word)
+    new_proficiency_levels = words_service.calculate_new_proficiency_levels(db.session, previous_words, current_word)
     return new_proficiency_levels, 200
 
 
 @words_bp.get('/saved')
 def get_saved_words():
     """Gets all words that are saved"""
-    saved_words = words.get_saved_words(db.session)
-    return jsonify(saved_words), 200
+    saved_words = words_repository.get_saved_words(db.session)
+    words_text = [word.text for word in saved_words]
+    return jsonify(words_text), 200
 
 
-@words_bp.get('/saved/<word>')
-def get_word_saved_status(word: str):
+@words_bp.get('/saved/<int:word_id>')
+def get_word_saved_status(word_id: int):
     """Checks if a word is saved"""
-    word_is_saved = words.get_word_saved_status(db.session, word)
+    word_is_saved = words_service.get_word_saved_status(db.session, word_id)
     return jsonify(word_is_saved), 200
 
 
-@words_bp.patch('/saved/<word>')
-def toggle_saved_word(word: str):
+@words_bp.patch('/saved/<int:word_id>')
+def toggle_saved_word(word_id: int):
     """Saves a word if not already saved, or unsaves if already saved"""
-    word_is_saved = words.get_word_saved_status(db.session, word)
-    words.update_word_saved_status(db.session, word, not word_is_saved)
-    db.session.commit()
+    word_is_saved = words_service.get_word_saved_status(db.session, word_id)
+    words_service.update_word_saved_status(db.session, word_id, not word_is_saved)
     return jsonify('success'), 200

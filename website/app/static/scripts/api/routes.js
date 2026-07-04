@@ -16,14 +16,25 @@ export async function addWords(words) {
 }
 
 /**
+ * Gets the IDs of each word from the database
+ * 
+ * @param {Array<string>} words The list of words to get the IDs of
+ * @returns {Promise<object<string, number>>} The IDs of each word
+ */
+export async function getWordIds(words) {
+    const args = words.map(word => `word=${encodeURIComponent(word)}`).join('&');
+    return await request(`/words/ids?${args}`, 'GET');
+}
+
+/**
  * Gets the proficiency levels of each word of the given array
  * 
- * @param {Array} words List of words
+ * @param {Array} wordIds List of word IDs
  * @returns {Promise<object<string, number>>} The proficiency levels of the given words
  */
-export async function getWordProficiencyLevels(words) {
-    const query = words.map(word => `word=${encodeURIComponent(word)}`).join('&');
-    return await request(`/words/proficiency-levels?${query}`, 'GET');
+export async function getWordProficiencyLevels(wordIds) {
+    const args = wordIds.map(wordId => `id=${encodeURIComponent(wordId)}`).join('&');
+    return await request(`/words/proficiency-levels?${args}`, 'GET');
 }
 
 /**
@@ -39,31 +50,31 @@ export async function updateWordProficiencyLevels(newProficiencyLevels) {
 /**
  * Calculates the new proficiency levels for a list of words based on the user's interaction
  * 
- * @param {Array} previousWords List of previous words. Increments proficiency of these words, sets max proficiency if previously zero.
- * @param {string} currentWord Word the user clicked on. Decrements its proficiency by one if greater than one, increments if zero.
+ * @param {Array} previousWordIds List of previous word IDs. Increments proficiency of these words, sets max proficiency if previously zero.
+ * @param {number} currentWordId ID of the word the user clicked on. Decrements its proficiency by one if greater than one, increments if zero.
  * @returns {Promise<object<string, number>>} The new proficiency levels of the given words
  */
-export async function calculateNewProficiencyLevels(previousWords, currentWord) {
+export async function calculateNewProficiencyLevels(previousWordIds, currentWordId) {
     return await request('/words/proficiency-levels/calculate', 'POST', {
-        previous_words: previousWords,
-        current_word: currentWord
+        previous_words: previousWordIds,
+        current_word: currentWordId
     });
 }
 
 /**
  * Gets whether or not a word is saved
  * 
- * @param {string} word The word to check
+ * @param {number} id The word ID to check
  * @returns {Promise<boolean>} A promise that resolves to true if the word is saved, false otherwise
  */
-export async function checkIfWordSaved(word) {
-    return await request(`/words/saved/${encodeURIComponent(word)}`, 'GET');
+export async function checkIfWordSaved(id) {
+    return await request(`/words/saved/${encodeURIComponent(id)}`, 'GET');
 }
 
 /**
  * Toggles the saved status of a word
  * 
- * @param {string} word The word to toggle
+ * @param {number} wordId The word to toggle
  * @returns {Promise<string>} The success or error message
  */
 export async function toggleWordSaved(word) {
@@ -113,34 +124,34 @@ export async function translateText(text) {
  * Adds a list of sentences for a specific word to the database
  * 
  * @param {Array<string>} sentences List of sentences to add
- * @param {string} word Word for which to add sentences
+ * @param {string} wordId Word ID for which to add sentences
  * @returns {Promise<string>} The success or error message
  */
-export async function addSentences(sentences, word) {
+export async function addSentences(sentences, wordId) {
     return await request('/sentences', 'POST', {
         sentences: sentences,
-        word: word
+        word: wordId
     });
 }
 
 /**
  * Gets the first sentence for a word that is available in the database
  * 
- * @param {string} word Word that the user saved that the sentence must contain
+ * @param {number} wordId ID of word that the user saved that the sentence must contain
  * @returns {Promise<string>} Sentence containing the given word
  */
-export async function getSentence(word) {
-    return await request(`/sentences/${encodeURIComponent(word)}`, 'GET');
+export async function getSentence(wordId) {
+    return await request(`/sentences/${encodeURIComponent(wordId)}`, 'GET');
 }
 
 /**
  * Deletes a practice sentence from the database
  * 
  * @param {string} sentence Sentence to delete
- * @param {string} word Word that the sentence contains
+ * @param {string} wordId ID of word that the sentence contains
  */
-export async function deleteSentence(sentence, word) {
-    return await request(`/sentences?sentence=${encodeURIComponent(sentence)}&word=${encodeURIComponent(word)}`, 'DELETE');
+export async function deleteSentence(sentence, wordId) {
+    return await request(`/sentences?sentence=${encodeURIComponent(sentence)}&word=${encodeURIComponent(wordId)}`, 'DELETE');
 }
 
 /**
@@ -237,21 +248,21 @@ export async function getNewTranscript(videoId) {
 /**
  * Adds a flashcard to the database
  * 
- * @param {string} word The word for which to create the flashcard
+ * @param {number} wordId The ID of the word for which to create the flashcard
  * @returns {Promise<string>} The success or error message
  */
-export async function addFlashcard(word) {
-    return await request('/flashcards', 'POST', { word: word, due: new Date().toISOString() });
+export async function addFlashcard(wordId) {
+    return await request('/flashcards', 'POST', { wordId: wordId, due: new Date().toISOString() });
 }
 
 /**
  * Gets a flashcard from the database
  * 
- * @param {string} word The word for which to get the flashcard
+ * @param {number} wordId The word for which to get the flashcard
  * @returns {Promise<object>} The flashcard data
  */
-export async function getFlashcard(word) {
-    return await request(`/flashcards/${encodeURIComponent(word)}`, 'GET');
+export async function getFlashcard(wordId) {
+    return await request(`/flashcards/${encodeURIComponent(wordId)}`, 'GET');
 }
 
 /**
@@ -277,43 +288,43 @@ export async function getDueFlashcards(currentTime) {
 /**
  * Updates a flashcard in the database
  * 
- * @param {string} word The word for which to update the flashcard
+ * @param {number} cardId The ID of the carrd for which to update
  * @param {object} flashcardData The updated data for the flashcard
  * @returns {Promise<string>} The success or error message
  */
-export async function updateFlashcard(word, flashcardData) {
-    return await request(`/flashcards/${encodeURIComponent(word)}`, 'PATCH', flashcardData);
+export async function updateFlashcard(cardId, flashcardData) {
+    return await request(`/flashcards/${encodeURIComponent(cardId)}`, 'PATCH', flashcardData);
 }
 
 /**
  * Uses the FSRS system to review a card
  * 
- * @param {string} word The word that was reviewwed
+ * @param {number} cardId The ID of the word that was reviewwed
  * @param {number} rating The rating from 1 to 4 that the user gave to the card
  * @param {string} reviewTime The date and time user reviewed the card as an ISO string
  * @returns {Promise<object>} The updated card
  */
-export async function reviewFlashcard(word, rating, reviewTime) {
-    return await request('/flashcards/review', 'POST', { word, rating, review_time: reviewTime });
+export async function reviewFlashcard(cardId, rating, reviewTime) {
+    return await request('/flashcards/review', 'POST', { word_id: cardId, rating: rating, review_time: reviewTime });
 }
 
 /**
  * Gets the review intervals for a flashcard
  * 
- * @param {string} word The word for which to get the review intervals
+ * @param {number} cardId The ID of the word for which to get the review intervals
  * @param {string} reviewTime The time of the review as an ISO string
  * @returns {Promise<Array<number>>} The review intervals
  */
-export async function getReviewIntervals(word, reviewTime) {
-    return await request(`/flashcards/review-intervals/${encodeURIComponent(word)}?review_time=${reviewTime}`, 'GET');
+export async function getReviewIntervals(cardId, reviewTime) {
+    return await request(`/flashcards/review-intervals/${encodeURIComponent(cardId)}?review_time=${reviewTime}`, 'GET');
 }
 
 /**
  * Deletes a flashcard from the database
  * 
- * @param {string} word The word for which to delete the flashcard
+ * @param {number} cardId The ID of the word for which to delete the flashcard
  * @returns {Promise<string>} The success or error message
  */
-export async function deleteFlashcard(word) {
-    return await request(`/flashcards/${encodeURIComponent(word)}`, 'DELETE');
+export async function deleteFlashcard(cardId) {
+    return await request(`/flashcards/${encodeURIComponent(cardId)}`, 'DELETE');
 }

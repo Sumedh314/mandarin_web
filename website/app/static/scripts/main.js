@@ -49,6 +49,7 @@ async function handleWordClick(event) {
         }
 
         state.clickedWord = event.target.dataset.word;
+        state.clickedWordElement = event.target;
     }
 
     // If the user clicked a timestamp, move the video to that timestamp
@@ -127,15 +128,17 @@ async function handleKeyPress(event) {
         if (state.clickedWord == '') {
             return
         }
+
+        const wordId = state.clickedWordElement.dataset.id;
         
-        await toggleWordSaved(state.clickedWord);
+        await toggleWordSaved(wordId);
         updateWordUnderlines(state.clickedWord);
 
-        if (await checkIfWordSaved(state.clickedWord)) {
-            await addFlashcard(state.clickedWord);
+        if (await checkIfWordSaved(wordId)) {
+            await addFlashcard(wordId);
         }
         else {
-            await deleteFlashcard(state.clickedWord);
+            await deleteFlashcard(wordId);
         }
         await showNumDueCards();
     }

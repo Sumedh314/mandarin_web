@@ -1,10 +1,7 @@
 from app import create_app
 from app.extensions import db
-# import website.app.services as services
 
 app = create_app()
-
-# word = Word()
 
 if __name__ == '__main__':
     with app.app_context():
@@ -23,12 +20,3 @@ if __name__ == '__main__':
 
     # while capture.isOpened():
     #     ret, frame = capture.read()
-
-# from fsrs import Card, Scheduler
-
-# card = Card()
-# scheduler = Scheduler()
-
-# print(card.due)
-# card, _ = scheduler.review_card(card, 1)
-# print(card.due)

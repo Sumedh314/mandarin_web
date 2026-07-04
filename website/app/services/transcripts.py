@@ -1,26 +1,32 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, insert
+
 from app.models import TranscriptLine
+import app.repositories.transcripts as transcripts_repository
 from config import transcript_generator, MANDARIN_AND_ENGLISH_LANGUAGE_CODES
 
 
-def add_transcript(session: Session, video_id: str, transcript: list[dict]):
+def add_transcript(session: Session, video_id: str, raw_transcript: list[dict]):
     """Adds a YouTube video's transcript lines to the database"""
-    transcript_lines = [TranscriptLine(video_id=video_id, **line) for line in transcript]
-    print(transcript_lines)
-    statement = insert(TranscriptLine).values([{'video_id': video_id, **line} for line in transcript])
-    session.execute(statement)
+    transcript_lines = [TranscriptLine(video_id=video_id, **line) for line in raw_transcript]
+    transcripts_repository.add_transcript_lines(transcript_lines)
+    session.commit()
+    return transcript_lines
 
 
-def get_transcript_from_database(session: Session, video_id: str):
+def get_transcript_from_database(session: Session, video_id: int):
     """Fetches the transcript of a YouTube video from the database"""
-    statement = select(TranscriptLine.text, TranscriptLine.start, TranscriptLine.duration).where(TranscriptLine.video_id == video_id)
-    transcript = session.execute(statement).mappings().all()
-    transcript = [dict(row) for row in transcript]
-    return transcript
+    transcript_lines = transcripts_repository.get_transcript_lines(session, video_id)
+    return sort_transcript_lines(transcript_lines)
 
 
-def get_transcript_from_youtube(video_id: str):
+def get_transcript_from_youtube(youtube_id: str):
     """Uses YouTubeTranscriptAPI to fetch the transcript of a YouTube video that has captions"""
-    transcript = transcript_generator.fetch(video_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
+    return transcript_generator.fetch(youtube_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
+
+
+def sort_transcript_lines(transcript_lines: list[TranscriptLine]):
+    """Sorts a transcript by its timestamp in each line"""
+    transcript = [{'text': line.text, 'start': line.start, 'duration': line.duration} for line in transcript_lines]
+    transcript.sort(key=lambda line: line['start'])
     return transcript

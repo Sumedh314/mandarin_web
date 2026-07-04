@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 
 from app.models import db
-import app.services.sentences as sentences
+import app.services.sentences as sentences_service
 
 
 sentences_bp = Blueprint('sentences', __name__, url_prefix='/api/v1/sentences')
@@ -13,16 +13,14 @@ def add_sentences():
     sentence_data = request.json
     sentence_list = sentence_data['sentences']
     word = sentence_data['word']
-    sentences.add_sentences(db.session, sentence_list, word)
-    sentences.add_num_sentences(db.session, word, len(sentence_list))
-    db.session.commit()
+    sentences_service.add_sentences_for_word(db.session, sentence_list, word)
     return jsonify('success'), 201
 
 
 @sentences_bp.get('/<word>')
 def get_sentence(word: str):
     """Gets the first sentence stored in the database for the desired word"""
-    sentence = sentences.get_sentence(db.session, word)
+    sentence = sentences_service.get_sentence(db.session, word).text
     return jsonify(sentence), 200
 
 
@@ -31,7 +29,5 @@ def delete_sentence():
     """Deletes a practice sentence for the specified word"""
     sentence = request.args.get('sentence')
     word = request.args.get('word')
-    sentences.delete_sentence(db.session, sentence, word)
-    sentences.add_num_sentences(db.session, word, -1)
-    db.session.commit()
+    sentences_service.delete_sentence(db.session, sentence, word)
     return jsonify('success'), 200

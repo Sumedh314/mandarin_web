@@ -66,11 +66,11 @@ export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
 
             if (wordIndex < currentIndex) {
                 if (wordIndex > lastIndex) {
-                    wordsToUpdate.previousWords.push(word.dataset.word);
+                    wordsToUpdate.previousWords.push(word.dataset.id);
                 }
             }
             else if (wordIndex == currentIndex) {
-                wordsToUpdate.currentWord = word.dataset.word;
+                wordsToUpdate.currentWord = word.dataset.id;
             }
             else {
                 break;
@@ -85,7 +85,7 @@ export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
 }
 
 /**
- * Gets whether or not each item in text is Mandarin
+ * Filters out items from the original list that are not entirely made of Mandarin characters
  * 
  * @param {Array<string>} segmentedText Text segmented into individual items
  * @returns {Array<string>} Items that are only Mandarin

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from fsrs import Scheduler, Card
 from deep_translator import GoogleTranslator
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -10,7 +11,7 @@ from dotenv import load_dotenv
 class DatabaseConfig:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
+    # SQLALCHEMY_ECHO = True
 
 
 load_dotenv()
@@ -32,5 +33,3 @@ SAVED_WORDS_PATH = BASE_PATH / 'user_progress' / 'saved_words.json'
 TRANSCRIPTS_PATH = BASE_PATH / 'user_progress' / 'transcripts.json'
 HSK_WORDS_PATH = BASE_PATH / 'mandarin_words' / 'words_by_hsk.json'
 WORDS_LIST_PATH = BASE_PATH / 'mandarin_words' / 'words.json'
-
-flashcards_by_word: dict[str, Card] = {}

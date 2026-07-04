@@ -5,9 +5,11 @@ export const state = {
     scrollToTimestamp: null,
     lastIndex: -1,
     clickedWord: '',
+    /** @type {HTMLElement} */
+    clickedWordElement: null,
     transcriptShowing: false,
     videoId: '',
-    flashcardWord: '',
+    flashcardWordId: '',
     flashcardSentence: ''
 };
 

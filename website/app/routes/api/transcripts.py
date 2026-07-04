@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 
 from app.models import db
-import app.services.transcripts as transcripts
+import app.services.transcripts as transcripts_service
 
 
 transcripts_bp = Blueprint('transcripts', __name__, url_prefix='/api/v1/transcripts')
@@ -13,8 +13,7 @@ def add_transcript():
     transcript_data = request.json
     transcript = transcript_data['transcript']
     video_id = transcript_data['video_id']
-    transcripts.add_transcript(db.session, video_id, transcript)
-    db.session.commit()
+    transcripts_service.add_transcript(db.session, video_id, transcript)
     return jsonify('success'), 200
 
 
@@ -23,12 +22,12 @@ def get_new_transcript():
     """Gets the transcript of a new YouTube video"""
     video_id = request.args.get('video_id')
     print(video_id)
-    transcript = transcripts.get_transcript_from_youtube(video_id)
+    transcript = transcripts_service.get_transcript_from_youtube(video_id)
     return jsonify(transcript), 200
 
 
 @transcripts_bp.get('/data/<video_id>')
 def get_transcript_from_database(video_id: str):
     """Gets the full transcript of a YouTube video from the database"""
-    transcript = transcripts.get_transcript_from_database(db.session, video_id)
+    transcript = transcripts_service.get_transcript_from_database(db.session, video_id)
     return jsonify(transcript), 200

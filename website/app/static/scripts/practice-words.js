@@ -5,8 +5,6 @@ import { currentISOTime, formatSeconds } from "./utils.js";
 
 /**
  * Allows user to review the next flashcard
- * 
- * @param {number} [wordIndex=0] Index of due words to be used
  */
 export async function showNextCard() {
     practiceAreaContainer.style.textAlign = 'center';
@@ -22,15 +20,16 @@ export async function showNextCard() {
 
     ratingSelectionArea.style.display = 'flex';
 
-    const word = card.word;
-    state.flashcardWord = word;
+    state.flashcardWordId = card.word_id;
+    console.log(card);
+    
 
     await printText('Generating sentence...');
-    const sentence = await getSentence(word);
+    const sentence = await getSentence(card.word_id);
     await printText(sentence);
     state.flashcardSentence = sentence;
     
-    const reviewTimes = await getReviewIntervals(word, currentISOTime());
+    const reviewTimes = await getReviewIntervals(card.word_id, currentISOTime());
     const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
 
     for (let index = 0; index < ratingTimeAreas.length; index++) {
@@ -49,16 +48,16 @@ export async function selectRating(event) {
     let newCard = null;
     switch (event.target.id) {
         case 'rating-again-button':
-            newCard = await reviewFlashcard(state.flashcardWord, 1, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 1, reviewTime);
             break;
         case 'rating-hard-button':
-            newCard = await reviewFlashcard(state.flashcardWord, 2, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 2, reviewTime);
             break;
         case 'rating-good-button':
-            newCard = await reviewFlashcard(state.flashcardWord, 3, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 3, reviewTime);
             break;
         case 'rating-easy-button':
-            newCard = await reviewFlashcard(state.flashcardWord, 4, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 4, reviewTime);
             break;
         case 'exit-review-button':
             ratingSelectionArea.style.display = 'none';
@@ -71,8 +70,8 @@ export async function selectRating(event) {
     console.log(newCard);
     
 
-    await deleteSentence(state.flashcardSentence, state.flashcardWord);
-    await updateFlashcard(state.flashcardWord, newCard);
+    await deleteSentence(state.flashcardSentence, state.flashcardWordId);
+    await updateFlashcard(state.flashcardWordId, newCard);
     await showNumDueCards();
     showNextCard();
 }

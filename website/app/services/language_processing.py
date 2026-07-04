@@ -1,6 +1,8 @@
 import json
+
 import jieba
 from pypinyin import lazy_pinyin, Style
+
 from config import translator, WORDS_LIST_PATH
 
 

@@ -1,5 +1,7 @@
 import json
+
 from google.genai import types
+
 from config import gemini_client
 
 
@@ -16,7 +18,7 @@ def generate_practice_sentences(words, num_sentences):
     return json.loads(prompt_gemini(prompt, schema=response_schema))
 
 
-def prompt_gemini(prompt: str, model: str = 'gemini-2.5-flash', schema: dict = None):
+def prompt_gemini(prompt: str, model: str = 'gemini-2.5-flash-lite', schema: dict = None):
     """Prompts Google Gemini and returns its response"""
     if schema == None:
         response = gemini_client.models.generate_content(model=model, contents=prompt).text

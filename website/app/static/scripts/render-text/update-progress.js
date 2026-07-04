@@ -22,15 +22,15 @@ export function updateLocationMarker() {
 /**
  * Updates the colors of the words on the screen based on the proficiency levels of each word.
  * 
- * @param {object} proficiencyLevels Proficiency levels of each word
+ * @param {object} proficiencyLevels Proficiency levels of each word ID
  */
 export function updateWordColors(proficiencyLevels) {
     console.log(proficiencyLevels)
     const segmentedWords = practiceArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {
-        if (word.dataset.word in proficiencyLevels) {
-            word.dataset.proficiency = proficiencyLevels[word.dataset.word];
+        if (word.dataset.id in proficiencyLevels) {
+            word.dataset.proficiency = proficiencyLevels[word.dataset.id];
         }
     }
 }
