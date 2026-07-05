@@ -1,18 +1,40 @@
 import { translationArea } from "../document-areas.js";
-import { getPinyin, segmentText, translateText } from "../api/routes.js";
+import { getTextPinyin, getWordPinyin, segmentText, translateText, translateWord, updateWord } from "../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
+
+/**
+ * Prints the word, pinyin, and English definitions into the dedicated area.
+ * 
+ * @param {number} wordId ID of word to translate
+ * @param {string} text The text of the word
+ */
+export async function printWordDefinitions(wordId, text) {
+    translationArea.innerHTML = LOADING_SIGN;
+    let translation = await translateWord(wordId);
+    if (translation == '') {
+        translation = await translateText(text);
+        await updateWord(wordId, { translation: translation });
+    }
+    let pinyin = await getWordPinyin(wordId);
+    if (pinyin == '') {
+        pinyin = await getTextPinyin(text);
+        await updateWord(wordId, { pinyin: pinyin });
+    }
+
+    translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+}
 
 /**
  * Prints the selected characters, pinyin, and English definitions into the dedicated area.
  * 
  * @param {string} text Text to translate
  */
-export async function printDefinitions(text) {
+export async function printTextDefinitions(text) {
     translationArea.innerHTML = LOADING_SIGN;
     const translation = await translateText(text);
     const segmentedText = await segmentText(text);
-    const pinyin = await getPinyin(segmentedText.join(' '));
+    const pinyin = await getTextPinyin(segmentedText.join(' '));
 
     translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }

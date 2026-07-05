@@ -139,9 +139,7 @@ async function createWordElement(word, wordId, wordIndex, proficiency, wordIsSav
     wordElement.dataset.index = wordIndex;
     wordElement.dataset.proficiency = proficiency;
     wordElement.textContent = word;
-    console.log(wordElement.dataset.proficiency);
     
-
     if (wordIsSaved) {
         wordElement.classList.add('saved-word');
     }

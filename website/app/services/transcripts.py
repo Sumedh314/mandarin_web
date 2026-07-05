@@ -9,7 +9,7 @@ from config import transcript_generator, MANDARIN_AND_ENGLISH_LANGUAGE_CODES
 def add_transcript(session: Session, video_id: str, raw_transcript: list[dict]):
     """Adds a YouTube video's transcript lines to the database"""
     transcript_lines = [TranscriptLine(video_id=video_id, **line) for line in raw_transcript]
-    transcripts_repository.add_transcript_lines(transcript_lines)
+    transcripts_repository.add_transcript_lines(session, transcript_lines)
     session.commit()
     return transcript_lines
 

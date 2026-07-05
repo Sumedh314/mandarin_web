@@ -2,7 +2,7 @@ import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, c
 import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer } from "./document-areas.js";
 import { selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
 import { addDoneButton, printText, printTranscript } from "./render-text/practice-area.js";
-import { printDefinitions } from "./render-text/translations.js";
+import { printTextDefinitions, printWordDefinitions } from "./render-text/translations.js";
 import { updateLocationMarker, updateWordColors, updateWordUnderlines } from "./render-text/update-progress.js";
 import { formatWordsToUpdate } from "./utils.js";
 import { embedVideo, findTimestamp, pauseIfPlayOtherwise, toggleVideo } from "./video/modifying-video.js";
@@ -17,12 +17,12 @@ async function handleWordClick(event) {
 
     // If the user highlighted something, print its translation and pinyin
     if (window.getSelection().toString() != '') {
-        await printDefinitions(window.getSelection().toString());
+        await printTextDefinitions(window.getSelection().toString());
     }
 
     // If the user clicked a word
     else if (event.target.hasAttribute('data-word')) {
-        printDefinitions(event.target.dataset.word);
+        printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         // updateHskLevels();
         
@@ -159,14 +159,14 @@ export async function loadVideoAndTranscript() {
     
     if (await checkIfVideoExists(videoId)) {
         const transcript = await getTranscriptFromDatabase(videoId);
-        printTranscript(transcript, false);
+        await printTranscript(transcript, false);
         state.lastIndex = await getVideoLastIndex(videoId);
     }
     else {
-        addVideo(videoId);
+        await addVideo(videoId);
         const transcript = await getNewTranscript(videoId);
-        addTranscript(videoId, transcript);
-        printTranscript(transcript, true);
+        await addTranscript(videoId, transcript);
+        await printTranscript(transcript, true);
         state.lastIndex = -1;
     }
 
@@ -177,6 +177,7 @@ export async function loadVideoAndTranscript() {
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
+    
     practiceAreaContainer.style.textAlign = 'left';
 
     const text = document.getElementById('text-entry').value;

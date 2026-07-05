@@ -41,7 +41,7 @@ class Sentence(db.Model):
 class Video(db.Model):
     __tablename__ = "videos"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     title: Mapped[Optional[str]] = mapped_column(String(255))
     last_index: Mapped[int] = mapped_column(Integer, default=-1)
     transcript: Mapped[list["TranscriptLine"]] = relationship(back_populates="video")

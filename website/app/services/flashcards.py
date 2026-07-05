@@ -16,7 +16,7 @@ def add_flashcard(session: Session, flashcard_data: dict[str, str | int | float]
     session.commit()
 
 
-def get_card_for_word_id(session: Session, word_id: str):
+def get_card_for_word_id(session: Session, word_id: int):
     """Gets a flashcard from the database"""
     flashcard = flashcards_repository.get_flashcard_by_word_id(session, word_id)
     card = create_new_card_object(**flashcard.to_dict())

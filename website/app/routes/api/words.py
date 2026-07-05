@@ -25,6 +25,26 @@ def get_word_ids():
     return jsonify(word_ids), 200
 
 
+@words_bp.get('/<int:word_id>/pinyin')
+def get_pinyin(word_id: int):
+    """Gets the pinyin representation of a word stored in the database"""
+    pinyin = words_service.get_pinyin(db.session, word_id)
+    if pinyin is not None:
+        return jsonify(pinyin), 200
+    else:
+        return jsonify(''), 200
+
+
+@words_bp.get('/<int:word_id>/translation')
+def get_translation(word_id: int):
+    """Gets the translation of a word stored in the database"""
+    translation = words_service.get_translation(db.session, word_id)
+    if translation is not None:
+        return jsonify(translation), 200
+    else:
+        return jsonify(''), 200
+
+
 @words_bp.get('/proficiency-levels')
 def get_proficiency_levels():
     """Returns the proficiency levels"""
@@ -35,6 +55,14 @@ def get_proficiency_levels():
     
     proficiency_levels = words_service.get_proficiency_levels(db.session, id_list)
     return proficiency_levels, 200
+
+
+@words_bp.patch('/<int:word_id>/update')
+def update_word(word_id: int):
+    """Update a word with new data"""
+    data = request.json
+    words_service.update_word(db.session, word_id, **data)
+    return jsonify('success'), 200
 
 
 @words_bp.patch('/proficiency-levels')
@@ -77,5 +105,5 @@ def get_word_saved_status(word_id: int):
 def toggle_saved_word(word_id: int):
     """Saves a word if not already saved, or unsaves if already saved"""
     word_is_saved = words_service.get_word_saved_status(db.session, word_id)
-    words_service.update_word_saved_status(db.session, word_id, not word_is_saved)
+    words_service.update_word(db.session, word_id, saved=not word_is_saved)
     return jsonify('success'), 200

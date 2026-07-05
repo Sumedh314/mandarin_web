@@ -27,9 +27,9 @@ def get_all_flashcards(session: Session):
     return session.scalars(statement).all()
 
 
-def update_flashcard(session: Session, word_id: int, flashcard_data: dict[str, str | int | float]):
+def update_flashcard(session: Session, card_id: int, flashcard_data: dict[str, str | int | float]):
     """Updates a flashcard with its new data"""
-    statement = update(Flashcard).where(Flashcard.word_id == word_id).values(**flashcard_data)
+    statement = update(Flashcard).where(Flashcard.card_id == card_id).values(**flashcard_data)
     session.execute(statement)
     return flashcard_data
 

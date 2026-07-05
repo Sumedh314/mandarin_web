@@ -19,6 +19,26 @@ def get_new_words(session: Session, words: list[Word]):
     return [word for word in words if word.text not in existing_words]
 
 
+def get_pinyin(session: Session, word_id: int):
+    """Gets the pinyin representation of a word from the database"""
+    word = words_repository.get_word_by_id(session, word_id)
+    return word.pinyin
+
+
+def get_translation(session: Session, word_id: int):
+    """Gets the translation of a word from the database"""
+    word = words_repository.get_word_by_id(session, word_id)
+    return word.translation
+
+
+def update_word(session: Session, word_id: int, **kwargs):
+    """Update any attribute of a word"""
+    word = words_repository.get_word_by_id(session, word_id)
+    for key, value in kwargs.items():
+        setattr(word, key, value)
+    session.commit()
+
+
 def update_word_proficiency_levels(session: Session, new_proficiency_levels_by_word_id: dict[int, int]):
     """Updates the proficiency levels for a dictionary of words"""
     for word_id, new_proficiency in new_proficiency_levels_by_word_id.items():
@@ -64,14 +84,6 @@ def get_word_saved_status(session: Session, word_id: int):
     """Checks if a word is marked as saved"""
     word = words_repository.get_word_by_id(session, word_id)
     return word.saved
-
-
-def update_word_saved_status(session: Session, word_id: int, new_saved_status: bool):
-    """Updates the saved status of a word in the database"""
-    word = words_repository.get_word_by_id(session, word_id)
-    word.saved = new_saved_status
-    session.commit()
-    return word
 
 
 def get_low_words(session: Session, threshold: int = 5):

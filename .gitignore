@@ -4,7 +4,8 @@ env/
 /node_modules
 
 website/app/user_progress
-
 website/instance
+
+tests.py
 
 __pycache__/

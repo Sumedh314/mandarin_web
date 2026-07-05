@@ -12,7 +12,8 @@ def add_video():
     """Adds a new video to the database"""
     video_data = request.json
     video_id = video_data['video_id']
-    videos_service.add_video(db.session, video_id)
+    video = videos_service.add_video(db.session, video_id)
+    print(video)
     return jsonify('success'), 201
 
 
@@ -27,6 +28,8 @@ def get_video_title(video_id: str):
 def update_video_title(video_id: str):
     """Updates the title of a video in the database"""
     title = request.json['title']
+    print(video_id)
+    print(title)
     videos_service.update_video_title(db.session, video_id, title)
     return jsonify('success'), 200
 

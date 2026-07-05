@@ -9,6 +9,7 @@ def add_video(session: Session, id: str):
     """Adds a YouTube video to the database"""
     video = Video(id=id)
     videos_repository.add_video(session, video)
+    session.commit()
     return video
 
 
@@ -20,7 +21,10 @@ def get_video_title(session: Session, id: str):
 
 def update_video_title(session: Session, id: str, title: str):
     """Updates the title of a YouTube video in the database"""
-    video = session.get(Video, id)
+    video = videos_repository.get_video_by_id(session, id)
+    print(title)
+    print(id)
+    print(video)
     video.title = title
     session.commit()
     return video

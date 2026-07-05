@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Words</title>
+<link rel="stylesheet" href="{{url_for('static', filename='styles/words/words.css')}}">
+{% endblock %}
+
+{% block body %}
+<h1>Words data</h1>
+
+<div id="hsk-progress">
+    <table id="hsk-table">
+        <tr>
+            <th>HSK Level</th>
+            <th>Old Levels %</th>
+            <th>New Levels %</th>
+        </tr>
+        <tr>
+            <td>HSK 1</td>
+            <td id="old-hsk-1-percent"></td>
+            <td id="new-hsk-1-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 2</td>
+            <td id="old-hsk-2-percent"></td>
+            <td id="new-hsk-2-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 3</td>
+            <td id="old-hsk-3-percent"></td>
+            <td id="new-hsk-3-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 4</td>
+            <td id="old-hsk-4-percent"></td>
+            <td id="new-hsk-4-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 5</td>
+            <td id="old-hsk-5-percent"></td>
+            <td id="new-hsk-5-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 6</td>
+            <td id="old-hsk-6-percent"></td>
+            <td id="new-hsk-6-percent"></td>
+        </tr>
+        <tr>
+            <td>HSK 7-9</td>
+            <td id="old-hsk-7-percent">N/A</td>
+            <td id="new-hsk-7-percent"></td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

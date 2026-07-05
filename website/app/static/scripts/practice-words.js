@@ -22,7 +22,6 @@ export async function showNextCard() {
 
     state.flashcardWordId = card.word_id;
     console.log(card);
-    
 
     await printText('Generating sentence...');
     const sentence = await getSentence(card.word_id);
@@ -67,8 +66,6 @@ export async function selectRating(event) {
         default:
             break;
     }
-    console.log(newCard);
-    
 
     await deleteSentence(state.flashcardSentence, state.flashcardWordId);
     await updateFlashcard(state.flashcardWordId, newCard);

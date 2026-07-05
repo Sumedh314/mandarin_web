@@ -27,6 +27,17 @@ export async function getWordIds(words) {
 }
 
 /**
+ * Updates a word with the given data
+ * 
+ * @param {number} wordId ID of word to update
+ * @param {object} data Data to update word with
+ * @returns {Promise<string>} The success or error message
+ */
+export async function updateWord(wordId, data) {
+    return await request(`/words/${wordId}/update`, 'PATCH', data);
+}
+
+/**
  * Gets the proficiency levels of each word of the given array
  * 
  * @param {Array} wordIds List of word IDs
@@ -101,14 +112,35 @@ export async function segmentText(text) {
 }
 
 /**
+ * Gets the pinyin representation of a single word through the database
+ * 
+ * @param {number} wordId ID of word to get pinyin for
+ * @returns {Promise<string>} The pinyin representation of the word
+ */
+export async function getWordPinyin(wordId) {
+    return await request(`/words/${wordId}/pinyin`, 'GET');
+}
+
+/**
  * Gets the pinyin representation of a piece of Mandarin text
  * 
  * @param {string} text The text to convert to pinyin
  * @returns {Promise<string>} The pinyin representation of the text
  */
-export async function getPinyin(text) {
+export async function getTextPinyin(text) {
     return await request(`/language/pinyin?text=${encodeURIComponent(text)}`, 'GET');
 }
+
+/**
+ * Gets the translation of a word from the database
+ * 
+ * @param {number} wordId The ID of the word to translate
+ * @returns {Promise<string>} The translation of the text
+ */
+export async function translateWord(wordId) {
+    return await request(`/words/${wordId}/translation`, 'GET');
+}
+
 
 /**
  * Gets the translation of a piece of text
