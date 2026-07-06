@@ -1,10 +1,29 @@
-from datetime import datetime, timezone
-
 from typing import Optional
-from sqlalchemy import Integer, String, Float, Boolean, ForeignKey, DateTime
+
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, Float, Boolean, ForeignKey
 
 from .extensions import db
+
+
+class User(db.Model):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String(255), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(256))
+    first_name: Mapped[str] = mapped_column(String(64))
+    last_name: Mapped[str] = mapped_column(String(64))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'Username: {self.username}, full name: {self.first_name} {self.last_name}'
 
 
 class Word(db.Model):

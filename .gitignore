@@ -5,6 +5,8 @@ env/
 
 website/app/user_progress
 website/instance
+website/__pycache__
+website/app/__pycache__
 
 tests.py
 

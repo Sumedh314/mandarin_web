@@ -86,6 +86,12 @@ def calculate_new_proficiency_levels():
     return new_proficiency_levels, 200
 
 
+@words_bp.get('/hsk-percentages')
+def calculate_hsk_percentages():
+    """Returns the percentage of words for each HSK level that the user has seen"""
+    return words_service.calculate_hsk_percentages(db.session)
+
+
 @words_bp.get('/saved')
 def get_saved_words():
     """Gets all words that are saved"""

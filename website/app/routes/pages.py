@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from app.auth.forms import LoginForm
 
 
 pages_bp = Blueprint('pages', __name__)
@@ -8,6 +9,13 @@ pages_bp = Blueprint('pages', __name__)
 def home():
     """Home page for site"""
     return render_template('index.html')
+
+
+@pages_bp.route('/login')
+def login():
+    """Login page"""
+    form = LoginForm()
+    return render_template('login.html', form=form)
 
 
 @pages_bp.route('/words')

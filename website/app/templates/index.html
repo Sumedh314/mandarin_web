@@ -2,6 +2,7 @@
 
 {% block head %}
 <title>Mandarin</title>
+<link rel="stylesheet" href="{{url_for('static', filename='styles/home/global.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='styles/home/upper-elements.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='styles/home/practice-area.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='styles/home/word-menu.css')}}">
@@ -11,41 +12,45 @@
 {% block body %}
 <h1 id="program">Mandarin</h1>
 
+<div id="menu">
+    <a href="/words">Words</a>
+</div>
+
 <div id="upper-elements">
-    <div id="inputs">
-        <div id="text-input-container" class="input-container">
-            <p>Text: </p>
-            <div id="text" class="input-form">
-                <input id="text-entry" type="text">
-                <button id="text-button" type="button">→</button>
-            </div>
+    <div id="text-input-container" class="input-container">
+        <p>Text: </p>
+        <div id="text" class="input-form">
+            <input id="text-entry" type="text">
+            <button id="text-button" type="button">→</button>
         </div>
-        
-        <div id="link-input-container" class="input-container">
-            <p>YouTube link:</p>
-            <div id="link" class="input-form">
-                <input id="link-entry" type="text">
-                <button id="video-button" type="button">→</button>
-            </div>
+    </div>
+    
+    <div id="link-input-container" class="input-container">
+        <p>YouTube link:</p>
+        <div id="link" class="input-form">
+            <input id="link-entry" type="text">
+            <button id="video-button" type="button">→</button>
         </div>
-        
+    </div>
+    
+    <div id="input-buttons">
         <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
-        <br>
         <button id="generate-story-button" type="button">Generate Story</button>
-        <br>
         <button id="review-words-button" type="button">Review words (<span id="num-due-cards"></span>)</button>
     </div>
 </div>
 
-<br>
+<div id="video-and-translations">
+    <div id="video-container">
+        <div id="video-location"></div>
+    </div>
 
-<div id="video-location"></div>
-
-<div id="translation-area-container">
-    <p id="translation-area"></p>
+    <div id="translation-area-container">
+        <span id="video-title"></span>
+        <p id="translation-area"></p>
+    </div>
 </div>
 
-<span id="video-title"></span>
 <div id="practice-area-container">
     <span id="location-marker">│</span>
     
@@ -78,4 +83,6 @@
         <button id="set-index-button" type="button">Set location</button>
     </div>
 </div>
+
+<script src="{{url_for('static', filename='scripts/main.js')}}" type="module"></script>
 {% endblock %}

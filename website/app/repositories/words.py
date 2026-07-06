@@ -16,11 +16,6 @@ def add_words(session: Session, words: list[Word]):
     return words
 
 
-def get_existing_words_in_list(session: Session, words: list[str]):
-    statement = select(Word).where(Word.text.in_(words))
-    return session.scalars(statement).all()
-
-
 def get_word_by_id(session: Session, id: int):
     """Fetches a word from the database by its ID"""
     return session.get(Word, id)
@@ -30,6 +25,17 @@ def get_word_by_text(session: Session, word_text: str):
     """Fetches a word from the database by its text"""
     statement = select(Word).where(Word.text == word_text)
     return session.scalar(statement)
+
+
+def get_all_words(session: Session):
+    """Gets all words in the database"""
+    statement = select(Word)
+    return session.scalars(statement).all()
+
+
+def get_existing_words_in_list(session: Session, words: list[str]):
+    statement = select(Word).where(Word.text.in_(words))
+    return session.scalars(statement).all()
 
 
 def get_saved_words(session: Session):

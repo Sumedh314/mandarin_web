@@ -1,7 +1,10 @@
+import json
+
 from sqlalchemy.orm import Session
 
 from app.repositories import words as words_repository
 from app.models import Word
+from config import HSK_WORDS_PATH, HSK_LEVEL_HASHMAP_PATH
 
 
 def add_new_words(session: Session, words_data: list[dict[str, int | str]]):
@@ -79,6 +82,31 @@ def calculate_new_proficiency_levels(session: Session, previous_word_ids: list[i
     
     return new_proficiency_levels
 
+
+def calculate_hsk_percentages(session: Session):
+    """Calculates the percentage of words of each HSK old and new level that the user knows or is learning"""
+    words: list[str] = [word.text for word in words_repository.get_all_words(session)]
+
+    with open(HSK_LEVEL_HASHMAP_PATH, 'r') as file:
+        hsk_words_hashmap: dict[str, dict[str, int]] = json.load(file)
+    with open(HSK_WORDS_PATH, 'r') as file:
+        words_by_hsk = json.load(file)
+
+    standards = ['old', 'new']
+    hsk_percentages = {'old': {level: 0 for level in range(1, 7)}, 'new': {level: 0 for level in range(1, 8)}}
+    for word in words:
+        for standard in standards:
+            hsk_levels = hsk_words_hashmap.get(word)
+            if hsk_levels is not None:
+                level = hsk_levels.get(standard)
+                if level is not None:
+                    hsk_percentages[standard][level] += 1
+
+    for standard in hsk_percentages:
+        for level in hsk_percentages[standard]:
+            hsk_percentages[standard][level] /= len(words_by_hsk[standard][str(level)])
+    return hsk_percentages
+    
 
 def get_word_saved_status(session: Session, word_id: int):
     """Checks if a word is marked as saved"""

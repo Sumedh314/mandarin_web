@@ -8,6 +8,7 @@ import {
  * Moves the location marker to show the user's farthest point in the text
  */
 export function updateLocationMarker() {
+    locationMarker.style.visibility = 'visible';
     for (const snippet of practiceArea.getElementsByTagName('span')) {
         for (const word of snippet.children) {
             if (word.hasAttribute('data-index')) {

@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete
 
 from app.models import Sentence
 import app.repositories.sentences as sentences_repository
@@ -12,6 +11,7 @@ def add_sentences_for_word(session: Session, sentences: list[str], word_id: int)
     sentence_list = [Sentence(text=sentence, word_id=word_id) for sentence in sentences]
     sentences_repository.add_sentences(session, sentence_list)
     session.commit()
+
 
 def get_sentence(session: Session, word_id: int):
     """Gets the first sentence for a word"""

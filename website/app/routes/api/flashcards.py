@@ -18,10 +18,10 @@ def add_flashcard():
 
 
 @flashcards_bp.get('/<int:word_id>')
-def get_flashcard(word_id: int):
+def get_card(word_id: int):
     """Gets a flashcard for the specified word"""
-    flashcard = flashcards_service.get_card_for_word_id(db.session, word_id)
-    return jsonify(flashcard.to_dict()), 200
+    card = flashcards_service.get_card_for_word_id(db.session, word_id)
+    return jsonify(card.to_dict()), 200
 
 
 @flashcards_bp.get('/next-due')

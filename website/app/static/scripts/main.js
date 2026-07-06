@@ -1,11 +1,11 @@
 import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, checkIfVideoExists, checkIfWordSaved, deleteFlashcard, getNewTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "./api/routes.js";
-import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer } from "./document-areas.js";
+import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer, videoLocation, showPracticeAndTranslationsArea } from "./document-areas.js";
 import { selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
 import { addDoneButton, printText, printTranscript } from "./render-text/practice-area.js";
 import { printTextDefinitions, printWordDefinitions } from "./render-text/translations.js";
 import { updateLocationMarker, updateWordColors, updateWordUnderlines } from "./render-text/update-progress.js";
 import { formatWordsToUpdate } from "./utils.js";
-import { embedVideo, findTimestamp, pauseIfPlayOtherwise, toggleVideo } from "./video/modifying-video.js";
+import { embedVideo, findTimestamp, pauseIfPlayOtherwise, removeVideo, showVideo, toggleVideo } from "./video/modifying-video.js";
 import { videoReady } from "./video/video-states.js";
 
 /**
@@ -29,14 +29,13 @@ async function handleWordClick(event) {
         if (state.transcriptShowing) {
             state.videoPlayer.seekTo(Number(event.target.parentNode.dataset.timestamp), true);
             pauseIfPlayOtherwise(state.clickedWord != event.target.dataset.word || state.clickedWord == event.target.dataset.word && state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING);
-            // updateLocationMarker();
         }
         
         if (state.lastIndex != currentIndex && state.clickedWord != event.target.dataset.word) {
             const wordElements = practiceArea.getElementsByTagName('span');
             const wordsToUpdate = formatWordsToUpdate(wordElements, state.lastIndex, currentIndex);
             const proficiencyLevels = await calculateNewProficiencyLevels(wordsToUpdate.previousWords, wordsToUpdate.currentWord);
-            updateWordProficiencyLevels(proficiencyLevels);
+            await updateWordProficiencyLevels(proficiencyLevels);
             updateWordColors(proficiencyLevels);
         }
         
@@ -45,7 +44,8 @@ async function handleWordClick(event) {
         }
         
         if (state.transcriptShowing) {
-            updateVideoLastIndex(state.videoId, state.lastIndex);
+            await updateVideoLastIndex(state.videoId, state.lastIndex);
+            updateLocationMarker();
         }
 
         state.clickedWord = event.target.dataset.word;
@@ -149,6 +149,8 @@ async function handleKeyPress(event) {
  */
 export async function loadVideoAndTranscript() {
     practiceAreaContainer.style.textAlign = 'left';
+    showVideo();
+    showPracticeAndTranslationsArea();
     
     // Embed video
     const link = document.getElementById('link-entry').value;
@@ -170,6 +172,7 @@ export async function loadVideoAndTranscript() {
         state.lastIndex = -1;
     }
 
+    updateLocationMarker();
     state.transcriptShowing = true;
 }
 
@@ -177,9 +180,12 @@ export async function loadVideoAndTranscript() {
  * Segments and prints text pasted in by the user
  */
 async function printUserText() {
-    
     practiceAreaContainer.style.textAlign = 'left';
-
+    console.log('askdfjls');
+    
+    removeVideo();
+    showPracticeAndTranslationsArea();
+    
     const text = document.getElementById('text-entry').value;
 
     const wordIndex = await printText(text);

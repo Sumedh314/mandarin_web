@@ -1,3 +1,8 @@
+export function showPracticeAndTranslationsArea() {
+    practiceAreaContainer.style.display = 'block';
+    translationAreaContainer.style.display = 'block';
+}
+
 export const state = {
     timestampElements: [],
     /** @type {YT.Player} */
@@ -27,10 +32,12 @@ export const translateTranscriptButton = document.getElementById('translate-tran
 export const numDueWordsCounter = document.getElementById('num-due-cards');
 
 // TRANSLATION INFORMAMTION (MIDDLE SECTION)
+export const translationAreaContainer = document.getElementById('translation-area-container');
 export const translationArea = document.getElementById('translation-area');
 export const wordMenu = document.getElementById('word-menu');
 export const tooltipTranslation = document.getElementById('word-tooltip-translation');
 
+export const videoContainer = document.getElementById('video-container');
 export const videoTitle = document.getElementById('video-title');
 export const videoLocation = document.getElementById('video-location');
 

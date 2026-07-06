@@ -1,15 +1,6 @@
 import { updateVideoTitle } from "../api/routes.js";
-import {
-    state,
-    videoTitle,
-    practiceAreaContainer
-} from "../document-areas.js";
-
-import {
-    iframeApiReady,
-    onPlayerReady,
-    videoReady
-} from "./video-states.js";
+import { state, videoTitle, practiceAreaContainer, videoLocation, videoContainer } from "../document-areas.js";
+import { iframeApiReady, onPlayerReady, videoReady } from "./video-states.js";
 
 /**
  * Loads a YouTube video based on the link pasted by the user, as well as its transcript.
@@ -26,8 +17,6 @@ export async function embedVideo(videoId) {
     // Embed video
     if (!videoReady()) {
         state.videoPlayer = new YT.Player('video-location', {
-            height: 450,
-            width: 800,
             videoId: videoId,
             playerVars: {
                 'origin': 'http://localhost:5000',
@@ -155,4 +144,19 @@ export function toggleVideo() {
     if (videoReady()) {
         pauseIfPlayOtherwise(state.videoPlayer.getPlayerState() === YT.PlayerState.PLAYING);
     }
+}
+
+/**
+ * Shows the current video on the page.
+ */
+export function showVideo() {
+    videoContainer.style.display = 'inline';
+}
+
+/**
+ * Hides the current video from the page.
+ */
+export function removeVideo() {
+    videoContainer.style.display = 'none';
+    videoTitle.textContent = '';
 }

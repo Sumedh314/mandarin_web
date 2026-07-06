@@ -1,11 +1,12 @@
 from flask import Flask
+from flask_login import LoginManager, UserMixin
 
 
 def create_app():
     app = Flask(__name__)
 
-    from config import DatabaseConfig
-    app.config.from_object(DatabaseConfig)
+    from config import Config
+    app.config.from_object(Config)
     
     from .extensions import db, migrate
     db.init_app(app)
@@ -26,5 +27,7 @@ def create_app():
     app.register_blueprint(transcripts_bp)
     app.register_blueprint(flashcards_bp)
     app.register_blueprint(language_bp)
+
+    # login = LoginManager(app)
     
     return app

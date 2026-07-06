@@ -1,0 +1,14 @@
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+#program {
+    margin: auto;
+}
+
+#menu {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}

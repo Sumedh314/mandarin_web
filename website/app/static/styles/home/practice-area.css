@@ -4,14 +4,14 @@
 }
 
 #practice-area-container {
+    display: none;
     position: relative;
     border: solid 1px lightgray;
     padding: 3px;
     min-height: 144px;
-    max-height: 250px;
-    height: auto;
+    max-height: 40vh;
     overflow-y: auto;
-    font-size: large;
+    font-size: larger;
 }
 
 #practice-area {
@@ -83,7 +83,8 @@
     position: absolute;
     font-size: larger;
     color: red;
-    transform: translate(-7px, 1px);
+    transform: translate(-8px, 1px);
+    user-select: none;
 }
 
 .saved-word {
