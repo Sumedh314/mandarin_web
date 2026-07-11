@@ -2,19 +2,20 @@
 
 {% block head %}
 <title>Mandarin</title>
-<link rel="stylesheet" href="{{url_for('static', filename='styles/home/global.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='styles/home/upper-elements.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='styles/home/practice-area.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='styles/home/word-menu.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='styles/home/rating-selection.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='styles/index/global.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='styles/index/upper-elements.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='styles/index/practice-area.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='styles/index/word-menu.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='styles/index/rating-selection.css')}}">
 {% endblock %}
 
 {% block body %}
 <h1 id="program">Mandarin</h1>
 
-<div id="menu">
+<nav id="menu">
     <a href="/words">Words</a>
-</div>
+    <a href="/logout">Log out</a>
+</nav>
 
 <div id="upper-elements">
     <div id="text-input-container" class="input-container">
@@ -36,7 +37,7 @@
     <div id="input-buttons">
         <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
         <button id="generate-story-button" type="button">Generate Story</button>
-        <button id="review-words-button" type="button">Review words (<span id="num-due-cards"></span>)</button>
+        <button id="review-words-button" type="button">Review words <span id="num-due-cards" class="notification"></span></button>
     </div>
 </div>
 
@@ -84,5 +85,5 @@
     </div>
 </div>
 
-<script src="{{url_for('static', filename='scripts/main.js')}}" type="module"></script>
+<script src="{{url_for('static', filename='scripts/index/main.js')}}" type="module"></script>
 {% endblock %}

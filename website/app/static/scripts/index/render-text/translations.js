@@ -1,5 +1,5 @@
-import { translationArea } from "../document-areas.js";
-import { getTextPinyin, getWordPinyin, segmentText, translateText, translateWord, updateWord } from "../api/routes.js";
+import { translationArea } from "../../document-areas.js";
+import { getTextPinyin, getWordPinyin, segmentText, translateText, translateWord, updateWord } from "../../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
 

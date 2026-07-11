@@ -1,4 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -9,3 +10,4 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 migrate = Migrate(db=db)
+jwt = JWTManager()

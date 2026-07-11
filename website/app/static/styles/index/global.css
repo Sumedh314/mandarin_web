@@ -5,6 +5,7 @@ body {
 
 #program {
     margin: auto;
+    justify-self: center;
 }
 
 #menu {

@@ -1,7 +1,7 @@
-import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewIntervals, getSentence, reviewFlashcard, updateFlashcard } from "./api/routes.js";
-import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer } from "./document-areas.js";
+import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewIntervals, getSentence, reviewFlashcard, updateFlashcard } from "../api/routes.js";
+import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer } from "../document-areas.js";
 import { clearPracticeAreaContainer, printText } from "./render-text/practice-area.js";
-import { currentISOTime, formatSeconds } from "./utils.js";
+import { currentISOTime, formatSeconds } from "../utils.js";
 
 /**
  * Allows user to review the next flashcard

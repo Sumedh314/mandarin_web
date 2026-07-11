@@ -2,7 +2,7 @@ import {
     state,
     practiceArea,
     locationMarker
-} from "../document-areas.js";
+} from "../../document-areas.js";
 
 /**
  * Moves the location marker to show the user's farthest point in the text

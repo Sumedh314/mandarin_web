@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Register</title>
+{% endblock %}
+
+{% block body %}
+<h1>Register</h1>
+
+<a href="/login">Log in</a>
+
+<form id="registration-form">
+    <div>
+        <label for="username">Username: </label>
+        <input type="text" id="username" name="username" required>
+    </div>
+
+    <div>
+        <label for="password">Password: </label>
+        <input type="password" id="password" name="password" required>
+    </div>
+
+    <div>
+        <label for="repeat-password">Repeat password: </label>
+        <input type="password" id="repeat-password" name="repeat-password" required>
+        <p id="check-passwords-match" hidden>Passwords do not match</p>
+    </div>
+
+    <div>
+        <button type="submit">Register</button>
+    </div>
+</form>
+
+<script src="{{url_for('static', filename='scripts/auth/register.js')}}" type="module"></script>
+{% endblock %}

@@ -1,6 +1,6 @@
-import { addWords, checkIfWordSaved, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../api/routes.js";
-import { state, practiceArea, practiceAreaContainer } from "../document-areas.js";
-import { filterText, formatTimestamp } from "../utils.js";
+import { addWords, checkIfWordSaved, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../../api/routes.js";
+import { state, practiceArea, practiceAreaContainer } from "../../document-areas.js";
+import { filterText, formatTimestamp } from "../../utils.js";
 
 /**
  * Prints a transcript into the practice area with clickable words and timestamps

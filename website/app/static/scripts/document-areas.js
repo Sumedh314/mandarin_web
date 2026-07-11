@@ -18,6 +18,12 @@ export const state = {
     flashcardSentence: ''
 };
 
+// USER AUTHENTICATION INFORMATION
+export const loginForm = document.getElementById('login-form');
+export const registrationForm = document.getElementById('registration-form');
+export const checkPasswordsMatch = document.getElementById('check-passwords-match');
+export const errorMessage = document.getElementById('error-message');
+
 // UPPER ELEMENTS
 export const textEntry = document.getElementById('text-entry');
 export const textButton = document.getElementById('text-button');

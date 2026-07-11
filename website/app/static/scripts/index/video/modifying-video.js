@@ -1,5 +1,5 @@
-import { updateVideoTitle } from "../api/routes.js";
-import { state, videoTitle, practiceAreaContainer, videoLocation, videoContainer } from "../document-areas.js";
+import { updateVideoTitle } from "../../api/routes.js";
+import { state, videoTitle, practiceAreaContainer, videoLocation, videoContainer } from "../../document-areas.js";
 import { iframeApiReady, onPlayerReady, videoReady } from "./video-states.js";
 
 /**

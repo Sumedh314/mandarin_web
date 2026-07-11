@@ -1,10 +1,10 @@
-import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, checkIfVideoExists, checkIfWordSaved, deleteFlashcard, getNewTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "./api/routes.js";
-import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer, videoLocation, showPracticeAndTranslationsArea } from "./document-areas.js";
+import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, checkIfVideoExists, checkIfWordSaved, deleteFlashcard, getNewTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "../api/routes.js";
+import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer, videoLocation, showPracticeAndTranslationsArea } from "../document-areas.js";
 import { selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
 import { addDoneButton, printText, printTranscript } from "./render-text/practice-area.js";
 import { printTextDefinitions, printWordDefinitions } from "./render-text/translations.js";
 import { updateLocationMarker, updateWordColors, updateWordUnderlines } from "./render-text/update-progress.js";
-import { formatWordsToUpdate } from "./utils.js";
+import { formatWordsToUpdate } from "../utils.js";
 import { embedVideo, findTimestamp, pauseIfPlayOtherwise, removeVideo, showVideo, toggleVideo } from "./video/modifying-video.js";
 import { videoReady } from "./video/video-states.js";
 
@@ -69,6 +69,11 @@ async function handleWordClick(event) {
  * @param {Event} event Key that was pressed
  */
 async function handleKeyPress(event) {
+
+    // Make sure user isn't trying to type somewhere
+    if (document.activeElement.tagName == 'input') {
+        return;
+    }
 
     // Make sure video is ready and transcript is showing
     if (videoReady() && state.transcriptShowing) {
@@ -159,21 +164,26 @@ export async function loadVideoAndTranscript() {
     embedVideo(videoId);
     state.videoId = videoId;
     
+    let transcript = [];
     if (await checkIfVideoExists(videoId)) {
-        const transcript = await getTranscriptFromDatabase(videoId);
-        await printTranscript(transcript, false);
+        transcript = await getTranscriptFromDatabase(videoId);
         state.lastIndex = await getVideoLastIndex(videoId);
     }
     else {
         await addVideo(videoId);
-        const transcript = await getNewTranscript(videoId);
+        transcript = await getNewTranscript(videoId);
         await addTranscript(videoId, transcript);
-        await printTranscript(transcript, true);
         state.lastIndex = -1;
     }
 
-    updateLocationMarker();
-    state.transcriptShowing = true;
+    if (transcript.length != 0) {
+        await printTranscript(transcript, true);
+        updateLocationMarker();
+        state.transcriptShowing = true;
+    }
+    else {
+        await printText('No transcript found');
+    }
 }
 
 /**

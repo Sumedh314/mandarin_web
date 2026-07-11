@@ -13,17 +13,18 @@ class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(String(256))
-    first_name: Mapped[str] = mapped_column(String(64))
-    last_name: Mapped[str] = mapped_column(String(64))
+    first_name: Mapped[Optional[str]] = mapped_column(String(64))
+    last_name: Mapped[Optional[str]] = mapped_column(String(64))
+    words: Mapped[list["UserWord"]] = relationship(back_populates="user")
 
-    def set_password(self, password):
+    def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
     
-    def check_password(self, password):
+    def check_password(self, password: str):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'Username: {self.username}, full name: {self.first_name} {self.last_name}'
+        return f'Username: {self.username}, Name: {self.first_name} {self.last_name}, ID: {self.id}'
 
 
 class Word(db.Model):
@@ -31,17 +32,26 @@ class Word(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     text: Mapped[str] = mapped_column(String(32), unique=True)
-    proficiency: Mapped[int] = mapped_column(Integer, default=0)
     pinyin: Mapped[Optional[str]] = mapped_column(String(64))
     translation: Mapped[Optional[str]] = mapped_column(String(64))
     hsk_old_level: Mapped[Optional[int]] = mapped_column(Integer)
     hsk_new_level: Mapped[Optional[int]] = mapped_column(Integer)
-    saved: Mapped[bool] = mapped_column(Boolean, default=False)
-    sentences: Mapped[Optional[list["Sentence"]]] = relationship(back_populates="target_word")
-    flashcard: Mapped[Optional["Flashcard"]] = relationship(back_populates="word")
 
     def __repr__(self):
         return f'Word: {self.text}'
+
+
+class UserWord(db.Model):
+    __tablename__ = "user_words"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey(User.id))
+    proficiency: Mapped[int] = mapped_column(Integer, default=0)
+    translation: Mapped[Optional[str]] = mapped_column(String(64))
+    saved: Mapped[bool] = mapped_column(Boolean, default=False)
+    sentences: Mapped[Optional[list["Sentence"]]] = relationship(back_populates="target_word")
+    flashcard: Mapped[Optional["Flashcard"]] = relationship(back_populates="word")
+    user: Mapped[list["User"]] = relationship(back_populates="words")
 
 
 class Sentence(db.Model):
@@ -50,8 +60,8 @@ class Sentence(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     text: Mapped[str] = mapped_column(String(255))
     times_used: Mapped[int] = mapped_column(Integer, default=0)
-    word_id: Mapped[str] = mapped_column(String(10), ForeignKey(Word.id))
-    target_word: Mapped["Word"] = relationship(back_populates="sentences")
+    word_id: Mapped[int] = mapped_column(Integer, ForeignKey(UserWord.id))
+    target_word: Mapped["UserWord"] = relationship(back_populates="sentences")
 
     def __repr__(self):
         return f'Sentence: {self.text}, word_id: {self.word_id}'
@@ -87,14 +97,14 @@ class Flashcard(db.Model):
     __tablename__ = "flashcards"
 
     card_id: Mapped[int] = mapped_column(primary_key=True)
-    word_id: Mapped[str] = mapped_column(String(32), ForeignKey(Word.id), unique=True)
+    word_id: Mapped[str] = mapped_column(String(32), ForeignKey(UserWord.id), unique=True)
     state: Mapped[int] = mapped_column(Integer, default=1)
     step: Mapped[Optional[int]] = mapped_column(Integer)
     stability: Mapped[Optional[float]] = mapped_column(Float)
     difficulty: Mapped[Optional[float]] = mapped_column(Float)
     due: Mapped[str] = mapped_column(String(64))
     last_review: Mapped[Optional[str]] = mapped_column(String(64))
-    word: Mapped["Word"] = relationship(back_populates="flashcard")
+    word: Mapped["UserWord"] = relationship(back_populates="flashcard")
 
     def to_dict(self):
         return {

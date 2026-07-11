@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_login import LoginManager, UserMixin
 
 
 def create_app():
@@ -8,12 +7,15 @@ def create_app():
     from config import Config
     app.config.from_object(Config)
     
-    from .extensions import db, migrate
+    from .extensions import db, migrate, jwt
     db.init_app(app)
     migrate.init_app(app)
+    jwt.init_app(app)
 
     from .routes.pages import pages_bp
+    from .auth.routes import auth_bp
     app.register_blueprint(pages_bp)
+    app.register_blueprint(auth_bp)
     
     from .routes.api.words import words_bp
     from .routes.api.sentences import sentences_bp
@@ -27,7 +29,5 @@ def create_app():
     app.register_blueprint(transcripts_bp)
     app.register_blueprint(flashcards_bp)
     app.register_blueprint(language_bp)
-
-    # login = LoginManager(app)
     
     return app

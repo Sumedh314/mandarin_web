@@ -27,15 +27,32 @@ button {
         cursor: pointer;
         background-color: lightgray;
     }
+
+    &:active {
+        cursor: pointer;
+        background-color: darkgray;
+    }
 }
 
-/* input {
+input {
+    background-color: white;
+    border: 1px solid black;
     border-radius: 999px;
-    border-style: solid;
-    border-width: 1px;
-    width: fit-content;
-} */
+    padding-left: 6px;
+}
 
-#program {
-    justify-self: center;
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.notification {
+    display: inline-block;
+    text-align: center;
+    border-radius: 50%;
+    background-color: rgb(232, 22, 22);
+    height: 100%;
+    width: auto;
+    aspect-ratio: 1 / 1;
 }

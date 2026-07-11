@@ -1,6 +1,26 @@
 import request from "./client.js";
 
 /**
+ * Registers a new user onto the site
+ * 
+ * @param {object} data Login data including username and password
+ * @returns {Promise<string>} The success or error message
+ */
+export async function register(data) {
+    return await request('/register', 'POST', data, '');
+}
+
+/**
+ * Logs a user into the site
+ * 
+ * @param {object} data Login data including username and password
+ * @returns {Promise<string>} The access token or an error message
+ */
+export async function login(data) {
+    return await request('/login', 'POST', data, '');
+}
+
+/**
  * Adds a list of words to the database
  * 
  * @param {Array} words List of words to add to database

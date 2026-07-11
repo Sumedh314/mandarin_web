@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select, insert
 
 from app.models import TranscriptLine
 import app.repositories.transcripts as transcripts_repository
@@ -22,7 +21,10 @@ def get_transcript_from_database(session: Session, video_id: int):
 
 def get_transcript_from_youtube(youtube_id: str):
     """Uses YouTubeTranscriptAPI to fetch the transcript of a YouTube video that has captions"""
-    return transcript_generator.fetch(youtube_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
+    try:
+        return transcript_generator.fetch(youtube_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES).to_raw_data()
+    except:
+        return []
 
 
 def sort_transcript_lines(transcript_lines: list[TranscriptLine]):

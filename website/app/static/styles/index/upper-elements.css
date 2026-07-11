@@ -26,6 +26,7 @@
         border-radius: 999px;
         margin-left: 5px;
         flex-grow: 1;
+        margin: 0px;
         
         &:focus {
             outline: none;
@@ -76,8 +77,17 @@
         width: 100%;
         padding: 5px;
 
+        #video-title {
+            width: 100%;
+        }
+
         #translation-area {
-            margin: 5px, 0px, 0px, 0px;
+            border-top: 1px solid lightgray;
+            margin-top: 3px;
+            padding-top: 5px;
+            min-height: 80px;
+            height: auto;
+            font-size: x-large;
         }
     }
 }
