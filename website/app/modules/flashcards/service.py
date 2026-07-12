@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fsrs import Card
 
 from app.models import Flashcard
-import app.repositories.flashcards as flashcards_repository
+import app.modules.flashcards.repository as flashcards_repository
 from config import scheduler
 
 

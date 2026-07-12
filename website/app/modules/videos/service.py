@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, update
 
 from app.models import Video
-import app.repositories.videos as videos_repository
+import app.modules.videos.repository as videos_repository
 
 
 def add_video(session: Session, id: str):

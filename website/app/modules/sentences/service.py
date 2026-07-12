@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 
 from app.models import Sentence
-import app.repositories.sentences as sentences_repository
-import app.services.words as words_service
-import app.services.ai as ai
+import app.modules.sentences.repository as sentences_repository
+import website.app.modules.words.service as service
+import app.modules.ai as ai
 
 
 def add_sentences_for_word(session: Session, sentences: list[str], word_id: int):
@@ -25,7 +25,7 @@ def get_sentence(session: Session, word_id: int):
 
 def generate_sentences_for_low_words(session: Session, num_sentences: int = 5, threshold: int = 5):
     """Generates sentences for words with fewer practice sentences than the given threshold if at least num_words words have fewer practice sentences than the threshold"""
-    low_words = words_service.get_low_words(session, threshold)
+    low_words = service.get_low_words(session, threshold)
     sentences = ai.generate_practice_sentences([word.text for word in low_words], num_sentences)
     print(sentences)
     for word in low_words:

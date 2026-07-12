@@ -1,10 +1,26 @@
 from typing import cast
 
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, make_response
-from flask_jwt_extended import current_user, jwt_required, get_jwt_identity, create_access_token, set_access_cookies, unset_access_cookies
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+    render_template,
+    redirect,
+    url_for,
+    make_response
+)
+from flask_jwt_extended import (
+    current_user,
+    jwt_required,
+    get_jwt_identity,
+    create_access_token,
+    set_access_cookies,
+    unset_access_cookies
+)
 
 from app.models import User
-import app.auth.services as user_service
+import app.modules.auth.service as auth_service
+import app.modules.auth.repository as auth_repository
 from app.extensions import db, jwt
 
 
@@ -21,16 +37,23 @@ def register():
         username = data.get('username')
         password = data.get('password')
 
-        user = user_service.get_user_by_username(db.session, username)
+        user = auth_repository.get_user_by_username(db.session, username)
         if user is not None:
             return jsonify("Username already exists"), 401
         
-        user = user_service.create_user(db.session, username=username, password=password)
-        response = jsonify({'msg': 'User created', 'url': url_for('auth.login')})
+        user = auth_service.create_user(
+            db.session,
+            username=username,
+            password=password
+        )
+        response = jsonify(
+            {'msg': 'User created',
+             'url': url_for('auth.login')}
+        )
 
         return response, 201
     
-    return render_template('register.html')
+    return render_template('auth/register.html')
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -38,23 +61,23 @@ def register():
 def login():
     """Login page"""
     if get_jwt_identity() is not None:
-        return redirect(url_for('pages.index'))
+        return redirect(url_for('pages.learn'))
     if request.method == 'POST':
         data: dict = request.json
         username = data.get('username')
         password = data.get('password')
 
-        user = user_service.get_user_by_username(db.session, username)
+        user = auth_repository.get_user_by_username(db.session, username)
         if not user or not user.check_password(password):
             return jsonify("Incorrect username or password"), 401
 
         access_token = create_access_token(identity=user)
-        response = jsonify({'url': url_for('pages.index')})
+        response = jsonify({'url': url_for('pages.learn')})
         set_access_cookies(response, access_token)
 
         return response, 200
 
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 
 @auth_bp.get('/logout')
@@ -73,7 +96,7 @@ def user_identity_lookup(user: User):
 @jwt.user_lookup_loader
 def user_lookup_callback(_, jwt_data):
     id = int(jwt_data['sub'])
-    return user_service.get_user_by_id(db.session, id)
+    return auth_repository.get_user_by_id(db.session, id)
 
 
 @jwt.expired_token_loader

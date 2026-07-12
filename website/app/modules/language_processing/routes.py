@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 
-import app.services.language_processing as language_service
-import app.services.words as words_service
+import app.modules.language_processing.service as language_service
+import website.app.modules.words.service as service
 
 
 language_bp = Blueprint('language', __name__, url_prefix='/api/v1/language')

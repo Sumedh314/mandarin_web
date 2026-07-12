@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 
 from app.models import db
-import app.services.sentences as sentences_service
+import app.modules.sentences.service as sentences_service
 
 
 sentences_bp = Blueprint('sentences', __name__, url_prefix='/api/v1/sentences')

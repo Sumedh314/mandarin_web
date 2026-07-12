@@ -1,19 +1,22 @@
 from datetime import datetime
 
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.models import db
-import app.services.flashcards as flashcards_service
+import app.modules.flashcards.service as flashcards_service
 
 
 flashcards_bp = Blueprint('flashcards', __name__, url_prefix='/api/v1/flashcards')
 
 
 @flashcards_bp.post('')
+@jwt_required
 def add_flashcard():
     """Adds a flashcard for the FSRS algorithm"""
     flashcard_data = request.json
-    flashcards_service.add_flashcard(db.session, flashcard_data)
+    user_id = get_jwt_identity()
+    flashcards_service.add_flashcard(db.session, user_id, flashcard_data)
     return jsonify('success'), 201
 
 

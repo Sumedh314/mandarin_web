@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models import TranscriptLine
-import app.repositories.transcripts as transcripts_repository
+import app.modules.transcripts.repository as transcripts_repository
 from config import transcript_generator, MANDARIN_AND_ENGLISH_LANGUAGE_CODES
 
 

@@ -2,21 +2,21 @@ import json
 
 from sqlalchemy.orm import Session
 
-from app.repositories import words as words_repository
-from app.models import Word
+from app.modules.words import repository as words_repository
+from app.models import UserWord
 from config import HSK_WORDS_PATH, HSK_LEVEL_HASHMAP_PATH
 
 
 def add_new_words(session: Session, words_data: list[dict[str, int | str]]):
     """Adds a list of words to the database. First filters out any words that already exist in the database, then adds the new words"""
-    words = [Word(**data) for data in words_data]
+    words = [UserWord(**data) for data in words_data]
     new_words = get_new_words(session, words)
     words_repository.add_words(session, new_words)
     session.commit()
     return new_words
 
 
-def get_new_words(session: Session, words: list[Word]):
+def get_new_words(session: Session, words: list[UserWord]):
     """Gets the words in the list that are not already stored in the database"""
     existing_words = [word.text for word in words_repository.get_existing_words_in_list(session, [word.text for word in words])]
     return [word for word in words if word.text not in existing_words]

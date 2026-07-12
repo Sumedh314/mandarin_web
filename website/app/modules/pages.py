@@ -6,16 +6,16 @@ pages_bp = Blueprint('pages', __name__)
 
 
 @pages_bp.get('/')
-def redirect_to_index():
-    """Redirect user to index page if no path"""
-    return redirect(url_for('pages.index'))
+def redirect_to_learn():
+    """Redirect user to learn page if no path"""
+    return redirect(url_for('pages.learn'))
 
 
-@pages_bp.get('/index')
+@pages_bp.get('/learn')
 @jwt_required()
-def index():
+def learn():
     """Home page for site"""
-    return render_template('index.html')
+    return render_template('learn.html')
 
 
 @pages_bp.get('/words')

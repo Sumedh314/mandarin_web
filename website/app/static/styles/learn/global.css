@@ -3,11 +3,6 @@ body {
     flex-direction: column;
 }
 
-#program {
-    margin: auto;
-    justify-self: center;
-}
-
 #menu {
     margin-top: 10px;
     margin-bottom: 20px;
