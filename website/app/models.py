@@ -1,8 +1,8 @@
-from typing import Optional
+from datetime import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Float, Boolean, ForeignKey
+from sqlalchemy import String, ForeignKey, UniqueConstraint, DateTime
 
 from .extensions import db
 
@@ -11,12 +11,8 @@ class User(db.Model):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column(String(255), unique=True)
+    username: Mapped[str] = mapped_column(unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(256))
-    
-    words: Mapped[list["UserWord"]] = relationship(back_populates="user")
-    videos: Mapped[list["UserVideo"]] = relationship(back_populates="user")
-    flashcards: Mapped[list["Flashcard"]] = relationship(back_populates="user")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -25,51 +21,21 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'Username: {self.username}, ID: {self.id}'
+        return f'ID: {self.id}, username: {self.username}'
 
 
-class DictionaryWord(db.Model):
-    __tablename__ = "dictionary_words"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    text: Mapped[str] = mapped_column(String(32), unique=True)
-    radical: Mapped[str] = mapped_column(String(32))
-    hsk_old_level: Mapped[Optional[int]] = mapped_column(Integer)
-    hsk_new_level: Mapped[Optional[int]] = mapped_column(Integer)
-    frequency: Mapped[int] = mapped_column(Integer)
-    parts_of_speech: Mapped[str] = mapped_column(String(64))
-
-    forms: Mapped[list["WordForm"]] = relationship(back_populates="dictionary_word")
-
-    def __repr__(self):
-        return f'Word: {self.text}'
-
-
-class UserWord(db.Model):
-    __tablename__ = "user_words"
+class Word(db.Model):
+    __tablename__ = "words"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    text: Mapped[str] = mapped_column(String(32))
-    proficiency: Mapped[int] = mapped_column(Integer, default=0)
-    saved: Mapped[bool] = mapped_column(Boolean, default=False)
+    text: Mapped[str] = mapped_column(unique=True)
+    radical: Mapped[str]
+    hsk_old_level: Mapped[int | None]
+    hsk_new_level: Mapped[int | None]
+    frequency: Mapped[int | None]
+    parts_of_speech: Mapped[str | None]
 
-    dictionary_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("dictionary_words.id")
-    )
-    flashcard_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("flashcards.id"),
-        unique=True
-    )
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-
-    user: Mapped["User"] = relationship(back_populates="words")
-    forms: Mapped[list["WordForm"]] = relationship(back_populates="user_word")
-    flashcard: Mapped[Optional["Flashcard"]] = relationship(back_populates="word")
-    sentences: Mapped[Optional[list["Sentence"]]] = relationship(
-        back_populates="target_word"
-    )
+    forms: Mapped[list["WordForm"]] = relationship(back_populates="word")
 
     def __repr__(self):
         return f'Word: {self.text}'
@@ -79,52 +45,105 @@ class WordForm(db.Model):
     __tablename__ = "dictionary_word_forms"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    traditional: Mapped[str] = mapped_column(String(32))
-    pinyin: Mapped[str] = mapped_column(String(64))
-    bopomofo: Mapped[str] = mapped_column(String(64))
-    translations: Mapped[str] = mapped_column(String(255))
-    classifiers: Mapped[Optional[str]] = mapped_column(String(32))
+    traditional: Mapped[str | None]
+    pinyin: Mapped[str | None]
+    bopomofo: Mapped[str | None]
+    translations: Mapped[str | None]
+    classifiers: Mapped[str | None] 
 
-    dictionary_word_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("dictionary_words.id")
-    )
-    user_word_id: Mapped[Optional[int]] = mapped_column(
-        Integer,
-        ForeignKey("user_words.id")
-    )
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"))
 
-    dictionary_word: Mapped["DictionaryWord"] = relationship(back_populates="forms")
-    user_word: Mapped["UserWord"] = relationship(back_populates="forms")
+    word: Mapped["Word"] = relationship(back_populates="forms")
 
     def __repr__(self):
         return (
-            f'Word: {self.dictionary_word}, '
+            f'Word: {self.word.text}, '
             f'Pinyin: {self.pinyin}, '
             f'Translations: {self.translations}'
         )
+
+
+class LearningWord(db.Model):
+    __tablename__ = "learning_words"
+    __table_args__ = (UniqueConstraint("user_id", "word_id", name="uq_user_word"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    proficiency: Mapped[int] = mapped_column(default=0, index=True)
+    saved: Mapped[bool] = mapped_column(default=False)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    word_id: Mapped[int] = mapped_column(ForeignKey("words.id"), index=True)
+
+    user: Mapped["User"] = relationship()
+    word: Mapped["Word"] = relationship()
+    sentences: Mapped[list["Sentence"]] = relationship(
+        back_populates="learning_word"
+    )
+    flashcard: Mapped["Flashcard" | None] = relationship(
+        back_populates="learning_word"
+    )
+
+    def __repr__(self):
+        return f'User ID: {self.user_id}, word ID: {self.word_id}'
 
 
 class Sentence(db.Model):
     __tablename__ = "sentences"
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    text: Mapped[str] = mapped_column(String(255))
-    times_used: Mapped[int] = mapped_column(Integer, default=0)
+    text: Mapped[str]
+    times_used: Mapped[int] = mapped_column(default=0)
 
-    word_id: Mapped[int] = mapped_column(Integer, ForeignKey("words.id"))
+    learning_word_id: Mapped[int] = mapped_column(
+        ForeignKey("learning_words.id"),
+        index=True
+    )
 
-    target_word: Mapped["UserWord"] = relationship(back_populates="sentences")
+    learning_word: Mapped["LearningWord"] = relationship(back_populates="sentences")
 
     def __repr__(self):
-        return f'Sentence: {self.text}, word_id: {self.word_id}'
+        return f'Sentence: {self.text}, word ID: {self.learning_word_id}'
+
+
+class Flashcard(db.Model):
+    __tablename__ = "flashcards"
+
+    card_id: Mapped[int] = mapped_column(primary_key=True)
+    state: Mapped[int] = mapped_column(default=1)
+    step: Mapped[int | None]
+    stability: Mapped[float | None]
+    difficulty: Mapped[float | None]
+    due: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    last_review: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    learning_word_id: Mapped[int] = mapped_column(
+        ForeignKey("learning_words.id"),
+        unique=True
+    )
+
+    learning_word: Mapped["LearningWord"] = relationship(back_populates="flashcard")
+
+    def to_dict(self):
+        return {
+            'card_id': self.card_id,
+            'state': self.state,
+            'step': self.step,
+            'stability': self.stability,
+            'difficulty': self.difficulty,
+            'due': self.due.isoformat(),
+            'last_review': self.last_review.isoformat(),
+            'learning_word_id': self.learning_word_id,
+        }
+
+    def __repr__(self):
+        return f'Word: {self.learning_word.word.text}, due: {self.due}'
 
 
 class Video(db.Model):
     __tablename__ = "videos"
 
     id: Mapped[str] = mapped_column(String(11), primary_key=True)
-    title: Mapped[Optional[str]] = mapped_column(String(255))
+    title: Mapped[str | None]
 
     transcript: Mapped[list["TranscriptLine"]] = relationship(back_populates="video")
 
@@ -135,13 +154,19 @@ class Video(db.Model):
 class UserVideo(db.Model):
     __tablename__ = "user_video"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    last_index: Mapped[int] = mapped_column(Integer, default=-1)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        primary_key=True
+    )
+    video_id: Mapped[str] = mapped_column(
+        String(11),
+        ForeignKey("videos.id"),
+        primary_key=True
+    )
+    last_index: Mapped[int] = mapped_column(default=-1)
 
-    video_id: Mapped[str] = mapped_column(String(11), ForeignKey("videos.id"))
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-
-    user: Mapped["User"] = relationship(back_populates="videos")
+    user: Mapped["User"] = relationship()
+    video: Mapped["Video"] = relationship()
 
     def __repr__(self):
         return f'Video ID: {self.video_id}, last_index: {self.last_index}'
@@ -151,9 +176,9 @@ class TranscriptLine(db.Model):
     __tablename__ = "transcript_lines"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    text: Mapped[str] = mapped_column(String(1024))
-    start: Mapped[float] = mapped_column(Float)
-    duration: Mapped[float] = mapped_column(Float)
+    text: Mapped[str]
+    start: Mapped[float]
+    duration: Mapped[float]
 
     video_id: Mapped[str] = mapped_column(
         String(11),
@@ -165,40 +190,3 @@ class TranscriptLine(db.Model):
 
     def __repr__(self):
         return f'Text: {self.text}, video_id: {self.video_id}, start: {self.start}'
-
-
-class Flashcard(db.Model):
-    __tablename__ = "flashcards"
-
-    card_id: Mapped[int] = mapped_column(primary_key=True)
-    state: Mapped[int] = mapped_column(Integer, default=1)
-    step: Mapped[Optional[int]] = mapped_column(Integer)
-    stability: Mapped[Optional[float]] = mapped_column(Float)
-    difficulty: Mapped[Optional[float]] = mapped_column(Float)
-    due: Mapped[str] = mapped_column(String(64))
-    last_review: Mapped[Optional[str]] = mapped_column(String(64))
-
-    word_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("user_words.id"),
-        unique=True
-    )
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-
-    word: Mapped["UserWord"] = relationship(back_populates="flashcard")
-    user: Mapped["User"] = relationship(back_populates="flashcards")
-
-    def to_dict(self):
-        return {
-            'card_id': self.card_id,
-            'word_id': self.word_id,
-            'state': self.state,
-            'step': self.step,
-            'stability': self.stability,
-            'difficulty': self.difficulty,
-            'due': self.due,
-            'last_review': self.last_review
-        }
-
-    def __repr__(self):
-        return f'Word: {self.word_id}, due: {self.due}'

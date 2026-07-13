@@ -21,7 +21,7 @@ def add_words():
 def get_word_ids():
     """Get the ids of words based on their text"""
     word_texts = request.args.getlist('word')
-    words = repository.get_words_by_texts(db.session, word_texts)
+    words = repository.get_user_words_by_texts(db.session, word_texts)
     word_ids = {word.id for word in words}
     return jsonify(word_ids), 200
 
@@ -100,7 +100,7 @@ def calculate_hsk_percentages():
 @words_bp.get('/saved')
 def get_saved_words():
     """Get all words that the user has saved."""
-    saved_words = repository.get_saved_words(db.session)
+    saved_words = repository.get_saved_words_for_user(db.session)
     words_text = [word.text for word in saved_words]
     return jsonify(words_text), 200
 

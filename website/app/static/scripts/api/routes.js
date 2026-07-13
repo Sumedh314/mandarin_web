@@ -182,7 +182,7 @@ export async function translateText(text) {
 export async function addSentences(sentences, wordId) {
     return await request('/sentences', 'POST', {
         sentences: sentences,
-        word: wordId
+        wordId: wordId
     });
 }
 
@@ -193,7 +193,7 @@ export async function addSentences(sentences, wordId) {
  * @returns {Promise<string>} Sentence containing the given word
  */
 export async function getSentence(wordId) {
-    return await request(`/sentences/${encodeURIComponent(wordId)}`, 'GET');
+    return await request(`/sentences/${wordId}`, 'GET');
 }
 
 /**
