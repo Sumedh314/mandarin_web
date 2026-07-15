@@ -19,8 +19,8 @@ from flask_jwt_extended import (
 )
 
 from app.models import User
-import app.modules.auth.service as auth_service
-import app.modules.auth.repository as auth_repository
+import app.modules.auth.service as service
+import app.modules.auth.repository as repository
 from app.extensions import db, jwt
 
 
@@ -33,15 +33,15 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     """Page to register a new user"""
     if request.method == 'POST':
-        data: dict = request.json
+        data: dict = request.get_json()
         username = data.get('username')
         password = data.get('password')
 
-        user = auth_repository.get_user_by_username(db.session, username)
+        user = repository.get_user_by_username(db.session, username)
         if user is not None:
             return jsonify("Username already exists"), 401
         
-        user = auth_service.create_user(
+        user = service.create_user(
             db.session,
             username=username,
             password=password
@@ -63,11 +63,11 @@ def login():
     if get_jwt_identity() is not None:
         return redirect(url_for('pages.learn'))
     if request.method == 'POST':
-        data: dict = request.json
+        data: dict = request.get_json()
         username = data.get('username')
         password = data.get('password')
 
-        user = auth_repository.get_user_by_username(db.session, username)
+        user = repository.get_user_by_username(db.session, username)
         if not user or not user.check_password(password):
             return jsonify("Incorrect username or password"), 401
 
@@ -96,7 +96,7 @@ def user_identity_lookup(user: User):
 @jwt.user_lookup_loader
 def user_lookup_callback(_, jwt_data):
     id = int(jwt_data['sub'])
-    return auth_repository.get_user_by_id(db.session, id)
+    return repository.get_user_by_id(db.session, id)
 
 
 @jwt.expired_token_loader

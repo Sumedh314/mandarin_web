@@ -14,20 +14,13 @@ def create_app():
 
     from .modules.pages import pages_bp
     from .modules.auth.routes import auth_bp
+    from .modules.words.routes import words_bp
+    from .modules.videos.routes import videos_bp
+    from .modules.spaced_repetition.routes import srs_bp
     app.register_blueprint(pages_bp)
     app.register_blueprint(auth_bp)
-    
-    from .modules.words.routes import words_bp
-    from .modules.sentences.routes import sentences_bp
-    from .modules.videos.routes import videos_bp
-    from .modules.transcripts.routes import transcripts_bp
-    from .modules.flashcards.routes import flashcards_bp
-    from .modules.language_processing.routes import language_bp
     app.register_blueprint(words_bp)
-    app.register_blueprint(sentences_bp)
     app.register_blueprint(videos_bp)
-    app.register_blueprint(transcripts_bp)
-    app.register_blueprint(flashcards_bp)
-    app.register_blueprint(language_bp)
+    app.register_blueprint(srs_bp)
     
     return app

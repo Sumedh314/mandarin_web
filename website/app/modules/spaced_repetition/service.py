@@ -14,53 +14,44 @@ from config import scheduler
 # FLASHCARDS
 
 
-def add_flashcard(session: Session, user_id: int, flashcard_data: dict):
+def validate_flashcard_user(user_id: int, learning_word_id: int):
+    """Make sure the user is allowed to change a flashcard."""
+    pass
+
+
+def add_flashcard(
+    session: Session,
+    flashcard_data: dict
+):
     """Add a new flashcard to the database."""
-    card = create_new_card_object(**flashcard_data)
-    repository.add_flashcard(
-        session=session,
-        flashcard=Flashcard(
-            user_id=user_id,
-            word_id=flashcard_data['wordId'],
-            **card.to_dict()
-        )
+    card = create_card_object_from_flashcard_data(**flashcard_data)
+    flashcard = Flashcard(
+        **convert_card_dict_iso_to_datetime(card.to_dict())
     )
+    repository.add_flashcard(session, flashcard)
     session.commit()
+    return card
 
 
-def get_card_for_user_and_word_ids(session: Session, user_id: int, user_word_id: int):
+def get_card_for_learning_word_id(session: Session, learning_word_id: int):
     """Get a flashcard from the database."""
-    flashcard = repository.get_flashcard_by_word_id(session, user_id, user_word_id)
-    card = create_new_card_object(**flashcard.to_dict())
+    flashcard = repository.get_flashcard_by_word_id(session, learning_word_id)
+    card = create_card_object_from_flashcard_data(**flashcard.to_dict())
     return card
 
 
 def get_next_due_flashcard(session: Session, user_id: int, current_time_iso: str):
     """Get the next flashcard that is due for review for the user."""
-    due_cards = get_due_flashcards(session, user_id, current_time_iso)
+    current_time = datetime.fromisoformat(current_time_iso)
+    due_cards = repository.get_due_flashcards(session, user_id, current_time)
     if not due_cards:
         return 'None'
     return due_cards[0]
 
 
-def get_due_flashcards(session: Session, user_id: int, current_time_iso: str):
-    """Get all words that are currently due for review for the user."""
-    flashcards = repository.get_all_flashcards_for_user(session, user_id)
-    current_time = datetime.fromisoformat(current_time_iso)
-
-    due_flashcards: list[Flashcard] = []
-    for flashcard in flashcards:
-        flashcard_due = datetime.fromisoformat(flashcard.due)
-        if flashcard_due <= current_time or flashcard.state == 1:
-            due_flashcards.append(flashcard)
-
-    due_flashcards.sort(key=lambda flashcard: datetime.fromisoformat(flashcard.due))
-    return due_flashcards
-
-
-def update_flashcard(session: Session, card_id: int, flashcard_data: dict):
+def update_flashcard(session: Session, learning_word_id: int, flashcard_data: dict):
     """Update a flashcard with its new data."""
-    repository.update_flashcard(session, card_id, flashcard_data)
+    repository.update_flashcard(session, learning_word_id, flashcard_data)
     session.commit()
     return flashcard_data
 
@@ -73,9 +64,9 @@ def review_card(card: Card, rating: int, review_time: datetime):
     return card
 
 
-def delete_flashcard(session: Session, card_id: int):
+def delete_flashcard(session: Session, learning_word_id: int):
     """Delete a flashcard from the database."""
-    flashcard = repository.get_flashcard_by_id(session, card_id)
+    flashcard = repository.get_flashcard_by_id(session, learning_word_id)
     repository.delete_flashcard(session, flashcard)
     session.commit()
     return True
@@ -91,14 +82,31 @@ def calculate_card_review_intervals(card: Card, current_time: datetime):
     return review_intervals
 
 
-def create_new_card_object(**kwargs):
-    """Createa a new card object with the given parameters."""
+def create_card_object_from_flashcard_data(**kwargs):
+    """Create a new card object with the given parameters."""
     card_dict = Card().to_dict()
     fsrs_card_keys = card_dict.keys()
-    card_keys = {key: value for key, value in kwargs.items() if key in fsrs_card_keys}
-    for key, value in card_keys.items():
+    card_items = {key: value for key, value in kwargs.items() if key in fsrs_card_keys}
+    for key, value in card_items.items():
         card_dict[key] = value
+    card_dict['card_id'] = card_dict.pop('learning_word_id')
     return Card.from_dict(card_dict)
+
+
+def convert_card_dict_iso_to_datetime(card_dict: dict):
+    """Convert dates in a card dictionary from ISO to datetime."""
+    for key, value in card_dict.items():
+        if key in ['due', 'last_review']:
+            card_dict[key] = datetime.fromisoformat(value)
+    return card_dict
+
+
+def convert_card_dict_datetime_to_iso(card_dict: dict):
+    """Convert dates in a card dictionary from datetime to ISO."""
+    for key, value in card_dict.items():
+        if key in ['due', 'last_review']:
+            card_dict[key] = datetime.isoformat(value)
+    return card_dict
 
 
 # SENTENCES
@@ -116,7 +124,7 @@ def add_sentences_for_word(session: Session, sentences: list[str], user_word_id:
 
 def get_sentence(session: Session, user_word_id: int):
     """Gets the first sentence for a word"""
-    sentence = repository.get_one_sentence_for_user_word(session, user_word_id)
+    sentence = repository.get_sentence_for_word(session, user_word_id)
     print(sentence)
     if sentence is None:
         generate_sentences_for_low_words(session)
@@ -136,10 +144,11 @@ def generate_sentences_for_low_words(
     words.
     
     Args:
-        session: The SQLAlchemy database session.
-        num_sentences: The number of sentences to create for each word.
-        threshold: The amount of sentences a word must have fewer than
-            to generate more sentences for.
+        session (sqlalchemy.orm.Session): The database session.
+        num_sentences (int): The number of sentences to create for each
+            word.
+        threshold (int): The amount of sentences a word must have fewer
+            than to generate more sentences for.
     """
     low_words = words_service.get_low_words(session, threshold)
     word_texts = [word.text for word in low_words]
@@ -151,8 +160,24 @@ def generate_sentences_for_low_words(
         add_sentences_for_word(session, word_sentences, word.id)
 
 
-def delete_sentence(session: Session, sentence_text: str, user_word_id: int):
-    """Remove a sentence from the database."""
-    sentence = repository.get_sentence(session, sentence_text, user_word_id)
+def delete_sentence_by_id(session: Session, id: int):
+    """Delete a sentence from the database by its ID."""
+    sentence = repository.get_sentence_by_id(session, id)
+    session.delete(sentence)
+    return True
+
+
+def delete_sentence_by_text_and_word_id(
+    session: Session,
+    sentence_text: str,
+    user_word_id: int
+):
+    """Delete a sentence from the database by its text and word ID."""
+    sentence = repository.get_sentence_by_text_and_word_id(
+        session,
+        sentence_text,
+        user_word_id
+    )
     repository.delete_sentence(session, sentence)
     session.commit()
+    return True

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models import User
-import app.modules.auth.repository as auth_repository
+import app.modules.auth.repository as repository
 
 
 def create_user(session: Session, **kwargs):
@@ -11,6 +11,6 @@ def create_user(session: Session, **kwargs):
     if password:
         user.set_password(password)
         
-    user = auth_repository.add_user(session, user)
+    user = repository.add_user(session, user)
     session.commit()
     return user

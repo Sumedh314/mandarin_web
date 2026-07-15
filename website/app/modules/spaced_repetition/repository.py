@@ -1,7 +1,9 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from datetime import datetime
 
-from app.models import Flashcard, Sentence
+from sqlalchemy.orm import Session
+from sqlalchemy import select, update, or_
+
+from app.models import LearningWord, Flashcard, Sentence
 
 
 # FLASHCARDS
@@ -13,31 +15,51 @@ def add_flashcard(session: Session, flashcard: Flashcard):
     return flashcard
 
 
-def get_flashcard_by_id(session: Session, card_id: int):
+def get_flashcard_by_id(session: Session, learning_word_id: int):
     """Get a flashcard by its ID in the database."""
-    return session.get(Flashcard, card_id)
+    return session.get(Flashcard, learning_word_id)
 
 
-def get_flashcard_by_word_id(session: Session, user_id: int, user_word_id: int):
+def get_flashcard_by_word_id(session: Session, learning_word_id: int):
     """Get a flashcard by its user and word IDs."""
     statement = select(Flashcard).where(
-        Flashcard.user_id == user_id,
-        Flashcard.word_id == user_word_id
+        Flashcard.learning_word_id == learning_word_id
     )
     return session.scalar(statement)
 
 
 def get_all_flashcards_for_user(session: Session, user_id: int):
     """Get all flashcards for a specific user."""
-    statement = select(Flashcard).where(Flashcard.user_id == user_id)
+    statement = (
+        select(Flashcard)
+        .join(Flashcard.learning_word)
+        .where(LearningWord.user_id == user_id)
+    )
     return session.scalars(statement).all()
 
 
-def update_flashcard(session: Session, card_id: int, flashcard_data: dict):
+def get_due_flashcards(session: Session, user_id: int, current_time: datetime):
+    """Get all words that are currently due for review for the user."""
+    statement = (
+        select(Flashcard)
+        .join(Flashcard.learning_word)
+        .where(
+            LearningWord.user_id == user_id,
+            or_(
+                Flashcard.due <= current_time,
+                Flashcard.state == 1
+            )
+        )
+        .order_by(Flashcard.due)
+    )
+    return session.scalars(statement).all()
+
+
+def update_flashcard(session: Session, learning_word_id: int, flashcard_data: dict):
     """Update a flashcard with new data."""
     statement = (
         update(Flashcard)
-        .where(Flashcard.card_id == card_id)
+        .where(Flashcard.learning_word_id == learning_word_id)
         .values(**flashcard_data)
     )
     session.execute(statement)
@@ -59,19 +81,32 @@ def add_sentences(session: Session, sentences: list[Sentence]):
     return sentences
 
 
-def get_one_sentence_for_user_word(session: Session, user_word_id: int):
+def get_sentence_by_id(session: Session, id: int):
+    """Get a sentence from the database by its ID."""
+    return session.get(Sentence, id)
+
+
+def get_sentence_for_word(session: Session, learning_word_id: int):
     """Get one sentence for a word."""
-    statement = select(Sentence).where(Sentence.learning_word_id == user_word_id).limit(1)
+    statement = (
+        select(Sentence)
+        .where(Sentence.learning_word_id == learning_word_id)
+        .limit(1)
+    )
     return session.scalar(statement)
 
 
-def get_sentence(session: Session, sentence_text: str, user_word_id: int):
-    """Get a sentence based on its text and associated word ID."""
+def get_sentence_by_text_and_word_id(
+    session: Session,
+    sentence_text: str,
+    learning_word_id: int
+):
+    """Get a sentence based on its text and learning word ID."""
     statement = (
         select(Sentence)
         .where(
             Sentence.text == sentence_text,
-            Sentence.learning_word_id == user_word_id
+            Sentence.learning_word_id == learning_word_id
         )
     )
     return session.scalar(statement)

@@ -14,9 +14,9 @@ videos_bp = Blueprint('videos', __name__, url_prefix='/api/v1/videos')
 @videos_bp.post('')
 def add_video():
     """Add a new video to the database."""
-    video_data = request.json
+    video_data = request.get_json()
     video_id = video_data['video_id']
-    video = service.add_video(db.session, video_id)
+    service.add_video(db.session, video_id)
     return jsonify('success'), 201
 
 
@@ -30,7 +30,7 @@ def get_video_title(video_id: str):
 @videos_bp.patch('/<video_id>/title')
 def update_video_title(video_id: str):
     """Update the title of a video."""
-    title = request.json['title']
+    title = request.get_json()['title']
     service.update_video_title(db.session, video_id, title)
     return jsonify('success'), 200
 
@@ -60,7 +60,7 @@ def get_video_last_index(video_id: str):
 def update_video_last_index(video_id: str):
     """Update the last index of a video."""
     user_id = get_jwt_identity()
-    last_index = request.json['last_index']
+    last_index = request.get_json()['last_index']
     service.update_video_last_index(db.session, user_id, video_id, last_index)
     return jsonify('success'), 200
 
@@ -71,7 +71,7 @@ def update_video_last_index(video_id: str):
 @videos_bp.post('')
 def add_transcript():
     """Add a transcript of a YouTube video to the database."""
-    transcript_data = request.json
+    transcript_data = request.get_json()
     transcript = transcript_data['transcript']
     video_id = transcript_data['video_id']
     service.add_transcript(db.session, video_id, transcript)
