@@ -13,11 +13,12 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
+    # SQLALCHEMY_ECHO = True
 
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_TOKEN_LOCATION = ['cookies']
     JWT_COOKIE_SECURE = False
+
 
 load_dotenv()
 

@@ -14,10 +14,11 @@ words_bp = Blueprint('words', __name__, url_prefix='/api/v1/words')
 
 @words_bp.post('')
 @jwt_required()
-def add_new_words():
+def add_all_new_words():
     """Add words to the database that are not already in it."""
-    words = request.get_json()['words']
-    new_words = service.add_new_words(db.session, words)
+    words = request.get_json()
+    user_id = int(get_jwt_identity())
+    new_words = service.add_all_new_words(db.session, user_id, words)
     return jsonify(new_words), 201
 
 
@@ -34,8 +35,8 @@ def update_word(word_id: int):
 @jwt_required()
 def add_learning_words():
     """Add words to the database that are not already in it."""
-    words = request.get_json()['words']
-    user_id = get_jwt_identity()
+    words = request.get_json()
+    user_id = int(get_jwt_identity())
     new_words = service.add_learning_words(db.session, user_id, words)
     return jsonify([word.id for word in new_words]), 201
 
@@ -53,8 +54,8 @@ def update_learning_word(learning_word_id: int):
 @jwt_required()
 def get_learning_word_ids():
     """Get the IDs of a list of learning words."""
-    words = request.get_json()['words']
-    user_id = get_jwt_identity()
+    words = request.get_json()
+    user_id = int(get_jwt_identity())
     learning_word_ids = service.get_learning_word_ids(db.session, user_id, words)
     return jsonify(learning_word_ids), 200
 
@@ -71,7 +72,7 @@ def get_learning_word_data(learning_word_id: int):
 @jwt_required()
 def get_word_proficiency_levels():
     """Get the proficiency levels of a list of words by their IDS."""
-    word_ids = request.get_json()['learningWordIds']
+    word_ids = request.get_json()
     proficiency_levels = service.get_proficiency_levels(db.session, word_ids)
     return jsonify(proficiency_levels), 200
 
@@ -94,10 +95,18 @@ def update_proficiency_levels():
 @jwt_required()
 def get_saved_words_in_list():
     """Get words from the list that the user has saved."""
-    word_ids = request.get_json()['wordIds']
-    user_id = get_jwt_identity()
+    word_ids = request.get_json()
+    user_id = int(get_jwt_identity())
     saved_word_ids = repository.get_saved_words_in_list(db.session, user_id, word_ids)
     return jsonify(saved_word_ids), 200
+
+
+@words_bp.patch(('/learning/saved/<int:learning_word_id>/toggle'))
+@jwt_required()
+def toggle_word_saved(learning_word_id: int):
+    """Toggle the saved status of a word"""
+    saved = service.toggle_word_saved(db.session, learning_word_id)
+    return jsonify(saved), 200
 
 
 # LANGAUGE PROCESSING
@@ -115,6 +124,7 @@ def segment_text():
 def get_new_pinyin():
     """Get the pinyin representation of a piece of text."""
     data: dict = request.get_json()
+    print(data)
     text = data.get('text')
     context = data.get('context')
     pinyin = service.get_new_pinyin(text, context)

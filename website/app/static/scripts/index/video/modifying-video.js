@@ -114,6 +114,8 @@ export async function onPlayerStateChange() {
         }
         if (videoTitle.textContent == '') {
             videoTitle.textContent = state.videoPlayer.videoTitle;
+            videoTitle.hidden = false;
+            console.log('a;sldfkjas;dlfkjas;ldfkjas;ldfkjas;ldkfjas;ldfkjas;ldfkjas;lfkjsa;ldfkj');
             updateVideoTitle(state.videoId, state.videoPlayer.videoTitle);
         }
     }

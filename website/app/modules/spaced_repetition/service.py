@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 from fsrs import Card
@@ -25,9 +25,9 @@ def add_flashcard(
 ):
     """Add a new flashcard to the database."""
     card = create_card_object_from_flashcard_data(**flashcard_data)
-    flashcard = Flashcard(
-        **convert_card_dict_iso_to_datetime(card.to_dict())
-    )
+    new_flashcard_data = convert_card_dict_iso_to_datetime(card.to_dict())
+    new_flashcard_data['learning_word_id'] = new_flashcard_data.pop('card_id')
+    flashcard = Flashcard(**new_flashcard_data)
     repository.add_flashcard(session, flashcard)
     session.commit()
     return card
@@ -43,24 +43,33 @@ def get_card_for_learning_word_id(session: Session, learning_word_id: int):
 def get_next_due_flashcard(session: Session, user_id: int, current_time_iso: str):
     """Get the next flashcard that is due for review for the user."""
     current_time = datetime.fromisoformat(current_time_iso)
+    print('next due', current_time.tzinfo)
     due_cards = repository.get_due_flashcards(session, user_id, current_time)
     if not due_cards:
         return 'None'
+    print('next due', due_cards[0].last_review.tzinfo if due_cards[0].last_review is not None else 'no info')
     return due_cards[0]
 
 
 def update_flashcard(session: Session, learning_word_id: int, flashcard_data: dict):
     """Update a flashcard with its new data."""
+    flashcard_data.pop('card_id')
+    flashcard_data = convert_card_dict_iso_to_datetime(flashcard_data)
+    print('aksdfjalsdfkjaskdfajsdlfkasjfd', flashcard_data['last_review'].tzinfo)
     repository.update_flashcard(session, learning_word_id, flashcard_data)
+    print('flashcard data', flashcard_data)
     session.commit()
     return flashcard_data
 
 
 def review_card(card: Card, rating: int, review_time: datetime):
     """Review a card by its rating."""
+    print(review_time.tzinfo, card.last_review.tzinfo if card.last_review is not None else 'no info')
     print('before', card.to_dict())
+    print(review_time, card.last_review)
     card, _ = scheduler.review_card(card, rating, review_time)
     print('after ', card.to_dict())
+    print(card.last_review.tzinfo if card.last_review is not None else 'no info')
     return card
 
 
@@ -70,6 +79,19 @@ def delete_flashcard(session: Session, learning_word_id: int):
     repository.delete_flashcard(session, flashcard)
     session.commit()
     return True
+
+
+def get_flashcard_review_intervals_by_id(
+    session: Session,
+    learning_word_id: int,
+    current_time_iso: str
+):
+    """Get the review intervals of a flashcard."""
+    current_time = datetime.fromisoformat(current_time_iso)
+    flashcard = repository.get_flashcard_by_id(session, learning_word_id)
+    print('crd', flashcard.due.tzinfo)
+    card = create_card_object_from_flashcard_data(**flashcard.to_dict())
+    return calculate_card_review_intervals(card, current_time)
 
 
 def calculate_card_review_intervals(card: Card, current_time: datetime):
@@ -88,16 +110,25 @@ def create_card_object_from_flashcard_data(**kwargs):
     fsrs_card_keys = card_dict.keys()
     card_items = {key: value for key, value in kwargs.items() if key in fsrs_card_keys}
     for key, value in card_items.items():
+        if key in ['due', 'last_review'] and value is not None:
+            new_datetime = datetime.fromisoformat(value)
+            if new_datetime.tzinfo is None:
+                new_datetime = new_datetime.replace(tzinfo=timezone.utc)
+            card_dict[key] = new_datetime.isoformat()
+            continue
         card_dict[key] = value
-    card_dict['card_id'] = card_dict.pop('learning_word_id')
+    card_dict['card_id'] = kwargs['learning_word_id']
     return Card.from_dict(card_dict)
 
 
 def convert_card_dict_iso_to_datetime(card_dict: dict):
     """Convert dates in a card dictionary from ISO to datetime."""
     for key, value in card_dict.items():
-        if key in ['due', 'last_review']:
-            card_dict[key] = datetime.fromisoformat(value)
+        if key in ['due', 'last_review'] and value is not None:
+            new_datetime = datetime.fromisoformat(value)
+            if new_datetime.tzinfo is None:
+                new_datetime = new_datetime.replace(tzinfo=timezone.utc)
+            card_dict[key] = new_datetime
     return card_dict
 
 
@@ -112,28 +143,29 @@ def convert_card_dict_datetime_to_iso(card_dict: dict):
 # SENTENCES
 
 
-def add_sentences_for_word(session: Session, sentences: list[str], user_word_id: int):
+def add_sentences_for_word(session: Session, sentences: list[str], learning_word_id: int):
     """Add a list of sentences for a specific word."""
     sentence_list = [
-        Sentence(text=sentence, user_word_id=user_word_id)
+        Sentence(text=sentence, learning_word_id=learning_word_id)
         for sentence in sentences
     ]
     repository.add_sentences(session, sentence_list)
     session.commit()
 
 
-def get_sentence(session: Session, user_word_id: int):
+def get_sentence_text(session: Session, user_id: int, learning_word_id: int):
     """Gets the first sentence for a word"""
-    sentence = repository.get_sentence_for_word(session, user_word_id)
+    sentence = repository.get_sentence_for_word(session, learning_word_id)
     print(sentence)
     if sentence is None:
-        generate_sentences_for_low_words(session)
-        return get_sentence(session, user_word_id)
-    return sentence
+        generate_sentences_for_low_words(session, user_id)
+        return get_sentence_text(session, user_id, learning_word_id)
+    return sentence.text
 
 
 def generate_sentences_for_low_words(
     session: Session,
+    user_id: int,
     num_sentences: int = 5,
     threshold: int = 5
 ):
@@ -150,13 +182,12 @@ def generate_sentences_for_low_words(
         threshold (int): The amount of sentences a word must have fewer
             than to generate more sentences for.
     """
-    low_words = words_service.get_low_words(session, threshold)
-    word_texts = [word.text for word in low_words]
+    low_words = words_service.get_low_words(session, user_id, threshold)
+    word_texts = [word.original_word.text for word in low_words]
     sentences = ai.generate_practice_sentences(word_texts, num_sentences)
     print(sentences)
     for word in low_words:
-        print(sentences[word.text], len(sentences[word.text]))
-        word_sentences = sentences[word.text]
+        word_sentences = sentences[word.original_word.text]
         add_sentences_for_word(session, word_sentences, word.id)
 
 
@@ -170,13 +201,13 @@ def delete_sentence_by_id(session: Session, id: int):
 def delete_sentence_by_text_and_word_id(
     session: Session,
     sentence_text: str,
-    user_word_id: int
+    learning_word_id: int
 ):
     """Delete a sentence from the database by its text and word ID."""
     sentence = repository.get_sentence_by_text_and_word_id(
         session,
         sentence_text,
-        user_word_id
+        learning_word_id
     )
     repository.delete_sentence(session, sentence)
     session.commit()

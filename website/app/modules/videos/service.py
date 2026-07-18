@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.models import Video, TranscriptLine
+from app.models import Video, UserVideo, TranscriptLine
 import app.modules.videos.repository as repository
 from config import transcript_generator, MANDARIN_AND_ENGLISH_LANGUAGE_CODES
 
@@ -14,6 +14,18 @@ def add_video(session: Session, **kwargs):
     repository.add_video(session, video)
     session.commit()
     return video
+
+
+def add_user_video(session: Session, user_id: int, video_id: str, **kwargs):
+    """Add a YouTube video for a user to the database."""
+    video_exists = check_video_exists(session, video_id)
+    if not video_exists:
+        video = Video(id=video_id, **kwargs)
+        repository.add_video(session, video)
+    user_video = UserVideo(user_id=user_id, video_id=video_id)
+    repository.add_user_video(session, user_video)
+    session.commit()
+    return user_video
 
 
 def get_video_title(session: Session, id: str):
@@ -30,15 +42,23 @@ def update_video_title(session: Session, id: str, title: str):
     return video
 
 
-def check_video_exists(session: Session, id: str):
+def check_video_exists(session: Session, video_id: str):
     """Check if a YouTube video exists in the database."""
-    video = repository.get_video_by_id(session, id)
+    video = repository.get_video_by_id(session, video_id)
+    return video is not None
+
+
+def check_video_exists_for_user(session: Session, user_id: int, video_id: str):
+    """Check if a YouTube video exists in the database."""
+    video = repository.get_user_video_by_ids(session, user_id, video_id)
     return video is not None
 
 
 def get_video_last_index(session: Session, user_id: int, video_id: str):
     """Get the last index for a video."""
     video = repository.get_user_video_by_ids(session, user_id, video_id)
+    if video is None:
+        video = add_user_video(session, user_id, video_id)
     return video.last_index
 
 
@@ -58,6 +78,33 @@ def update_video_last_index(
 # TRANSCRIPTS
 
 
+def get_transcript(session: Session, video_id: str):
+    """Get the transcript of a YouTube video.
+    
+    If the database already contains the transcript, this function gets
+    the transcript already in the database. Otherwise, it fetches the
+    transcript using YouTubeTranscriptAPI and adds it to the database.
+
+    If the video does not already exist in the database, this function
+    creates a new video with the given ID.
+    
+    Arguments:
+        session (sqlalchemy.orm.Session): The database session.
+        video_id (str): The ID of the YouTube video.
+    
+    Returns:
+        (list[dict]): The raw transcrpit lines sorted by timestamp.
+    """
+    video = repository.get_video_by_id(session, video_id)
+    if video is None:
+        video = add_video(session, id=video_id)
+    if len(video.transcript_lines) > 0:
+        return get_transcript_from_database(session, video_id), 200
+    transcript = get_transcript_from_youtube(video_id)
+    add_transcript(session, video_id, transcript)
+    return transcript, 201
+
+
 def add_transcript(session: Session, video_id: str, transcript: list[dict]):
     """Add a YouTube video's transcript lines to the database."""
     lines = [TranscriptLine(video_id=video_id, **line) for line in transcript]
@@ -69,7 +116,10 @@ def add_transcript(session: Session, video_id: str, transcript: list[dict]):
 def get_transcript_from_database(session: Session, video_id: int):
     """Get the transcript of a YouTube video from the database."""
     transcript_lines = repository.get_transcript_lines(session, video_id)
-    return sort_transcript_lines(transcript_lines)
+    return [
+        {'text': line.text, 'start': line.start, 'duration': line.duration}
+        for line in transcript_lines
+    ]
 
 
 def get_transcript_from_youtube(video_id: str):
@@ -80,15 +130,6 @@ def get_transcript_from_youtube(video_id: str):
             .fetch(video_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES)
             .to_raw_data()
         )
-    except:
-        return []
-
-
-def sort_transcript_lines(transcript_lines: list[TranscriptLine]):
-    """Sort a transcript by its timestamp in each line."""
-    transcript = [
-        {'text': line.text, 'start': line.start, 'duration': line.duration}
-        for line in transcript_lines
-    ]
-    transcript.sort(key=lambda line: line['start'])
-    return transcript
+    except Exception as e:
+        print(e)
+        return [{}]

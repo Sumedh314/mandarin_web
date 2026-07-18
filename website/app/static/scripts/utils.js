@@ -66,11 +66,11 @@ export function formatWordsToUpdate(wordElements, lastIndex, currentIndex) {
 
             if (wordIndex < currentIndex) {
                 if (wordIndex > lastIndex) {
-                    wordsToUpdate.previousWords.push(word.dataset.id);
+                    wordsToUpdate.previousWords.push(Number(word.dataset.id));
                 }
             }
             else if (wordIndex == currentIndex) {
-                wordsToUpdate.currentWord = word.dataset.id;
+                wordsToUpdate.currentWord = Number(word.dataset.id);
             }
             else {
                 break;
@@ -113,15 +113,4 @@ function textIsMandarin(text) {
         }
     }
     return true;
-}
-
-/**
- * Gets the current time in ISO format
- * 
- * @returns {string} Current time in ISO format
- */
-export function currentISOTime() {
-    const currentTime = new Date();
-    const isoTime = currentTime.toISOString();
-    return isoTime;
 }

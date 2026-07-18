@@ -1,4 +1,4 @@
-import { errorMessage, loginForm } from "../document-areas.js";
+import { errorMessage, loginForm, state } from "../document-areas.js";
 import { login } from "../api/routes.js";
 
 /**
@@ -19,7 +19,8 @@ async function loginUser(event) {
     console.log(response);
     
     if (Object.keys(response).includes('url')) {
-        window.location.href = response.url;
+        localStorage.setItem('username', userData.username);
+        window.location.replace(response.url);
     }
     else {
         errorMessage.textContent = response;

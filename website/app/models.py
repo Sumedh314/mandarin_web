@@ -43,7 +43,7 @@ class Word(db.Model):
 
 
 class WordForm(db.Model):
-    __tablename__ = "dictionary_word_forms"
+    __tablename__ = "word_forms"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     traditional: Mapped[str | None]
@@ -147,7 +147,7 @@ class Video(db.Model):
     id: Mapped[str] = mapped_column(String(11), primary_key=True)
     title: Mapped[str | None]
 
-    transcript: Mapped[list[TranscriptLine]] = relationship(back_populates="video")
+    transcript_lines: Mapped[list[TranscriptLine]] = relationship(back_populates="video")
 
     def __repr__(self):
         return f'Video ID: {self.id}, title: {self.title}'
@@ -188,7 +188,10 @@ class TranscriptLine(db.Model):
         index=True
     )
     
-    video: Mapped[Video] = relationship(back_populates="transcript")
+    video: Mapped[Video] = relationship(back_populates="transcript_lines")
+
+    def to_dict(self):
+        return {'text': self.text, }
 
     def __repr__(self):
         return f'Text: {self.text}, video_id: {self.video_id}, start: {self.start}'

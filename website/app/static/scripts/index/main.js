@@ -1,6 +1,6 @@
-import { addFlashcard, addTranscript, addVideo, calculateNewProficiencyLevels, checkIfVideoExists, checkIfWordSaved, deleteFlashcard, getNewTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "../api/routes.js";
-import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer, videoLocation, showPracticeAndTranslationsArea } from "../document-areas.js";
-import { selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
+import { addFlashcard, addTranscript, addVideo, checkIfVideoExists, checkIfVideoExistsForUser, deleteFlashcard, getNewTranscript, getTranscript, getTranscriptFromDatabase, getVideoLastIndex, toggleWordSaved, updateVideoLastIndex, updateWordProficiencyLevels } from "../api/routes.js";
+import { videoButton, linkEntry, state, practiceArea, textButton, textEntry, reviewWordsButton, ratingSelectionArea, practiceAreaContainer, videoLocation, showPracticeAndTranslationsArea, videoTitle } from "../document-areas.js";
+import { checkIfWordSaved, selectRating, showNextCard, showNumDueCards } from "./practice-words.js";
 import { addDoneButton, printText, printTranscript } from "./render-text/practice-area.js";
 import { printTextDefinitions, printWordDefinitions } from "./render-text/translations.js";
 import { updateLocationMarker, updateWordColors, updateWordUnderlines } from "./render-text/update-progress.js";
@@ -22,7 +22,7 @@ async function handleWordClick(event) {
 
     // If the user clicked a word
     else if (event.target.hasAttribute('data-word')) {
-        printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
+        await printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         // updateHskLevels();
         
@@ -34,8 +34,7 @@ async function handleWordClick(event) {
         if (state.lastIndex != currentIndex && state.clickedWord != event.target.dataset.word) {
             const wordElements = practiceArea.getElementsByTagName('span');
             const wordsToUpdate = formatWordsToUpdate(wordElements, state.lastIndex, currentIndex);
-            const proficiencyLevels = await calculateNewProficiencyLevels(wordsToUpdate.previousWords, wordsToUpdate.currentWord);
-            await updateWordProficiencyLevels(proficiencyLevels);
+            const proficiencyLevels = await updateWordProficiencyLevels(wordsToUpdate.previousWords, wordsToUpdate.currentWord);
             updateWordColors(proficiencyLevels);
         }
         
@@ -154,6 +153,8 @@ async function handleKeyPress(event) {
  */
 export async function loadVideoAndTranscript() {
     practiceAreaContainer.style.textAlign = 'left';
+    videoTitle.textContent = '';
+    practiceArea.textContent = '';
     showVideo();
     showPracticeAndTranslationsArea();
     
@@ -164,18 +165,8 @@ export async function loadVideoAndTranscript() {
     embedVideo(videoId);
     state.videoId = videoId;
     
-    let transcript = [];
-    if (await checkIfVideoExists(videoId)) {
-        transcript = await getTranscriptFromDatabase(videoId);
-        state.lastIndex = await getVideoLastIndex(videoId);
-    }
-    else {
-        await addVideo(videoId);
-        transcript = await getNewTranscript(videoId);
-        await addTranscript(videoId, transcript);
-        state.lastIndex = -1;
-    }
-
+    let transcript = await getTranscript(videoId);
+    state.lastIndex = await getVideoLastIndex(videoId);
     if (transcript.length != 0) {
         await printTranscript(transcript, true);
         updateLocationMarker();
@@ -205,6 +196,7 @@ async function printUserText() {
     state.lastIndex = -1;
 }
 
+document.getElementById('username').textContent = localStorage.getItem('username');
 showNumDueCards();
 
 // YouTube Iframe stuff

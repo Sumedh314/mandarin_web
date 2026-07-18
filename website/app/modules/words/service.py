@@ -1,24 +1,59 @@
-import json
-
 from sqlalchemy.orm import Session
 import jieba
 from pypinyin import lazy_pinyin, Style
 
-import app.modules.words.repository as repository
 from app.models import Word, WordForm, LearningWord
-from config import translator, WORDS_LIST_PATH, HSK_WORDS_PATH, HSK_LEVEL_HASHMAP_PATH
+import app.modules.words.repository as repository
+from config import translator
+
+
+def add_all_new_words(session: Session, user_id: int, word_texts: list[str]):
+    """Add new Word and LearningWord objects.
+    
+    First creates Word objects that do not already exist. Then, creates
+    new LearningWord objects from the same list that the user has not
+    seen before.
+    
+    Arguments:
+        session (sqlalchemy.orm.Session): The database session.
+        word_texts (list[str]): A list of words written in Mandarin.
+    
+    Returns:
+        dict[str, int]: A dictionary with keys being word texts and
+            values being the IDs of new learning words that were added.
+    """
+    add_new_words(session, set(word_texts))
+    existing_learning_word_texts = repository.get_existing_learning_word_texts_in_list(
+        session,
+        user_id,
+        word_texts
+    )
+    print(existing_learning_word_texts)
+    new_learning_word_texts = list(set(word_texts) - set(existing_learning_word_texts))
+    corresponding_word_ids = repository.get_word_ids_by_texts(
+        session,
+        new_learning_word_texts
+    )
+    print(new_learning_word_texts, corresponding_word_ids)
+    new_learning_words = add_learning_words(session, user_id, corresponding_word_ids)
+    return {word.original_word.text: word.id for word in new_learning_words}
 
 
 def add_new_words(session: Session, word_texts: list[str]):
     """Add words to the database that are not already in it."""
-    existing_word_texts = repository.get_existing_words_in_list(session, word_texts)
-    new_word_texts = [
-        word_text for word_text in word_texts
-        if word_text not in existing_word_texts
+    existing_word_texts = [
+        word.text for word in repository.get_existing_words_in_list(
+            session,
+            word_texts
+        )
     ]
+    print(f'existing words: {existing_word_texts}')
+    new_word_texts = list(set(word_texts) - set(existing_word_texts))
     new_words = [Word(text=word_text) for word_text in new_word_texts]
-    new_word_forms = [WordForm(word_id=word.id) for word in new_words]
+    print(f'new words: {new_word_texts}')
     repository.add_words(session, new_words)
+    session.flush()
+    new_word_forms = [WordForm(word_id=word.id) for word in new_words]
     repository.add_word_forms(session, new_word_forms)
     session.commit()
     return new_words
@@ -128,19 +163,19 @@ def calculate_new_proficiency_levels(
         dict[int, int]: A dictionary with the keys being the word
             IDs and the values being the new proficiency levels.
     """
-    previous_words_proficiency_levels_by_id = repository.get_proficiency_levels(
+    previous_words_proficiency_levels_by_id = get_proficiency_levels(
         session,
         previous_word_ids
     )
-    current_word_proficiency_level_by_id = repository.get_proficiency_levels(
+    current_word_proficiency_level_by_id = get_proficiency_levels(
         session,
-        current_word_id
-    )[0]
+        [current_word_id]
+    )
 
     new_proficiency_levels = {}
-    for id, proficiency in previous_words_proficiency_levels_by_id:
+    for id, proficiency in previous_words_proficiency_levels_by_id.items():
         if proficiency == 0:
-            proficiency = 4
+            proficiency = 3
         elif proficiency < 3:
             proficiency += 1
         new_proficiency_levels[id] = proficiency
@@ -176,6 +211,19 @@ def calculate_and_update_proficiency_levels(
     update_proficiency_levels(session, new_proficiency_levels)
     session.commit()
     return new_proficiency_levels
+
+
+def toggle_word_saved(session: Session, learning_word_id: int):
+    """Toggle the saved status of a word."""
+    learning_word = repository.get_learning_word_by_id(session, learning_word_id)
+    learning_word.saved = not learning_word.saved
+    session.commit()
+    return learning_word.saved
+
+
+def get_low_words(session: Session, user_id: int, threshold: int):
+    """Get words that have fewer than the given amount of sentences."""
+    return repository.get_low_words(session, user_id, threshold)
 
 
 # LANGUAGE PROCESSING

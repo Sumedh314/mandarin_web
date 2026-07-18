@@ -28,11 +28,21 @@ export async function login(data) {
  */
 export async function addWords(words) {
     // const words_data = Object.fromEntries(words.map(word => [word, {text: word}]));
-    const words_data = [];
-    for (const word of words) {
-        words_data.push({ text: word });
-    }
-    return await request('/words', 'POST', words_data);
+    // const words_data = [];
+    // for (const word of words) {
+    //     words_data.push({ text: word });
+    // }
+    return await request('/words', 'POST', words);
+}
+
+/**
+ * Get all the data of a word.
+ * 
+ * @param {number} wordId The ID of the word
+ * @returns {Promise<object>} The word's data
+ */
+export async function getWordData(wordId) {
+    return await request(`/words/learning/${wordId}`, 'GET');
 }
 
 /**
@@ -42,8 +52,7 @@ export async function addWords(words) {
  * @returns {Promise<object<string, number>>} The IDs of each word
  */
 export async function getWordIds(words) {
-    const args = words.map(word => `word=${encodeURIComponent(word)}`).join('&');
-    return await request(`/words/ids?${args}`, 'GET');
+    return await request(`/words/learning/ids/read`, 'POST', words);
 }
 
 /**
@@ -64,42 +73,21 @@ export async function updateWord(wordId, data) {
  * @returns {Promise<object<string, number>>} The proficiency levels of the given words
  */
 export async function getWordProficiencyLevels(wordIds) {
-    const args = wordIds.map(wordId => `id=${encodeURIComponent(wordId)}`).join('&');
-    return await request(`/words/proficiency-levels?${args}`, 'GET');
+    return await request(`/words/learning/proficiency-levels/read`, 'POST', wordIds);
 }
 
 /**
- * Updates the proficiency levels for a list of words
- *
- * @param {object} newProficiencyLevels New proficiency levels with keys being words and values being their new levels
- * @returns {Promise<string>} The success or error message
- */
-export async function updateWordProficiencyLevels(newProficiencyLevels) {
-    return await request('/words/proficiency-levels', 'PATCH', { proficiency_levels: newProficiencyLevels });
-}
-
-/**
- * Calculates the new proficiency levels for a list of words based on the user's interaction
+ * Updates the new proficiency levels for a list of words based on the user's interaction.
  * 
  * @param {Array} previousWordIds List of previous word IDs. Increments proficiency of these words, sets max proficiency if previously zero.
  * @param {number} currentWordId ID of the word the user clicked on. Decrements its proficiency by one if greater than one, increments if zero.
  * @returns {Promise<object<string, number>>} The new proficiency levels of the given words
  */
-export async function calculateNewProficiencyLevels(previousWordIds, currentWordId) {
-    return await request('/words/proficiency-levels/calculate', 'POST', {
-        previous_words: previousWordIds,
-        current_word: currentWordId
+export async function updateWordProficiencyLevels(previousWordIds, currentWordId) {
+    return await request('/words/learning/proficiency-levels', 'PATCH', {
+        previousWordIds: previousWordIds,
+        currentWordId: currentWordId
     });
-}
-
-/**
- * Gets whether or not a word is saved
- * 
- * @param {number} id The word ID to check
- * @returns {Promise<boolean>} A promise that resolves to true if the word is saved, false otherwise
- */
-export async function checkIfWordSaved(id) {
-    return await request(`/words/saved/${encodeURIComponent(id)}`, 'GET');
 }
 
 /**
@@ -108,17 +96,18 @@ export async function checkIfWordSaved(id) {
  * @param {number} wordId The word to toggle
  * @returns {Promise<string>} The success or error message
  */
-export async function toggleWordSaved(word) {
-    return await request(`/words/saved/${encodeURIComponent(word)}`, 'PATCH');
+export async function toggleWordSaved(wordId) {
+    return await request(`/words/learning/saved/${encodeURIComponent(wordId)}/toggle`, 'PATCH');
 }
 
 /**
- * Gets a list of every word that the user has saved
+ * Gets a list of words that the user has saved from the given list.
  * 
+ * @param {Array<int>} wordIds Word IDs to check
  * @returns {Promise<Array<str>>} Words that are saved
  */
-export async function getSavedWords() {
-    return await request('/words/saved', 'GET');
+export async function getSavedWords(wordIds) {
+    return await request('/words/learning/saved', 'POST', wordIds);
 }
 
 /**
@@ -128,7 +117,7 @@ export async function getSavedWords() {
  * @returns {Promise<Array<string>>} The segmented text
  */
 export async function segmentText(text) {
-    return await request(`/language/segment?text=${encodeURIComponent(text)}`, 'GET');
+    return await request('/words/segment', 'POST', { text: text });
 }
 
 /**
@@ -148,19 +137,8 @@ export async function getWordPinyin(wordId) {
  * @returns {Promise<string>} The pinyin representation of the text
  */
 export async function getTextPinyin(text) {
-    return await request(`/language/pinyin?text=${encodeURIComponent(text)}`, 'GET');
+    return await request(`/words/pinyin?text=${encodeURIComponent(text)}`, 'GET');
 }
-
-/**
- * Gets the translation of a word from the database
- * 
- * @param {number} wordId The ID of the word to translate
- * @returns {Promise<string>} The translation of the text
- */
-export async function translateWord(wordId) {
-    return await request(`/words/${wordId}/translation`, 'GET');
-}
-
 
 /**
  * Gets the translation of a piece of text
@@ -169,7 +147,7 @@ export async function translateWord(wordId) {
  * @returns {Promise<string>} The translation of the text
  */
 export async function translateText(text) {
-    return await request(`/language/translate?text=${encodeURIComponent(text)}`, 'GET');
+    return await request(`/words/translate?text=${encodeURIComponent(text)}`, 'GET');
 }
 
 /**
@@ -180,7 +158,7 @@ export async function translateText(text) {
  * @returns {Promise<string>} The success or error message
  */
 export async function addSentences(sentences, wordId) {
-    return await request('/sentences', 'POST', {
+    return await request('/srs/sentences', 'POST', {
         sentences: sentences,
         wordId: wordId
     });
@@ -193,7 +171,7 @@ export async function addSentences(sentences, wordId) {
  * @returns {Promise<string>} Sentence containing the given word
  */
 export async function getSentence(wordId) {
-    return await request(`/sentences/${wordId}`, 'GET');
+    return await request(`/srs/sentences/${wordId}`, 'GET');
 }
 
 /**
@@ -203,7 +181,7 @@ export async function getSentence(wordId) {
  * @param {string} wordId ID of word that the sentence contains
  */
 export async function deleteSentence(sentence, wordId) {
-    return await request(`/sentences?sentence=${encodeURIComponent(sentence)}&word=${encodeURIComponent(wordId)}`, 'DELETE');
+    return await request(`/srs/sentences?sentence=${encodeURIComponent(sentence)}&learningWordId=${encodeURIComponent(wordId)}`, 'DELETE');
 }
 
 /**
@@ -247,6 +225,16 @@ export async function checkIfVideoExists(videoId) {
 }
 
 /**
+ * Checks if a video exists in the database
+ * 
+ * @param {string} videoId The ID of the video
+ * @returns {Promise<boolean>} Whether or not the video exists
+ */
+export async function checkIfVideoExistsForUser(videoId) {
+    return await request(`/videos/check/user?video_id=${videoId}`, 'GET');
+}
+
+/**
  * Updates the last index of a video in the database
  * 
  * @param {string} videoId The ID of the video
@@ -274,7 +262,17 @@ export async function getVideoLastIndex(videoId) {
  * @returns {Promise<string>} The success or error message
  */
 export async function addTranscript(videoId, transcript) {
-    return await request('/transcripts', 'POST', { video_id: videoId, transcript: transcript });
+    return await request('/videos/transcripts', 'POST', { video_id: videoId, transcript: transcript });
+}
+
+/**
+ * Gets the transcript of a video
+ * 
+ * @param {string} videoId The ID of the video
+ * @returns {Promise<object<string, string | number>>} The transcript of the video
+ */
+export async function getTranscript(videoId) {
+    return await request(`/videos/transcripts/${videoId}`, 'GET');
 }
 
 /**
@@ -284,7 +282,7 @@ export async function addTranscript(videoId, transcript) {
  * @returns {Promise<object<string, string | number>>} The transcript of the video
  */
 export async function getTranscriptFromDatabase(videoId) {
-    return await request(`/transcripts/data/${videoId}`, 'GET');
+    return await request(`/videos/transcripts/data/${videoId}`, 'GET');
 }
 
 /**
@@ -294,7 +292,7 @@ export async function getTranscriptFromDatabase(videoId) {
  * @returns {Promise<object<string, string | number>>} The transcript of the video
  */
 export async function getNewTranscript(videoId) {
-    return await request(`/transcripts/new?video_id=${videoId}`, 'GET');
+    return await request(`/videos/transcripts/new?video_id=${videoId}`, 'GET');
 }
 
 /**
@@ -304,7 +302,7 @@ export async function getNewTranscript(videoId) {
  * @returns {Promise<string>} The success or error message
  */
 export async function addFlashcard(wordId) {
-    return await request('/flashcards', 'POST', { wordId: wordId, due: new Date().toISOString() });
+    return await request('/srs/flashcards', 'POST', { learning_word_id: wordId });
 }
 
 /**
@@ -314,27 +312,25 @@ export async function addFlashcard(wordId) {
  * @returns {Promise<object>} The flashcard data
  */
 export async function getFlashcard(wordId) {
-    return await request(`/flashcards/${encodeURIComponent(wordId)}`, 'GET');
+    return await request(`/srs/flashcards/${encodeURIComponent(wordId)}`, 'GET');
 }
 
 /**
  * Gets the next flashcard that is due for review
  * 
- * @param {string} currentTime The current time in ISO format
  * @returns {Promise<object>} The flashcard that is next due
  */
-export async function getNextDueFlashcard(currentTime) {
-    return await request(`/flashcards/next-due?current_time=${currentTime}`, 'GET');
+export async function getNextDueFlashcard() {
+    return await request(`/srs/flashcards/next-due`, 'GET');
 }
 
 /**
  * Gets all flashcards that are currently due for review
  * 
- * @param {string} currentTime The current time in ISO format
  * @returns {Promise<Array<object>>} The flashcards that are due
  */
-export async function getDueFlashcards(currentTime) {
-    return await request(`/flashcards/due?current_time=${currentTime}`, 'GET');
+export async function getDueFlashcards() {
+    return await request(`/srs/flashcards/due`, 'GET');
 }
 
 /**
@@ -345,7 +341,7 @@ export async function getDueFlashcards(currentTime) {
  * @returns {Promise<string>} The success or error message
  */
 export async function updateFlashcard(cardId, flashcardData) {
-    return await request(`/flashcards/${encodeURIComponent(cardId)}`, 'PATCH', flashcardData);
+    return await request(`/srs/flashcards/${encodeURIComponent(cardId)}`, 'PATCH', flashcardData);
 }
 
 /**
@@ -353,22 +349,20 @@ export async function updateFlashcard(cardId, flashcardData) {
  * 
  * @param {number} cardId The ID of the word that was reviewwed
  * @param {number} rating The rating from 1 to 4 that the user gave to the card
- * @param {string} reviewTime The date and time user reviewed the card as an ISO string
  * @returns {Promise<object>} The updated card
  */
-export async function reviewFlashcard(cardId, rating, reviewTime) {
-    return await request('/flashcards/review', 'POST', { word_id: cardId, rating: rating, review_time: reviewTime });
+export async function reviewFlashcard(cardId, rating) {
+    return await request('/srs/flashcards/review', 'PATCH', { learningWordId: cardId, rating: rating });
 }
 
 /**
  * Gets the review intervals for a flashcard
  * 
  * @param {number} cardId The ID of the word for which to get the review intervals
- * @param {string} reviewTime The time of the review as an ISO string
  * @returns {Promise<Array<number>>} The review intervals
  */
-export async function getReviewIntervals(cardId, reviewTime) {
-    return await request(`/flashcards/review-intervals/${encodeURIComponent(cardId)}?review_time=${reviewTime}`, 'GET');
+export async function getReviewIntervals(cardId) {
+    return await request(`/srs/flashcards/review-intervals/${encodeURIComponent(cardId)}`, 'GET');
 }
 
 /**
@@ -378,5 +372,5 @@ export async function getReviewIntervals(cardId, reviewTime) {
  * @returns {Promise<string>} The success or error message
  */
 export async function deleteFlashcard(cardId) {
-    return await request(`/flashcards/${encodeURIComponent(cardId)}`, 'DELETE');
+    return await request(`/srs/flashcards/${encodeURIComponent(cardId)}`, 'DELETE');
 }

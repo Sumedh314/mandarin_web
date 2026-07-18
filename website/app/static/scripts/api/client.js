@@ -19,7 +19,7 @@ export default async function request(endpoint, method, body, urlPrefix = '/api/
         options.body = bodyIsString ? body : JSON.stringify(body);
     }
 
-    const cookie = getCookie('csrf_access_token');
+    const cookie = await getCookie('csrf_access_token');
     if (cookie != null) {
         headers['X-CSRF-TOKEN'] = cookie;
     }

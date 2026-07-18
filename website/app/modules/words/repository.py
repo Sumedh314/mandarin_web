@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
-from app.models import Word, WordForm, LearningWord
+from app.models import Word, WordForm, LearningWord, Sentence
 
 
 def add_words(session: Session, words: list[Word]):
@@ -23,8 +23,14 @@ def add_word_forms(session: Session, word_forms: list[WordForm]):
 
 
 def get_word_by_id(session: Session, id: int):
-    """Get a learning word object by its ID."""
+    """Get a word object by its ID."""
     return session.get(Word, id)
+
+
+def get_word_ids_by_texts(session: Session, texts: list[str]):
+    """Get a list of words by their IDs."""
+    statement = select(Word.id).where(Word.text.in_(texts))
+    return session.scalars(statement).all()
 
 
 def get_learning_word_by_id(session: Session, id: int):
@@ -51,14 +57,14 @@ def get_existing_words_in_list(session: Session, words: list[str]):
     return session.scalars(statement).all()
 
 
-def get_existing_learning_words_in_list(
+def get_existing_learning_word_texts_in_list(
     session: Session,
     user_id: int,
     words: list[str]
 ):
     """Get learning words that the current user has seen."""
     statement = (
-        select(LearningWord)
+        select(Word.text)
         .join(LearningWord.original_word)
         .where(
             LearningWord.user_id == user_id,
@@ -102,7 +108,22 @@ def get_saved_words_in_list(
         .where(
             LearningWord.user_id == user_id,
             LearningWord.id.in_(learning_word_ids),
-            LearningWord.saved == True
+            LearningWord.saved
         )
+    )
+    return session.scalars(statement).all()
+
+
+def get_low_words(session: Session, user_id: int, threshold: int):
+    """Get words that have fewer sentences than the given threshold."""
+    statement = (
+        select(LearningWord)
+        .outerjoin(LearningWord.sentences)
+        .where(
+            LearningWord.user_id == user_id,
+            LearningWord.saved
+        )
+        .group_by(LearningWord.id)
+        .having(func.count(Sentence.id) < threshold)
     )
     return session.scalars(statement).all()

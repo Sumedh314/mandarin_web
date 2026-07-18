@@ -12,11 +12,13 @@ videos_bp = Blueprint('videos', __name__, url_prefix='/api/v1/videos')
 
 
 @videos_bp.post('')
-def add_video():
+@jwt_required()
+def add_user_video():
     """Add a new video to the database."""
     video_data = request.get_json()
     video_id = video_data['video_id']
-    service.add_video(db.session, video_id)
+    user_id = int(get_jwt_identity())
+    service.add_user_video(db.session, user_id, video_id)
     return jsonify('success'), 201
 
 
@@ -36,6 +38,7 @@ def update_video_title(video_id: str):
 
 
 @videos_bp.get('/check')
+@jwt_required()
 def check_video_exists():
     """Check if a video exists in the database."""
     video_id = request.args.get('video_id')
@@ -46,11 +49,21 @@ def check_video_exists():
 # USER VIDEO PROGRESS
 
 
+@videos_bp.get('/check/user')
+@jwt_required()
+def check_video_exists_for_user():
+    """Check if a video exists in the database."""
+    video_id = request.args.get('video_id')
+    user_id = int(get_jwt_identity())
+    video_exists = service.check_video_exists_for_user(db.session, user_id, video_id)
+    return jsonify(video_exists), 200
+
+
 @videos_bp.get('/<video_id>/last-index')
 @jwt_required()
 def get_video_last_index(video_id: str):
     """Get the last index for a video."""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     last_index = service.get_video_last_index(db.session, user_id, video_id)
     return jsonify(last_index), 200
 
@@ -59,7 +72,7 @@ def get_video_last_index(video_id: str):
 @jwt_required()
 def update_video_last_index(video_id: str):
     """Update the last index of a video."""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     last_index = request.get_json()['last_index']
     service.update_video_last_index(db.session, user_id, video_id, last_index)
     return jsonify('success'), 200
@@ -68,7 +81,7 @@ def update_video_last_index(video_id: str):
 # TRANSCRIPTS
 
 
-@videos_bp.post('')
+@videos_bp.post('/transcripts')
 def add_transcript():
     """Add a transcript of a YouTube video to the database."""
     transcript_data = request.get_json()
@@ -78,7 +91,14 @@ def add_transcript():
     return jsonify('success'), 200
 
 
-@videos_bp.get('/new')
+@videos_bp.get('/transcripts/<video_id>')
+def get_transcript(video_id: str):
+    """Get the transcript of a YouTube video."""
+    transcript, status_code = service.get_transcript(db.session, video_id)
+    return jsonify(transcript), status_code
+
+
+@videos_bp.get('/transcripts/new')
 def get_new_transcript():
     """Get the transcript of a new YouTube video."""
     video_id = request.args.get('video_id')
@@ -87,7 +107,7 @@ def get_new_transcript():
     return jsonify(transcript), 200
 
 
-@videos_bp.get('/data/<video_id>')
+@videos_bp.get('/transcripts/data/<video_id>')
 def get_transcript_from_database(video_id: str):
     """Get the full transcript of a YouTube video from the database."""
     transcript = service.get_transcript_from_database(db.session, video_id)

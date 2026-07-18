@@ -1,5 +1,5 @@
 import { translationArea } from "../../document-areas.js";
-import { getTextPinyin, getWordPinyin, segmentText, translateText, translateWord, updateWord } from "../../api/routes.js";
+import { getTextPinyin, getWordData, getWordPinyin, segmentText, translateText, updateWord } from "../../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
 
@@ -11,18 +11,25 @@ const LOADING_SIGN = 'Loading...';
  */
 export async function printWordDefinitions(wordId, text) {
     translationArea.innerHTML = LOADING_SIGN;
-    let translation = await translateWord(wordId);
-    if (translation == '') {
-        translation = await translateText(text);
-        await updateWord(wordId, { translation: translation });
+    const wordData = await getWordData(wordId);
+    console.log(wordData);
+    let translations = [];
+    for (const form of wordData.forms) {
+        translations.push(form.translations);
     }
-    let pinyin = await getWordPinyin(wordId);
-    if (pinyin == '') {
-        pinyin = await getTextPinyin(text);
-        await updateWord(wordId, { pinyin: pinyin });
-    }
+    console.log(translations);
+    
+    // if (translation == '') {
+    //     translation = await translateText(text);
+    //     await updateWord(wordId, { translation: translation });
+    // }
+    // let pinyin = await getWordPinyin(wordId);
+    // if (pinyin == '') {
+    //     pinyin = await getTextPinyin(text);
+    //     await updateWord(wordId, { pinyin: pinyin });
+    // }
 
-    translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+    // translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }
 
 /**

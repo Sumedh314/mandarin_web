@@ -1,16 +1,19 @@
-import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewIntervals, getSentence, reviewFlashcard, updateFlashcard } from "../api/routes.js";
-import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer } from "../document-areas.js";
+import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewIntervals, getSentence, getWordData, reviewFlashcard, updateFlashcard } from "../api/routes.js";
+import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer, showPracticeAndTranslationsArea } from "../document-areas.js";
 import { clearPracticeAreaContainer, printText } from "./render-text/practice-area.js";
-import { currentISOTime, formatSeconds } from "../utils.js";
+import { formatSeconds } from "../utils.js";
 
 /**
  * Allows user to review the next flashcard
  */
 export async function showNextCard() {
+    showPracticeAndTranslationsArea();
     practiceAreaContainer.style.textAlign = 'center';
     state.lastIndex = -1;
 
-    const card = await getNextDueFlashcard(new Date().toISOString());
+    console.log('asdfj;asldkfjas;ldkfjas;ldkfjads;lkfjasd;lfk')
+    const card = await getNextDueFlashcard();
+    console.log(card);
     
     if (card == 'None') {
         printText('No new flashcards', true);
@@ -20,15 +23,16 @@ export async function showNextCard() {
 
     ratingSelectionArea.style.display = 'flex';
 
-    state.flashcardWordId = card.word_id;
+    state.flashcardWordId = card.learning_word_id;
     console.log(card);
 
     await printText('Generating sentence...');
-    const sentence = await getSentence(card.word_id);
+    const sentence = await getSentence(state.flashcardWordId);
+
     await printText(sentence);
     state.flashcardSentence = sentence;
     
-    const reviewTimes = await getReviewIntervals(card.word_id, currentISOTime());
+    const reviewTimes = await getReviewIntervals(state.flashcardWordId);
     const ratingTimeAreas = [ratingAgainTime, ratingHardTime, ratingGoodTime, ratingEasyTime];
 
     for (let index = 0; index < ratingTimeAreas.length; index++) {
@@ -43,20 +47,19 @@ export async function showNextCard() {
  */
 export async function selectRating(event) {
     console.log('as;ldkfjas;l');
-    const reviewTime = currentISOTime();
     let newCard = null;
     switch (event.target.id) {
         case 'rating-again-button':
-            newCard = await reviewFlashcard(state.flashcardWordId, 1, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 1);
             break;
         case 'rating-hard-button':
-            newCard = await reviewFlashcard(state.flashcardWordId, 2, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 2);
             break;
         case 'rating-good-button':
-            newCard = await reviewFlashcard(state.flashcardWordId, 3, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 3);
             break;
         case 'rating-easy-button':
-            newCard = await reviewFlashcard(state.flashcardWordId, 4, reviewTime);
+            newCard = await reviewFlashcard(state.flashcardWordId, 4);
             break;
         case 'exit-review-button':
             ratingSelectionArea.style.display = 'none';
@@ -68,7 +71,6 @@ export async function selectRating(event) {
     }
 
     await deleteSentence(state.flashcardSentence, state.flashcardWordId);
-    await updateFlashcard(state.flashcardWordId, newCard);
     await showNumDueCards();
     showNextCard();
 }
@@ -77,10 +79,21 @@ export async function selectRating(event) {
  * Show the number of cards the user can practice that are due currently
  */
 export async function showNumDueCards() {
-    const currentTime = new Date().toISOString();
-    const dueWords = await getDueFlashcards(currentTime);
+    const dueWords = await getDueFlashcards();
     console.log(dueWords);
     const numDueCards = dueWords.length;
 
     numDueWordsCounter.textContent = numDueCards;
+}
+
+/**
+ * Check if the user has saved a word or not.
+ * 
+ * @param {number} wordId The ID of the word
+ * @returns {boolean} Whether or not the word is saved.
+ */
+export async function checkIfWordSaved(wordId) {
+    const data = await getWordData(wordId);
+    console.log(data);
+    return data.saved;
 }

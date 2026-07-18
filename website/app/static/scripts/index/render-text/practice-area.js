@@ -1,4 +1,4 @@
-import { addWords, checkIfWordSaved, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../../api/routes.js";
+import { addWords, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../../api/routes.js";
 import { state, practiceArea, practiceAreaContainer } from "../../document-areas.js";
 import { filterText, formatTimestamp } from "../../utils.js";
 
@@ -72,21 +72,21 @@ export async function printText(text, clearArea = true, wordIndex = 0, addNewWor
         await addWords(Array.from(new Set(filteredText)));
     }
     
-    const wordIds = await getWordIds(filteredText);
-    console.log(wordIds);
+    const wordIdsByText = await getWordIds(filteredText);
+    console.log(wordIdsByText);
     
-    const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIds));
+    const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIdsByText));
     console.log(proficiencyLevels);
     
-    const savedWords = await getSavedWords();
+    const savedWords = await getSavedWords(Object.values(wordIdsByText));
     
     for (const text of segmentedText) {
         let elementToAdd = null;
 
         if (filteredText.includes(text)) {
             wordIndex++;
-            const wordId = wordIds[text];
-            const wordElement = await createWordElement(text, wordId, wordIndex, proficiencyLevels[wordId], savedWords.includes(text));
+            const wordId = wordIdsByText[text];
+            const wordElement = await createWordElement(text, wordId, wordIndex, proficiencyLevels[wordId], savedWords.includes(wordId));
             elementToAdd = wordElement;
         }
         else if (text == '\n') {

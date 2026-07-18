@@ -13,6 +13,12 @@ def add_video(session: Session, video: Video):
     return video
 
 
+def add_user_video(session: Session, user_video: UserVideo):
+    """Add a user video to the database."""
+    session.add(user_video)
+    return user_video
+
+
 def get_video_by_id(session: Session, id: str):
     """Get a video from the database based on its ID."""
     return session.get(Video, id)
@@ -38,5 +44,9 @@ def add_transcript_lines(session: Session, transcript_lines: list[TranscriptLine
 
 def get_transcript_lines(session: Session, video_id: str):
     """Get all transcript lines associated with a video."""
-    statement = select(TranscriptLine).where(TranscriptLine.video_id == video_id)
+    statement = (
+        select(TranscriptLine)
+        .where(TranscriptLine.video_id == video_id)
+        .order_by(TranscriptLine.start)
+    )
     return session.scalars(statement).all()

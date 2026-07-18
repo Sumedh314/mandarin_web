@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -16,6 +16,7 @@ srs_bp = Blueprint('srs', __name__, url_prefix='/api/v1/srs')
 def add_flashcard():
     """Add a flashcard for the FSRS algorithm."""
     flashcard_data = request.get_json()
+    print(flashcard_data)
     service.add_flashcard(db.session, flashcard_data)
     return jsonify('success'), 201
 
@@ -32,8 +33,8 @@ def get_card(learning_word_id: int):
 @jwt_required()
 def get_next_due_flashcard():
     """Get the next flashcard that is due for review."""
-    current_time = request.args.get('current_time')
-    user_id = get_jwt_identity()
+    current_time = datetime.now(timezone.utc).isoformat()
+    user_id = int(get_jwt_identity())
     flashcard = service.get_next_due_flashcard(db.session, user_id, current_time)
     if flashcard == 'None':
         return jsonify('None'), 200
@@ -44,8 +45,8 @@ def get_next_due_flashcard():
 @jwt_required()
 def get_due_flashcards():
     """Get all flashcards that are currently due for review."""
-    current_time = request.args.get('current_time')
-    user_id = get_jwt_identity()
+    current_time = datetime.now(timezone.utc).isoformat()
+    user_id = int(get_jwt_identity())
     flashcard_list = repository.get_due_flashcards(db.session, user_id, current_time)
     return jsonify([flashcard.to_dict() for flashcard in flashcard_list]), 200
 
@@ -59,17 +60,19 @@ def update_flashcard(learning_word_id: int):
     return jsonify('success'), 200
 
 
-@srs_bp.post('/flashcards/review')
+@srs_bp.patch('/flashcards/review')
 @jwt_required()
 def review_flashcard():
     """Review a flashcard based on the user's rating."""
     review_data = request.get_json()
     learning_word_id = review_data['learningWordId']
     rating = review_data['rating']
-    review_time = datetime.fromisoformat(review_data['reviewTime'])
+    review_time = datetime.now(timezone.utc)
     
     card = service.get_card_for_learning_word_id(db.session, learning_word_id)
+    print(card.to_dict())
     card = service.review_card(card, rating, review_time)
+    service.update_flashcard(db.session, learning_word_id, card.to_dict())
     return jsonify(card.to_dict()), 200
 
 
@@ -77,11 +80,13 @@ def review_flashcard():
 @jwt_required()
 def get_review_intervals(learning_word_id: int):
     """Get the review intervals for a flashcard."""
-    review_time = datetime.fromisoformat(request.args.get('review_time'))
-
-    card = repository.get_flashcard_by_id(db.session, learning_word_id)
+    review_time = datetime.now(timezone.utc).isoformat()
     print(learning_word_id)
-    intervals = service.calculate_card_review_intervals(card, review_time)
+    intervals = service.get_flashcard_review_intervals_by_id(
+        db.session,
+        learning_word_id,
+        review_time
+    )
     return jsonify(intervals), 200
 
 
@@ -112,7 +117,8 @@ def add_sentences():
 @jwt_required()
 def get_sentence(learning_word_id: int):
     """Get one sentence for the desired word."""
-    sentence = service.get_sentence(db.session, learning_word_id)
+    user_id = int(get_jwt_identity())
+    sentence = service.get_sentence_text(db.session, user_id, learning_word_id)
     return jsonify(sentence), 200
 
 
