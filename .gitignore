@@ -1,7 +1,7 @@
 env/
 .env
 
-/node_modules
+chrome_extension/node_modules
 
 website/app/user_progress
 website/instance
