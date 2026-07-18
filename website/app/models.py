@@ -154,7 +154,7 @@ class Video(db.Model):
 
 
 class UserVideo(db.Model):
-    __tablename__ = "user_video"
+    __tablename__ = "user_videos"
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey(User.id),

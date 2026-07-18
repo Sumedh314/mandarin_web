@@ -1,4 +1,4 @@
-import { translationArea } from "../../document-areas.js";
+import { mainWordInfo, translationArea } from "../../document-areas.js";
 import { getTextPinyin, getWordData, getWordPinyin, segmentText, translateText, updateWord } from "../../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
@@ -10,26 +10,21 @@ const LOADING_SIGN = 'Loading...';
  * @param {string} text The text of the word
  */
 export async function printWordDefinitions(wordId, text) {
-    translationArea.innerHTML = LOADING_SIGN;
+    mainWordInfo.textContent = LOADING_SIGN;
     const wordData = await getWordData(wordId);
     console.log(wordData);
-    let translations = [];
-    for (const form of wordData.forms) {
-        translations.push(form.translations);
+    let allForms = {};
+    for (const key of Object.keys(wordData.forms[0])) {
+        allForms[key] = new Set();
     }
-    console.log(translations);
-    
-    // if (translation == '') {
-    //     translation = await translateText(text);
-    //     await updateWord(wordId, { translation: translation });
-    // }
-    // let pinyin = await getWordPinyin(wordId);
-    // if (pinyin == '') {
-    //     pinyin = await getTextPinyin(text);
-    //     await updateWord(wordId, { pinyin: pinyin });
-    // }
-
-    // translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+    console.log(allForms);
+    for (const form of wordData.forms) {
+        for (const key of Object.keys(form)) {
+            allForms[key].add(form[key]);
+        }
+    }
+    console.log(allForms);
+    mainWordInfo.innerHTML = `${wordData.text}<br>${[...allForms.pinyin].join('; ')}<br>${[...allForms.translations].join('; ')}`
 }
 
 /**

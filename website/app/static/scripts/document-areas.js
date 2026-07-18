@@ -44,8 +44,13 @@ export const wordMenu = document.getElementById('word-menu');
 export const tooltipTranslation = document.getElementById('word-tooltip-translation');
 
 export const videoContainer = document.getElementById('video-container');
-export const videoTitle = document.getElementById('video-title');
 export const videoLocation = document.getElementById('video-location');
+
+export const videoTitle = document.getElementById('video-title');
+    
+export const mainWordInfo = document.getElementById('main-word-info');
+export const supplementalWordInfo = document.getElementById('supplemental-word-info');
+export const saveWordButton = document.getElementById('save-word-button');
 
 // PRACTICE AREA
 export const practiceAreaContainer = document.getElementById('practice-area-container');
