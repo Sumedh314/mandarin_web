@@ -22,7 +22,7 @@
     <div id="text-input-container" class="input-container">
         <p>Text: </p>
         <div id="text" class="input-form">
-            <input id="text-entry" type="text">
+            <input id="text-entry" type="text" autofocus>
             <button id="text-button" type="button">→</button>
         </div>
     </div>
@@ -37,7 +37,7 @@
     
     <div id="input-buttons">
         <button id="translate-transcript-button" type="button" hidden>Translate Transcript</button>
-        <button id="generate-story-button" type="button">Generate Story</button>
+        <button id="generate-story-button" type="button" hidden>Generate Story</button>
         <button id="review-words-button" type="button">Review words <span id="num-due-cards" class="notification"></span></button>
     </div>
 </div>
@@ -47,11 +47,11 @@
         <div id="video-location"></div>
     </div>
 
-    <div id="translation-area-container">
+    <div id="translation-area-container" hidden>
         <p id="video-title" hidden></p>
         <div id="translation-area">
             <div id="main-word-info">
-                <button id="save-word-button"></button>
+                <button id="save-word-button" hidden></button>
             </div>
             <div id="supplemental-word-info"></div>
         </div>
@@ -91,5 +91,5 @@
     </div>
 </div>
 
-<script src="{{url_for('static', filename='scripts/index/main.js')}}" type="module"></script>
+<script src="{{url_for('static', filename='scripts/learn/main.js')}}" type="module"></script>
 {% endblock %}

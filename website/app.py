@@ -11,7 +11,6 @@ app = create_app()
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    
 
         # with open(WORDS_LIST_PATH, 'r') as file:
         #     hsk_words = json.load(file)
@@ -80,7 +79,7 @@ if __name__ == '__main__':
         # new_words = []
         # new_word_forms = []
         
-        # id = 0
+        # id = 1
         # for word in hsk_words:
         #     old_level = None
         #     new_level = None
@@ -119,6 +118,7 @@ if __name__ == '__main__':
         #     # print(new_word)
         #     # print(new_word_form)
         #     # break
+        # print(len([word.id for word in new_words]), len(set([word.id for word in new_words])))
         # db.session.add_all(new_words)
         # db.session.add_all(new_word_forms)
         # db.session.commit()

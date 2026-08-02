@@ -22,7 +22,6 @@ async function handleWordClick(event) {
 
     // If the user clicked a word
     else if (event.target.hasAttribute('data-word')) {
-        await printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
         let currentIndex = parseInt(event.target.dataset.index, 10);
         // updateHskLevels();
         
@@ -49,6 +48,8 @@ async function handleWordClick(event) {
 
         state.clickedWord = event.target.dataset.word;
         state.clickedWordElement = event.target;
+        
+        await printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
     }
 
     // If the user clicked a timestamp, move the video to that timestamp

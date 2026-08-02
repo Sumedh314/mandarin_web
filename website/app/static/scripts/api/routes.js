@@ -134,10 +134,11 @@ export async function getWordPinyin(wordId) {
  * Gets the pinyin representation of a piece of Mandarin text
  * 
  * @param {string} text The text to convert to pinyin
+ * @param {string} context Optional text surrounding target text
  * @returns {Promise<string>} The pinyin representation of the text
  */
-export async function getTextPinyin(text) {
-    return await request(`/words/pinyin?text=${encodeURIComponent(text)}`, 'GET');
+export async function getTextPinyin(text, context) {
+    return await request(`/words/pinyin`, 'POST', { text: text, context: context });
 }
 
 /**
@@ -147,7 +148,7 @@ export async function getTextPinyin(text) {
  * @returns {Promise<string>} The translation of the text
  */
 export async function translateText(text) {
-    return await request(`/words/translate?text=${encodeURIComponent(text)}`, 'GET');
+    return await request(`/words/translate`, 'POST', { text: text });
 }
 
 /**

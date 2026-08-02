@@ -1,6 +1,7 @@
 export function showPracticeAndTranslationsArea() {
     practiceAreaContainer.style.display = 'block';
     translationAreaContainer.style.display = 'block';
+    // translationArea.style.display = 'flex';
 }
 
 export const state = {

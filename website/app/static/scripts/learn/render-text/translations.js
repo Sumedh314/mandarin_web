@@ -1,4 +1,4 @@
-import { mainWordInfo, translationArea } from "../../document-areas.js";
+import { mainWordInfo, supplementalWordInfo, translationArea } from "../../document-areas.js";
 import { getTextPinyin, getWordData, getWordPinyin, segmentText, translateText, updateWord } from "../../api/routes.js";
 
 const LOADING_SIGN = 'Loading...';
@@ -12,19 +12,31 @@ const LOADING_SIGN = 'Loading...';
 export async function printWordDefinitions(wordId, text) {
     mainWordInfo.textContent = LOADING_SIGN;
     const wordData = await getWordData(wordId);
-    console.log(wordData);
-    let allForms = {};
-    for (const key of Object.keys(wordData.forms[0])) {
-        allForms[key] = new Set();
-    }
-    console.log(allForms);
-    for (const form of wordData.forms) {
-        for (const key of Object.keys(form)) {
-            allForms[key].add(form[key]);
+    if (wordData.hsk_old_level !== null && wordData.hsk_new_level !== null) {
+        console.log(wordData);
+        let allForms = {};
+        for (let key in wordData.forms[0]) {
+            allForms[key] = new Set();
         }
+        console.log(allForms);
+        for (const form of wordData.forms) {
+            for (let key in form) {
+                allForms[key].add(form[key]);
+            }
+        }
+        console.log(allForms);
+        mainWordInfo.innerHTML = `${text}<br>${[...allForms.pinyin].join('; ')}<br>${[...allForms.translations].join('; ')}`;
+
+        supplementalWordInfo.innerHTML = `Proficiency: ${wordData.proficiency}<br>HSK 2.0 level: ${wordData.hsk_old_level}<br>HSK 3.0 level: ${wordData.hsk_new_level}<br>
+                                        Radical: ${wordData.radical}<br>`;
     }
-    console.log(allForms);
-    mainWordInfo.innerHTML = `${wordData.text}<br>${[...allForms.pinyin].join('; ')}<br>${[...allForms.translations].join('; ')}`
+    else {
+        const pinyin = await getTextPinyin(text);
+        const translation = await translateText(text);
+
+        mainWordInfo.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+        supplementalWordInfo.innerHTML = `Proficiency: ${wordData.proficiency}<br>Word not in HSK standard`;
+    }
 }
 
 /**

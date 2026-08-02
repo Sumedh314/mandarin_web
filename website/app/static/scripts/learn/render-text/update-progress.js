@@ -57,7 +57,7 @@ export function updateWordUnderlines(wordToUpdate) {
 export async function updateHskLevels() {
     const hskPercentages = await fetchHskPercentages();
 
-    for (const level of Object.keys(hskPercentages)) {
+    for (let level in hskPercentages) {
         document.getElementById(level).innerHTML = hskPercentages[level];
     }
 }

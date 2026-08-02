@@ -231,7 +231,8 @@ def get_low_words(session: Session, user_id: int, threshold: int):
 
 def segment_text(text: str):
     """Segment Chinese text using the Jieba library."""
-    return jieba.lcut(text)
+    return [word for word in jieba.cut(text, HMM=False)]
+    # return jieba.lcut(text)
 
 
 def get_new_pinyin(text: str, context: str | None = None) -> str:
