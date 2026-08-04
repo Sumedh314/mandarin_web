@@ -45,7 +45,7 @@ def get_next_due_flashcard():
 @jwt_required()
 def get_due_flashcards():
     """Get all flashcards that are currently due for review."""
-    current_time = datetime.now(timezone.utc).isoformat()
+    current_time = datetime.now(timezone.utc)
     user_id = int(get_jwt_identity())
     flashcard_list = repository.get_due_flashcards(db.session, user_id, current_time)
     return jsonify([flashcard.to_dict() for flashcard in flashcard_list]), 200
@@ -127,6 +127,6 @@ def get_sentence(learning_word_id: int):
 def delete_sentence():
     """Delete a practice sentence for the specified word."""
     sentence = request.args.get('sentence')
-    learning_word_id = request.args.get('learningWordId')
+    learning_word_id = int(request.args.get('learningWordId'))
     service.delete_sentence_by_text_and_word_id(db.session, sentence, learning_word_id)
     return jsonify('success'), 200

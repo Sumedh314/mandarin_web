@@ -5,13 +5,12 @@ from fsrs import Scheduler
 from deep_translator import GoogleTranslator
 from youtube_transcript_api import YouTubeTranscriptApi
 from google import genai
-from dotenv import load_dotenv
 
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://mandarin_qk5p_user:4IkK3c1JHC9Njb8TYnIpj52BxYfcchEF@dpg-d9p5mc3m8hqs73acecf0-a/mandarin_qk5p'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 
@@ -20,12 +19,9 @@ class Config:
     JWT_COOKIE_SECURE = False
 
 
-load_dotenv()
-
 scheduler = Scheduler()
 translator = GoogleTranslator()
 transcript_generator = YouTubeTranscriptApi()
-gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
 
 MANDARIN_LANGAUGE_CODES = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']
 MANDARIN_AND_ENGLISH_LANGUAGE_CODES = MANDARIN_LANGAUGE_CODES + ['en']
