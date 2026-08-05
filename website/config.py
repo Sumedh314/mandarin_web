@@ -11,6 +11,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
     SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://mandarin_qk5p_user:4IkK3c1JHC9Njb8TYnIpj52BxYfcchEF@dpg-d9p5mc3m8hqs73acecf0-a/mandarin_qk5p'
+    # SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://mandarin_qk5p_user:4IkK3c1JHC9Njb8TYnIpj52BxYfcchEF@dpg-d9p5mc3m8hqs73acecf0-a.ohio-postgres.render.com/mandarin_qk5p'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
 

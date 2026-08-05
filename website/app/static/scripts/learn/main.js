@@ -14,14 +14,17 @@ import { videoReady } from "./video/video-states.js";
  * @param {MouseEvent} event The place where the user clicked
  */
 async function handleWordClick(event) {
+    console.log('clicked');
 
     // If the user highlighted something, print its translation and pinyin
     if (window.getSelection().toString() != '') {
+        console.log('highlighted');
         await printTextDefinitions(window.getSelection().toString());
     }
 
     // If the user clicked a word
     else if (event.target.hasAttribute('data-word')) {
+        console.log('clicked word');
         let currentIndex = parseInt(event.target.dataset.index, 10);
         // updateHskLevels();
         
@@ -49,7 +52,9 @@ async function handleWordClick(event) {
         state.clickedWord = event.target.dataset.word;
         state.clickedWordElement = event.target;
         
+        console.log('printing definitions', event.target.dataset.id, event.target.dataset.word);
         await printWordDefinitions(event.target.dataset.id, event.target.dataset.word);
+        console.log('done printing');
     }
 
     // If the user clicked a timestamp, move the video to that timestamp

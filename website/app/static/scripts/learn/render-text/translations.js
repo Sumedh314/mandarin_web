@@ -31,6 +31,7 @@ export async function printWordDefinitions(wordId, text) {
                                         Radical: ${wordData.radical}<br>`;
     }
     else {
+        console.log('printing new word')
         const pinyin = await getTextPinyin(text);
         const translation = await translateText(text);
 
@@ -45,12 +46,12 @@ export async function printWordDefinitions(wordId, text) {
  * @param {string} text Text to translate
  */
 export async function printTextDefinitions(text) {
-    translationArea.innerHTML = LOADING_SIGN;
+    mainWordInfo.innerHTML = LOADING_SIGN;
     const translation = await translateText(text);
     const segmentedText = await segmentText(text);
     const pinyin = await getTextPinyin(segmentedText.join(' '));
 
-    translationArea.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
+    mainWordInfo.innerHTML = `${text}<br>${pinyin}<br>${translation}`;
 }
 
 /**
