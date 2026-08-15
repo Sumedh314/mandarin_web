@@ -4,10 +4,8 @@ env/
 chrome_extension/node_modules
 
 website/app/user_progress
-website/instance
-website/__pycache__
-website/app/__pycache__
 
+raspberry_pi.py
 tests.py
 
 __pycache__/

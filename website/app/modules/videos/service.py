@@ -1,3 +1,6 @@
+import os
+
+import requests
 from sqlalchemy.orm import Session
 
 from app.models import Video, UserVideo, TranscriptLine
@@ -124,12 +127,17 @@ def get_transcript_from_database(session: Session, video_id: int):
 
 def get_transcript_from_youtube(video_id: str):
     """Get the transcript of a new YouTube video that has captions."""
-    try:
-        return (
-            transcript_generator
-            .fetch(video_id, MANDARIN_AND_ENGLISH_LANGUAGE_CODES)
-            .to_raw_data()
+    password = os.environ.get('RASPBERRY_PI_PASSWORD')
+    formatted_language_codes = '&'.join(
+        ['code=' + code for code in MANDARIN_AND_ENGLISH_LANGUAGE_CODES]
+    )
+    return (
+        requests.post(
+            (
+                f'https://sumedh.tail3317aa.ts.net/transcript/'
+                f'{video_id}?'
+                f'{formatted_language_codes}'
+            ),
+            {'password': password}
         )
-    except Exception as e:
-        print(e)
-        return [{}]
+    )
