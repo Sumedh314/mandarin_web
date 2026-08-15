@@ -139,5 +139,5 @@ def get_transcript_from_youtube(video_id: str):
                 f'{formatted_language_codes}'
             ),
             {'password': password}
-        )
+        ).json()
     )
