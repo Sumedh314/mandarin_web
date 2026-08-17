@@ -5,15 +5,16 @@ from fsrs import Scheduler
 from deep_translator import GoogleTranslator
 from youtube_transcript_api import YouTubeTranscriptApi
 from google import genai
+from sqlalchemy.pool import NullPool
 
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://mandarin_qk5p_user:4IkK3c1JHC9Njb8TYnIpj52BxYfcchEF@dpg-d9p5mc3m8hqs73acecf0-a/mandarin_qk5p'
-    # SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://mandarin_qk5p_user:4IkK3c1JHC9Njb8TYnIpj52BxYfcchEF@dpg-d9p5mc3m8hqs73acecf0-a.ohio-postgres.render.com/mandarin_qk5p'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg://postgres.vhhdmhspaajixulsclmn:y9bUrk6zxfVACzzp@aws-0-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ENGINE_OPTIONS = {'poolclass': NullPool}
 
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_TOKEN_LOCATION = ['cookies']

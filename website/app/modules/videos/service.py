@@ -131,7 +131,8 @@ def get_transcript_from_youtube(video_id: str):
     formatted_language_codes = '&'.join(
         ['code=' + code for code in MANDARIN_AND_ENGLISH_LANGUAGE_CODES]
     )
-    return (
+    print(formatted_language_codes)
+    transcript_response = (
         requests.post(
             (
                 f'https://sumedh.tail3317aa.ts.net/transcript/'
@@ -139,5 +140,7 @@ def get_transcript_from_youtube(video_id: str):
                 f'{formatted_language_codes}'
             ),
             json={'password': password}
-        ).json()
+        )
     )
+    print('Transcript:', transcript_response.status_code, transcript_response.json())
+    return transcript_response.json()
