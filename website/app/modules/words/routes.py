@@ -96,6 +96,7 @@ def update_proficiency_levels():
 def get_saved_words_in_list():
     """Get words from the list that the user has saved."""
     word_ids = request.get_json()
+    print(word_ids)
     user_id = int(get_jwt_identity())
     saved_word_ids = repository.get_saved_words_in_list(db.session, user_id, word_ids)
     return jsonify(saved_word_ids), 200

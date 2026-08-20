@@ -229,9 +229,23 @@ def get_low_words(session: Session, user_id: int, threshold: int):
 # LANGUAGE PROCESSING
 
 
-def segment_text(text: str):
-    """Segment Chinese text using the Jieba library."""
-    return [word for word in jieba.cut(text, HMM=False)]
+def segment_text(text: str | list[str]) -> list[str] | list[list[str]]:
+    """Segment Chinese text using the Jieba library.
+    
+    If a single string is provided, simply returns the string segmented
+    into individual words. If a list of strings is provided, returns a
+    list of lists of segmented text.
+    
+    Arguments:
+        text: (str | list[str]): String of Mandarin text or list of
+            strings of Mandarin text to be segmented
+    
+    Returns
+        list[str] | list[list[str]]: Segmented text.
+    """
+    if isinstance(text, list):
+        return [list(jieba.cut(item, HMM=False)) for item in text]
+    return list(jieba.cut(text, HMM=False))
     # return jieba.lcut(text)
 
 

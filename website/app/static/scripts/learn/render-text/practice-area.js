@@ -1,17 +1,29 @@
 import { addWords, getSavedWords, getWordIds, getWordProficiencyLevels, segmentText } from "../../api/routes.js";
 import { state, practiceArea, practiceAreaContainer } from "../../document-areas.js";
 import { filterText, formatTimestamp } from "../../utils.js";
+import { printWordDefinitions } from "./translations.js";
 
 /**
  * Prints a transcript into the practice area with clickable words and timestamps
  * 
  * @param {object} transcript Transcript to print
- * @param {boolean} [newWords=false] Whether the transcript contains new words
  */
-export async function printTranscript(transcript, newWords = false) {
+export async function printTranscript(transcript) {
     let wordIndex = -1;
     clearPracticeAreaContainer();
 
+    const allText = transcript.map(line => line.text);
+    const allSegmentedText = await segmentText(allText);
+
+    const allWords = Array.from(new Set(allSegmentedText.flat()));
+    const wordIds = await getWordIds(allWords);
+
+    const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIds));
+
+    console.log('wordIds:', wordIds);
+    const savedWords = await getSavedWords(Object.values(wordIds));
+
+    let index = 0;
     for (const line of transcript) {
         const timestamp = line.start;
 
@@ -32,8 +44,10 @@ export async function printTranscript(transcript, newWords = false) {
         practiceArea.appendChild(transcriptLineElement);
 
         const text = line.text;
-        wordIndex = await printText(text, false, wordIndex, newWords, transcriptLineElement);
-        practiceArea.appendChild(document.createElement('br'));        
+        wordIndex = await printText(text, false, wordIndex, transcriptLineElement, allSegmentedText[index], wordIds, proficiencyLevels, savedWords);
+        practiceArea.appendChild(document.createElement('br'));
+
+        index++;
     }
 
     addDoneButton(wordIndex);
@@ -57,28 +71,24 @@ export async function printTranscript(transcript, newWords = false) {
  * @param {string} text Original text to be printed
  * @param {boolean} [clearArea=true] Whether or not to clear the practice area before printing text
  * @param {number} [wordIndex=0] The index to start labeling words at
- * @param {boolean} [addNewWords=true] Whether or not the text contains new words to add to the database
  * @param {HTMLElement} [parentElement=wordsArea] The element to print the text into
  * @returns {Promise<number>} The index of the last word printed
  */
-export async function printText(text, clearArea = true, wordIndex = 0, addNewWords = true, parentElement = practiceArea) {
+export async function printText(text, clearArea = true, wordIndex = 0, parentElement = practiceArea, segmentedText = undefined, wordIds = undefined, proficiencyLevels = undefined, savedWords = undefined) {
     if (clearArea) {
         parentElement.textContent = '';
     }
 
-    const segmentedText = await segmentText(text);
+    segmentedText = segmentedText || await segmentText(text);
     const filteredText = filterText(segmentedText);
-    if (addNewWords) {
-        await addWords(Array.from(new Set(filteredText)));
-    }
     
-    const wordIdsByText = await getWordIds(filteredText);
+    const wordIdsByText = wordIds || await getWordIds(filteredText);
     console.log(wordIdsByText);
     
-    const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIdsByText));
+    proficiencyLevels = proficiencyLevels || await getWordProficiencyLevels(Object.values(wordIdsByText));
     console.log(proficiencyLevels);
     
-    const savedWords = await getSavedWords(Object.values(wordIdsByText));
+    savedWords = savedWords || await getSavedWords(Object.values(wordIdsByText));
     
     for (const text of segmentedText) {
         let elementToAdd = null;
@@ -86,7 +96,10 @@ export async function printText(text, clearArea = true, wordIndex = 0, addNewWor
         if (filteredText.includes(text)) {
             wordIndex++;
             const wordId = wordIdsByText[text];
+            console.log('creating element');
+            console.log(wordId)
             const wordElement = await createWordElement(text, wordId, wordIndex, proficiencyLevels[wordId], savedWords.includes(wordId));
+            console.log('created element');
             elementToAdd = wordElement;
         }
         else if (text == '\n') {
@@ -138,6 +151,7 @@ async function createWordElement(word, wordId, wordIndex, proficiency, wordIsSav
     wordElement.dataset.word = word;
     wordElement.dataset.index = wordIndex;
     wordElement.dataset.proficiency = proficiency;
+    console.log(wordElement.dataset.proficiency);
     wordElement.textContent = word;
     
     if (wordIsSaved) {

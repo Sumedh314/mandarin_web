@@ -174,7 +174,7 @@ export async function loadVideoAndTranscript() {
     let transcript = await getTranscript(videoId);
     state.lastIndex = await getVideoLastIndex(videoId);
     if (transcript.length != 0) {
-        await printTranscript(transcript, true);
+        await printTranscript(transcript);
         updateLocationMarker();
         state.transcriptShowing = true;
     }

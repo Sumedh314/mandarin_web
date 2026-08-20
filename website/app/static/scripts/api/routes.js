@@ -113,7 +113,7 @@ export async function getSavedWords(wordIds) {
 /**
  * Segments a piece of Mandarin text into individual words
  * 
- * @param {string} text The text to segment
+ * @param {string | Array<string>} text The text to segment
  * @returns {Promise<Array<string>>} The segmented text
  */
 export async function segmentText(text) {

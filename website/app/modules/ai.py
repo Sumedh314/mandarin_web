@@ -20,7 +20,7 @@ def generate_practice_sentences(words, num_sentences):
 
 def prompt_gemini(prompt: str, model: str = 'gemini-2.5-flash-lite', schema: dict = None):
     """Prompts Google Gemini and returns its response"""
-    gemini_client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'))
+    gemini_client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
     if schema == None:
         response = gemini_client.models.generate_content(model=model, contents=prompt).text

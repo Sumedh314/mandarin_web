@@ -92,9 +92,11 @@ def add_transcript():
 
 
 @videos_bp.get('/transcripts/<video_id>')
+@jwt_required(optional=True)
 def get_transcript(video_id: str):
     """Get the transcript of a YouTube video."""
-    transcript, status_code = service.get_transcript(db.session, video_id)
+    user_id = int(get_jwt_identity())
+    transcript, status_code = service.get_transcript(db.session, user_id, video_id)
     return jsonify(transcript), status_code
 
 
