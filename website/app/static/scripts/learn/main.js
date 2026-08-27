@@ -195,7 +195,7 @@ async function printUserText() {
     
     const text = document.getElementById('text-entry').value;
 
-    const wordIndex = await printText(text);
+    const wordIndex = await printText(text, true, true);
     addDoneButton(wordIndex);
 
     state.transcriptShowing = false;

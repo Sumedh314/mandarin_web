@@ -44,7 +44,7 @@ export async function printTranscript(transcript) {
         practiceArea.appendChild(transcriptLineElement);
 
         const text = line.text;
-        wordIndex = await printText(text, false, wordIndex, transcriptLineElement, allSegmentedText[index], wordIds, proficiencyLevels, savedWords);
+        wordIndex = await printText(text, false, false, wordIndex, transcriptLineElement, allSegmentedText[index], wordIds, proficiencyLevels, savedWords);
         practiceArea.appendChild(document.createElement('br'));
 
         index++;
@@ -70,11 +70,12 @@ export async function printTranscript(transcript) {
  * 
  * @param {string} text Original text to be printed
  * @param {boolean} [clearArea=true] Whether or not to clear the practice area before printing text
+ * @param {boolean} [newWords=false] Whether or not to add new words to the database
  * @param {number} [wordIndex=0] The index to start labeling words at
  * @param {HTMLElement} [parentElement=wordsArea] The element to print the text into
  * @returns {Promise<number>} The index of the last word printed
  */
-export async function printText(text, clearArea = true, wordIndex = 0, parentElement = practiceArea, segmentedText = undefined, wordIds = undefined, proficiencyLevels = undefined, savedWords = undefined) {
+export async function printText(text, clearArea = true, newWords = false, wordIndex = 0, parentElement = practiceArea, segmentedText = undefined, wordIds = undefined, proficiencyLevels = undefined, savedWords = undefined) {
     if (clearArea) {
         parentElement.textContent = '';
     }
@@ -112,6 +113,11 @@ export async function printText(text, clearArea = true, wordIndex = 0, parentEle
         }
 
         parentElement.appendChild(elementToAdd);
+    }
+
+    if (newWords) {
+        console.log('adding words');
+        addWords(filteredText);
     }
 
     return wordIndex;
