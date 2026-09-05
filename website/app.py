@@ -17,19 +17,19 @@ if __name__ == '__main__':
         #     hsk_words = json.load(file)
         
         # simplified = [word['s'] for word in hsk_words]
-        # print(simplified)
-        # seen = set()
-        # duplicates = set()
-        # for index, word in enumerate(simplified):
-        #     if word in seen:
-        #         duplicates.add(word)
-        #         print(simplified.index(word), index)
-        #     else:
-        #         seen.add(word)
+        # # print(simplified)
+        # # seen = set()
+        # # duplicates = set()
+        # # for index, word in enumerate(simplified):
+        # #     if word in seen:
+        # #         duplicates.add(word)
+        # #         print(simplified.index(word), index)
+        # #     else:
+        # #         seen.add(word)
         
-        # print(duplicates)
-        # print(hsk_words[838])
-        # print(hsk_words[839])
+        # # print(duplicates)
+        # # print(hsk_words[838])
+        # # print(hsk_words[839])
         
         # pos_dict = {
         #     "a": "adjective",
@@ -76,7 +76,6 @@ if __name__ == '__main__':
         #     "z": "descriptive"
         # }
 
-
         # new_words = []
         # new_word_forms = []
         
@@ -116,6 +115,7 @@ if __name__ == '__main__':
             
         #     id += 1
 
+        #     print(id)
         #     # print(new_word)
         #     # print(new_word_form)
         #     # break

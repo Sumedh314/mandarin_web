@@ -20,7 +20,7 @@ class Config:
         f'{os.getenv('DB_NAME')}?'
         f'sslmode=require'
     )
-    print(SQLALCHEMY_DATABASE_URI)
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_ENGINE_OPTIONS = {'poolclass': NullPool}

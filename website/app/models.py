@@ -52,7 +52,10 @@ class WordForm(db.Model):
     translations: Mapped[str | None]
     classifiers: Mapped[str | None]
 
-    word_id: Mapped[int] = mapped_column(ForeignKey(Word.id))
+    word_id: Mapped[int] = mapped_column(
+        ForeignKey(Word.id, ondelete='CASCADE'),
+        index=True
+    )
 
     word: Mapped[Word] = relationship(back_populates="forms")
 
@@ -72,8 +75,14 @@ class LearningWord(db.Model):
     proficiency: Mapped[int] = mapped_column(default=0, index=True)
     saved: Mapped[bool] = mapped_column(default=False)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey(User.id), index=True)
-    word_id: Mapped[int] = mapped_column(ForeignKey(Word.id), index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete='CASCADE'),
+        index=True
+    )
+    word_id: Mapped[int] = mapped_column(
+        ForeignKey(Word.id, ondelete='CASCADE'),
+        index=True
+    )
 
     user: Mapped[User] = relationship()
     original_word: Mapped[Word] = relationship()
@@ -96,7 +105,7 @@ class Sentence(db.Model):
     times_used: Mapped[int] = mapped_column(default=0)
 
     learning_word_id: Mapped[int] = mapped_column(
-        ForeignKey(LearningWord.id),
+        ForeignKey(LearningWord.id, ondelete='CASCADE'),
         index=True
     )
 
@@ -110,7 +119,7 @@ class Flashcard(db.Model):
     __tablename__ = "flashcards"
 
     learning_word_id: Mapped[int] = mapped_column(
-        ForeignKey(LearningWord.id),
+        ForeignKey(LearningWord.id, ondelete='CASCADE'),
         primary_key=True
     )
     state: Mapped[int] = mapped_column(default=1)
@@ -157,12 +166,12 @@ class UserVideo(db.Model):
     __tablename__ = "user_videos"
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(User.id),
+        ForeignKey(User.id, ondelete='CASCADE'),
         primary_key=True
     )
     video_id: Mapped[str] = mapped_column(
         String(11),
-        ForeignKey(Video.id),
+        ForeignKey(Video.id, ondelete='CASCADE'),
         primary_key=True
     )
     last_index: Mapped[int] = mapped_column(default=-1)
@@ -184,14 +193,18 @@ class TranscriptLine(db.Model):
 
     video_id: Mapped[str] = mapped_column(
         String(11),
-        ForeignKey(Video.id),
+        ForeignKey(Video.id, ondelete='CASCADE'),
         index=True
     )
     
     video: Mapped[Video] = relationship(back_populates="transcript_lines")
 
     def to_dict(self):
-        return {'text': self.text, }
+        return {
+            'text': self.text,
+            'start': self.start,
+            'duration': self.duration
+        }
 
     def __repr__(self):
         return f'Text: {self.text}, video_id: {self.video_id}, start: {self.start}'

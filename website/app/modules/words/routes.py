@@ -50,7 +50,7 @@ def update_learning_word(learning_word_id: int):
     return jsonify(learning_word.id), 200
 
 
-@words_bp.post('/learning/ids/read')
+@words_bp.post('/learning/ids')
 @jwt_required()
 def get_learning_word_ids():
     """Get the IDs of a list of learning words."""
@@ -68,7 +68,7 @@ def get_learning_word_data(learning_word_id: int):
     return jsonify(learning_word_data), 200
 
 
-@words_bp.post('/learning/proficiency-levels/read')
+@words_bp.post('/learning/proficiency-levels')
 @jwt_required()
 def get_word_proficiency_levels():
     """Get the proficiency levels of a list of words by their IDS."""

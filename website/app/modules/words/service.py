@@ -29,6 +29,8 @@ def add_all_new_words(session: Session, user_id: int, word_texts: list[str]):
         word_texts
     )
     print(existing_learning_word_texts)
+    if len(existing_learning_word_texts) == len(set(word_texts)):
+        return []
     new_learning_word_texts = list(set(word_texts) - set(existing_learning_word_texts))
     corresponding_word_ids = repository.get_word_ids_by_texts(
         session,
@@ -36,7 +38,7 @@ def add_all_new_words(session: Session, user_id: int, word_texts: list[str]):
     )
     print(new_learning_word_texts, corresponding_word_ids)
     new_learning_words = add_learning_words(session, user_id, corresponding_word_ids)
-    return {word.original_word.text: word.id for word in new_learning_words}
+    return [word.id for word in new_learning_words]
 
 
 def add_new_words(session: Session, word_texts: list[str]):
@@ -91,7 +93,11 @@ def update_learning_word(session: Session, learning_word_id: int, data: dict):
 def get_learning_word_ids(session: Session, user_id: int, word_texts: list[str]):
     """Get the IDs of a list of learning words."""
     words = repository.get_learning_word_ids(session, user_id, word_texts)
-    return {word[0]: word[1] for word in words}
+    ids = {word[0]: word[1] for word in words}
+    print(word_texts)
+    print('asdf')
+    print(ids)
+    return ids
 
 
 def get_learning_word_data(session: Session, learning_word_id: int):

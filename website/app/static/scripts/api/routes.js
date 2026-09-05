@@ -52,7 +52,7 @@ export async function getWordData(wordId) {
  * @returns {Promise<object<string, number>>} The IDs of each word
  */
 export async function getWordIds(words) {
-    return await request(`/words/learning/ids/read`, 'POST', words);
+    return await request(`/words/learning/ids`, 'POST', words);
 }
 
 /**
@@ -73,7 +73,7 @@ export async function updateWord(wordId, data) {
  * @returns {Promise<object<string, number>>} The proficiency levels of the given words
  */
 export async function getWordProficiencyLevels(wordIds) {
-    return await request(`/words/learning/proficiency-levels/read`, 'POST', wordIds);
+    return await request(`/words/learning/proficiency-levels`, 'POST', wordIds);
 }
 
 /**

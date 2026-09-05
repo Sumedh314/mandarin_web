@@ -171,7 +171,7 @@ export async function loadVideoAndTranscript() {
     embedVideo(videoId);
     state.videoId = videoId;
     
-    let transcript = await getTranscript(videoId);
+    const transcript = await getTranscript(videoId);;
     state.lastIndex = await getVideoLastIndex(videoId);
     if (transcript.length != 0) {
         await printTranscript(transcript);

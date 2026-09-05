@@ -61,6 +61,7 @@ def check_video_exists_for_user(session: Session, user_id: int, video_id: str):
 def get_video_last_index(session: Session, user_id: int, video_id: str):
     """Get the last index for a video."""
     video = videos_repository.get_user_video_by_ids(session, user_id, video_id)
+    print(video)
     if video is None:
         video = add_user_video(session, user_id, video_id)
     return video.last_index
@@ -105,11 +106,6 @@ def get_transcript(session: Session, user_id: int, video_id: str):
     if len(video.transcript_lines) > 0:
         return get_transcript_from_database(session, video_id), 200
     transcript = get_transcript_from_youtube(video_id)
-    words_service.add_all_new_words(
-        session,
-        user_id,
-        [line['text'] for line in transcript]
-    )
     add_transcript(session, video_id, transcript)
     
     return transcript, 201
@@ -149,5 +145,6 @@ def get_transcript_from_youtube(video_id: str) -> dict:
             json={'password': password}
         )
     )
-    print('Transcript:', transcript_response.status_code, transcript_response.json())
+    print('Transcript:', transcript_response.status_code)
+    print(transcript_response.json())
     return transcript_response.json()

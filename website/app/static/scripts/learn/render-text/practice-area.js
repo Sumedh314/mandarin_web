@@ -14,8 +14,13 @@ export async function printTranscript(transcript) {
 
     const allText = transcript.map(line => line.text);
     const allSegmentedText = await segmentText(allText);
+    console.log('segmented: ', allSegmentedText);
+    const allFilteredText = filterText(Array.from(allSegmentedText.flat()));
+    console.log('filterd: ', allFilteredText);
 
-    const allWords = Array.from(new Set(allSegmentedText.flat()));
+    await addWords(allFilteredText);
+
+    const allWords = Array.from(new Set(allFilteredText.flat()));
     const wordIds = await getWordIds(allWords);
 
     const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIds));
@@ -82,6 +87,11 @@ export async function printText(text, clearArea = true, newWords = false, wordIn
 
     segmentedText = segmentedText || await segmentText(text);
     const filteredText = filterText(segmentedText);
+
+    if (newWords) {
+        console.log('adding words');
+        await addWords(filteredText);
+    }
     
     const wordIdsByText = wordIds || await getWordIds(filteredText);
     console.log(wordIdsByText);
@@ -113,11 +123,6 @@ export async function printText(text, clearArea = true, newWords = false, wordIn
         }
 
         parentElement.appendChild(elementToAdd);
-    }
-
-    if (newWords) {
-        console.log('adding words');
-        addWords(filteredText);
     }
 
     return wordIndex;

@@ -4,7 +4,7 @@
     border: solid 1px lightgray;
     padding: 3px;
     min-height: 144px;
-    max-height: 40vh;
+    max-height: 39vh;
     overflow-y: auto;
     font-size: larger;
 }
