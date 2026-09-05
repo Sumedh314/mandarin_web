@@ -11,7 +11,8 @@ export async function showNextCard() {
     practiceAreaContainer.style.textAlign = 'center';
     state.lastIndex = -1;
 
-    console.log('asdfj;asldkfjas;ldkfjas;ldkfjads;lkfjasd;lfk')
+    console.log('asdfj;asldkfjas;ldkfjas;ldkfjads;lkfjasd;lfk');
+    await printText('Generating sentence...');
     const card = await getNextDueFlashcard();
     console.log(card);
     
@@ -26,10 +27,9 @@ export async function showNextCard() {
     state.flashcardWordId = card.learning_word_id;
     console.log(card);
 
-    await printText('Generating sentence...');
     const sentence = await getSentence(state.flashcardWordId);
 
-    await printText(sentence);
+    await printText(sentence, true, true);
     state.flashcardSentence = sentence;
     
     const reviewTimes = await getReviewIntervals(state.flashcardWordId);
