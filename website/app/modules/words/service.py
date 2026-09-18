@@ -1,10 +1,11 @@
 from sqlalchemy.orm import Session
 import jieba
 from pypinyin import lazy_pinyin, Style
+from googletrans import Translator
 
 from app.models import Word, WordForm, LearningWord
 import app.modules.words.repository as repository
-from config import translator
+# from config import translator
 
 
 def add_all_new_words(session: Session, user_id: int, word_texts: list[str]):
@@ -282,6 +283,7 @@ def get_new_pinyin(text: str, context: str | None = None) -> str:
     return ''.join(pinyin_list)
 
 
-def get_new_translation(text: str):
+async def get_new_translation(text: str):
     """Translate a piece of Mandarin text with Google Translate."""
-    return translator.translate(text)
+    async with Translator() as translator:
+        return (await translator.translate(text)).text

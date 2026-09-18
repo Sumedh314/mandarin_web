@@ -2,25 +2,25 @@ import os
 from pathlib import Path
 
 from fsrs import Scheduler
-from deep_translator import GoogleTranslator
+# from deep_translator import GoogleTranslator
+# from googletrans import Translator
 from youtube_transcript_api import YouTubeTranscriptApi
-from google import genai
 from sqlalchemy.pool import NullPool
 
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     
-    SQLALCHEMY_DATABASE_URI = (
-        f'postgresql+psycopg://'
-        f'{os.getenv('DB_USER')}:'
-        f'{os.getenv('DB_PASSWORD')}@'
-        f'{os.getenv('DB_HOST')}:'
-        f'{os.getenv('DB_PORT')}/'
-        f'{os.getenv('DB_NAME')}?'
-        f'sslmode=require'
-    )
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
+    # SQLALCHEMY_DATABASE_URI = (
+    #     f'postgresql+psycopg://'
+    #     f'{os.getenv('DB_USER')}:'
+    #     f'{os.getenv('DB_PASSWORD')}@'
+    #     f'{os.getenv('DB_HOST')}:'
+    #     f'{os.getenv('DB_PORT')}/'
+    #     f'{os.getenv('DB_NAME')}?'
+    #     f'sslmode=require'
+    # )
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///mandarin.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_ENGINE_OPTIONS = {'poolclass': NullPool}
@@ -28,10 +28,11 @@ class Config:
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     JWT_TOKEN_LOCATION = ['cookies']
     JWT_COOKIE_SECURE = False
+    JWT_ACCESS_TOKEN_EXPIRES = 2592000
 
 
 scheduler = Scheduler()
-translator = GoogleTranslator()
+# translator = Translator()
 transcript_generator = YouTubeTranscriptApi()
 
 MANDARIN_LANGAUGE_CODES = ['zh', 'zh-Hans', 'zh-CN', 'zh-Hant']

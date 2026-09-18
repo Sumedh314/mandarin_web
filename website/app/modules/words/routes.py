@@ -1,3 +1,5 @@
+import asyncio
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -133,8 +135,8 @@ def get_new_pinyin():
 
 
 @words_bp.post('/translate')
-def get_new_translation():
+async def get_new_translation():
     """Translate a piece of Mandarin text."""
     text = request.get_json()['text']
-    translation = service.get_new_translation(text)
+    translation = await service.get_new_translation(text)
     return jsonify(translation), 200
