@@ -1,3 +1,6 @@
+import os
+
+import requests
 from sqlalchemy.orm import Session
 import jieba
 from pypinyin import lazy_pinyin, Style
@@ -285,7 +288,14 @@ def get_new_pinyin(text: str, context: str | None = None) -> str:
 
 async def get_new_translation(text: str):
     """Translate a piece of Mandarin text with Google Translate."""
-    async with Translator() as translator:
-        translation = await translator.translate(src='zh', dest='en', text=text)
-        print(translation)
-        return translation.text
+    password = os.getenv('RASPBERRY_PI_PASSWORD')
+    translation_response = (
+        requests.post(
+            (
+                f'https://sumedh.tail3317aa.ts.net/translate/'
+                f'{text}?'
+            ),
+            json={'password': password}
+        )
+    )
+    return translation_response.text

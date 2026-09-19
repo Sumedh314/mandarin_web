@@ -134,7 +134,6 @@ def get_transcript_from_youtube(video_id: str) -> dict:
     formatted_language_codes = '&'.join(
         ['code=' + code for code in MANDARIN_AND_ENGLISH_LANGUAGE_CODES]
     )
-    print(formatted_language_codes)
     transcript_response = (
         requests.post(
             (
@@ -145,6 +144,4 @@ def get_transcript_from_youtube(video_id: str) -> dict:
             json={'password': password}
         )
     )
-    print('Transcript:', transcript_response.status_code)
-    print(transcript_response.json())
     return transcript_response.json()
