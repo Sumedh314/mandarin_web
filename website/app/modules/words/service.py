@@ -286,4 +286,6 @@ def get_new_pinyin(text: str, context: str | None = None) -> str:
 async def get_new_translation(text: str):
     """Translate a piece of Mandarin text with Google Translate."""
     async with Translator() as translator:
-        return (await translator.translate(text)).text
+        translation = await translator.translate(src='zh', dest='en', text=text)
+        print(translation)
+        return translation.text

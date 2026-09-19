@@ -139,4 +139,5 @@ async def get_new_translation():
     """Translate a piece of Mandarin text."""
     text = request.get_json()['text']
     translation = await service.get_new_translation(text)
+    print(text, translation)
     return jsonify(translation), 200
