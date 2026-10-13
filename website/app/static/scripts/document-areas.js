@@ -1,6 +1,6 @@
 export function showPracticeAndTranslationsArea() {
     practiceAreaContainer.style.display = 'block';
-    translationAreaContainer.style.display = 'block';
+    translationAreaContainer.style.display = 'flex';
     // translationArea.style.display = 'flex';
 }
 
