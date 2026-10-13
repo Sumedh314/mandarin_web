@@ -292,7 +292,7 @@ async def get_new_translation(text: str):
     translation_response = (
         requests.post(
             (
-                f'https://sumedh.tail3317aa.ts.net/translate/'
+                f'{os.getenv("RASPBERRY_PI_TRANSLATE_URL")}'
                 f'{text}?'
             ),
             json={'password': password}

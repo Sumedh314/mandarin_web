@@ -9,11 +9,32 @@ import {
  */
 export function updateLocationMarker() {
     locationMarker.style.visibility = 'visible';
-    for (const snippet of practiceArea.getElementsByTagName('span')) {
-        for (const word of snippet.children) {
+    if (state.transcriptShowing) {
+        for (const snippet of practiceArea.getElementsByTagName('span')) {
+            for (const word of snippet.children) {
+                if (state.lastIndex == -1) {
+                    word.before(locationMarker);
+                    return;
+                }
+                if (word.hasAttribute('data-index')) {
+                    if (word.dataset.index == state.lastIndex) {
+                        word.after(locationMarker);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        for (const word of practiceArea.getElementsByTagName('span')) {
+            if (state.lastIndex == -1) {
+                word.before(locationMarker);
+                return;
+            }
             if (word.hasAttribute('data-index')) {
                 if (word.dataset.index == state.lastIndex) {
                     word.after(locationMarker);
+                    return;
                 }
             }
         }

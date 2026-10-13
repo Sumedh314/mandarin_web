@@ -46,8 +46,8 @@ async function handleWordClick(event) {
         
         if (state.transcriptShowing) {
             await updateVideoLastIndex(state.videoId, state.lastIndex);
-            updateLocationMarker();
         }
+        updateLocationMarker();
 
         state.clickedWord = event.target.dataset.word;
         state.clickedWordElement = event.target;
@@ -188,7 +188,6 @@ export async function loadVideoAndTranscript() {
  */
 async function printUserText() {
     practiceAreaContainer.style.textAlign = 'left';
-    console.log('askdfjls');
     
     removeVideo();
     showPracticeAndTranslationsArea();
@@ -197,9 +196,10 @@ async function printUserText() {
 
     const wordIndex = await printText(text, true, true);
     addDoneButton(wordIndex);
-
+    
     state.transcriptShowing = false;
     state.lastIndex = -1;
+    updateLocationMarker();
 }
 
 document.getElementById('username').textContent = localStorage.getItem('username');

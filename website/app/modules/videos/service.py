@@ -137,7 +137,7 @@ def get_transcript_from_youtube(video_id: str) -> dict:
     transcript_response = (
         requests.post(
             (
-                f'https://sumedh.tail3317aa.ts.net/transcript/'
+                f'{os.getenv("RASPBERRY_PI_TRANSCRIPT_URL")}'
                 f'{video_id}?'
                 f'{formatted_language_codes}'
             ),

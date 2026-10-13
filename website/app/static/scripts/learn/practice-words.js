@@ -2,6 +2,7 @@ import { deleteSentence, getDueFlashcards, getNextDueFlashcard, getReviewInterva
 import { numDueWordsCounter, ratingAgainTime, ratingEasyTime, ratingGoodTime, ratingHardTime, ratingSelectionArea, state, practiceAreaContainer, showPracticeAndTranslationsArea } from "../document-areas.js";
 import { clearPracticeAreaContainer, printText } from "./render-text/practice-area.js";
 import { formatSeconds } from "../utils.js";
+import { updateLocationMarker } from "./render-text/update-progress.js";
 
 /**
  * Allows user to review the next flashcard
@@ -38,6 +39,9 @@ export async function showNextCard() {
     for (let index = 0; index < ratingTimeAreas.length; index++) {
         ratingTimeAreas[index].textContent = formatSeconds(reviewTimes[index]);
     }
+
+    state.lastIndex = -1;
+    updateLocationMarker();
 }
 
 /**
