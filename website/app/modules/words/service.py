@@ -4,7 +4,6 @@ import requests
 from sqlalchemy.orm import Session
 import jieba
 from pypinyin import lazy_pinyin, Style
-from googletrans import Translator
 
 from app.models import Word, WordForm, LearningWord
 import app.modules.words.repository as repository
