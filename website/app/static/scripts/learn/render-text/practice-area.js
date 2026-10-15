@@ -13,9 +13,9 @@ export async function printTranscript(transcript) {
 
     const allText = transcript.map(line => line.text);
     const allSegmentedText = await segmentText(allText);
-    console.log('segmented: ', allSegmentedText);
+    // console.log('segmented: ', allSegmentedText);
     const allFilteredText = filterText(Array.from(allSegmentedText.flat()));
-    console.log('filterd: ', allFilteredText);
+    // console.log('filterd: ', allFilteredText);
 
     await addWords(allFilteredText);
 
@@ -24,7 +24,7 @@ export async function printTranscript(transcript) {
 
     const proficiencyLevels = await getWordProficiencyLevels(Object.values(wordIds));
 
-    console.log('wordIds:', wordIds);
+    // console.log('wordIds:', wordIds);
     const savedWords = await getSavedWords(Object.values(wordIds));
 
     let index = 0;
@@ -88,15 +88,15 @@ export async function printText(text, clearArea = true, newWords = false, wordIn
     const filteredText = filterText(segmentedText);
 
     if (newWords) {
-        console.log('adding words');
+        // console.log('adding words');
         await addWords(filteredText);
     }
     
     const wordIdsByText = wordIds || await getWordIds(filteredText);
-    console.log(wordIdsByText);
+    // console.log(wordIdsByText);
     
     proficiencyLevels = proficiencyLevels || await getWordProficiencyLevels(Object.values(wordIdsByText));
-    console.log(proficiencyLevels);
+    // console.log(proficiencyLevels);
     
     savedWords = savedWords || await getSavedWords(Object.values(wordIdsByText));
     
@@ -106,10 +106,10 @@ export async function printText(text, clearArea = true, newWords = false, wordIn
         if (filteredText.includes(text)) {
             wordIndex++;
             const wordId = wordIdsByText[text];
-            console.log('creating element');
-            console.log(wordId)
+            // console.log('creating element');
+            // console.log(wordId)
             const wordElement = await createWordElement(text, wordId, wordIndex, proficiencyLevels[wordId], savedWords.includes(wordId));
-            console.log('created element');
+            // console.log('created element');
             elementToAdd = wordElement;
         }
         else if (text == '\n') {
@@ -161,7 +161,7 @@ async function createWordElement(word, wordId, wordIndex, proficiency, wordIsSav
     wordElement.dataset.word = word;
     wordElement.dataset.index = wordIndex;
     wordElement.dataset.proficiency = proficiency;
-    console.log(wordElement.dataset.proficiency);
+    // console.log(wordElement.dataset.proficiency);
     wordElement.textContent = word;
     
     if (wordIsSaved) {

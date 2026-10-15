@@ -12,11 +12,11 @@ export function updateLocationMarker() {
     if (state.transcriptShowing) {
         for (const snippet of practiceArea.getElementsByTagName('span')) {
             for (const word of snippet.children) {
-                if (state.lastIndex == -1) {
-                    word.before(locationMarker);
-                    return;
-                }
                 if (word.hasAttribute('data-index')) {
+                    if (state.lastIndex == -1) {
+                        word.before(locationMarker);
+                        return;
+                    }
                     if (word.dataset.index == state.lastIndex) {
                         word.after(locationMarker);
                         return;
@@ -47,7 +47,7 @@ export function updateLocationMarker() {
  * @param {object} proficiencyLevels Proficiency levels of each word ID
  */
 export function updateWordColors(proficiencyLevels) {
-    console.log(proficiencyLevels)
+    // console.log(proficiencyLevels)
     const segmentedWords = practiceArea.getElementsByTagName('span');
     
     for (const word of segmentedWords) {
